@@ -1,11 +1,13 @@
 package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Play-flavor transport using the Wear OS Data Layer message API.
@@ -31,27 +33,34 @@ class WearDataLayerTransport(
             )
         ).toByteArray(Charsets.UTF_8)
 
-        val nodes = awaitTask<List<Node>> {
-            Wearable.getNodeClient(appContext).connectedNodes
-        }
+        val nodes = awaitConnectedNodes()
         require(nodes.isNotEmpty()) { "No connected Wear OS node" }
 
         nodes.forEach { node ->
-            awaitTask<Int> {
-                Wearable.getMessageClient(appContext)
-                    .sendMessage(node.id, AlarmSyncTransportPaths.ALARM_MUTATION, payload)
-            }
+            awaitSendMessage(node, payload)
         }
     }
 
-    private suspend fun <T> awaitTask(factory: () -> Task<T>): T =
+    private suspend fun awaitConnectedNodes(): List<Node> =
         suspendCancellableCoroutine { continuation ->
-            factory()
-                .addOnSuccessListener { value ->
-                    if (continuation.isActive) continuation.resume(value)
-                }
-                .addOnFailureListener { error ->
-                    if (continuation.isActive) continuation.resumeWith(Result.failure(error))
-                }
+            Wearable.getNodeClient(appContext).connectedNodes
+                .addOnSuccessListener(OnSuccessListener { nodes ->
+                    if (continuation.isActive) continuation.resume(nodes)
+                })
+                .addOnFailureListener(OnFailureListener { error ->
+                    if (continuation.isActive) continuation.resumeWithException(error)
+                })
+        }
+
+    private suspend fun awaitSendMessage(node: Node, payload: ByteArray): Int =
+        suspendCancellableCoroutine { continuation ->
+            Wearable.getMessageClient(appContext)
+                .sendMessage(node.id, AlarmSyncTransportPaths.ALARM_MUTATION, payload)
+                .addOnSuccessListener(OnSuccessListener { result ->
+                    if (continuation.isActive) continuation.resume(result)
+                })
+                .addOnFailureListener(OnFailureListener { error ->
+                    if (continuation.isActive) continuation.resumeWithException(error)
+                })
         }
 }
