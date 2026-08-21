@@ -1,218 +1,221 @@
-# Alarm Sync (Phone ↔ Wear OS) — карта проекта
+# WakeSync — Phone ↔ Wear OS Alarm Sync
 
 Дата: 2026-08-21
-Статус: планирование, форк ещё не сделан
+Статус: планирование / подготовка базы
 
 ## TL;DR
 
-Разобрал исходники двух реальных open-source проектов на GitHub (не с чужих слов,
-а по коду через `codeload.github.com`). Ниже — что там на самом деле есть, что
-можно унести к себе, и предложенная архитектура для своего Alarm Sync поверх
-форка AlarmClockXtreme.
+WakeSync — двусторонняя синхронизация будильников между Android-телефоном и Wear OS.
+
+Цель: один логический будильник существует на обоих устройствах. Его можно создать,
+изменить, включить/выключить, удалить, отложить или отключить с телефона либо часов,
+а состояние второй стороны автоматически приводится к тому же состоянию.
+
+База: форк AlarmClockXtreme (Apache 2.0), с использованием архитектурных решений
+из UAC Companion там, где это подходит. Sync-протокол и conflict resolution пишем сами.
 
 ---
 
-## 1. AlarmClockXtreme (SysAdminDoc/AlarmClockXtreme)
+## 1. AlarmClockXtreme
 
 https://github.com/SysAdminDoc/AlarmClockXtreme — Apache 2.0, Kotlin/Compose,
-реально существует, актуально поддерживается.
+модули `app/` (телефон) + `wear/` (часы), flavor'ы `play` и `fdroid`.
 
-Структура: `app/` (телефон) + `wear/` (часы), разделение на flavor'ы `play` и
-`fdroid`. Wear-логика на Data Layer (`com.google.android.gms.wearable`) живёт
-только в `play` flavor — в `fdroid` её нет вообще (no-op бридж).
+### Что реально реализовано
 
-### Что там реально реализовано (проверено по коду)
+ACX НЕ является полноценной двусторонней синхронизацией будильников как объектов.
 
-Это **НЕ** двусторонняя синхронизация будильников как объектов. Это:
+- Phone → Watch: публикуется только один `next alarm` снапшот через
+  `/alarmclockxtreme/next_alarm`.
+- Watch → Phone: skip / snooze / dismiss для уже звонящего будильника.
+- Нет создания/редактирования/удаления/toggle будильника с часов.
+- Нет полного локального объекта Alarm на часах.
+- Data Layer находится в Play flavor; F-Droid вариант использует no-op bridge.
 
-- Phone → Watch: публикуется **только один "next alarm" снапшот** (ближайший
-  активный будильник), через `PutDataMapRequest` на путь
-  `/alarmclockxtreme/next_alarm`. Публикуется по одному урезанному DTO
-  (id, label, time_label, trigger_time, is_firing, timezone), не полный объект
-  будильника, не список.
-- Watch → Phone: только 3 команды-действия **для уже звонящего** будильника —
-  skip / snooze / dismiss (`WearAlarmActionListenerService`), причём
-  snooze/dismiss на телефоне проверяются на `AlarmService.activeAlarmId` —
-  сработает только если этот будильник реально сейчас звонит на телефоне.
-- **Нет** создания/редактирования/удаления/toggle будильника с часов.
-- **Нет** независимого хранения полного будильника на часах — только
-  SharedPreferences-снапшот для отображения на tile/complication.
-- Транспорт — Google Wearable Data Layer (требует Play Services на обоих
-  устройствах, никакого direct BLE тут нет).
+### Что берём
 
-### Что можно унести как есть
+- готовый Alarm Engine;
+- Room database и миграции;
+- Android/Wear UI;
+- Tile/complication;
+- Wear Data Layer patterns;
+- flavor-based DI для Play/no-op реализаций.
 
-- `wear/.../WearAlarmData.kt` — константы путей и ключей DataMap, паттерн
-  задания протокола. Годится как основа для своих path/key констант.
-- `WearAlarmDataListenerService` — паттерн подписки на `onDataChanged` +
-  триггер обновления Tile/Complication после апдейта.
-- `PlayWearNextAlarmBridge` — паттерн `observeNextAlarm().combine(settings)`
-  + `Wearable.getDataClient(context).putDataItem(...).setUrgent()`. Рабочий
-  пример как публиковать поверх Room+Flow репозитория.
-- Flavor-based DI (`WearNextAlarmBridge` интерфейс + `Play`/no-op реализации)
-  — полезный паттерн, если тоже хотим F-Droid сборку без Play Services.
-- Готовый Alarm Engine, UI, тесты миграций БД, tile/complication код — большой
-  объём написанной и рабочей инфраструктуры вокруг будильников как таковых.
-
-### Вывод по ACX
-
-Хорошая база для форка (Alarm Engine + UI + Wear skeleton), но
-**sync-протокол придётся писать с нуля** — готового bidirectional CRUD там нет.
+Исходный sync-протокол ACX не переносим как готовое решение — WakeSync нужен другой,
+полноценный bidirectional CRUD протокол.
 
 ---
 
-## 2. UAC Companion (CCExtractor/uac_companion)
+## 2. UAC Companion
 
-https://github.com/CCExtractor/uac_companion — официальный Wear OS companion
-для Ultimate Alarm Clock, GSoC 2025. Flutter-приложение для часов + Kotlin
-native слой для scheduling/DataClient. Это **только сторона часов** — сам
-UAC (телефон) в отдельном репозитории CCExtractor/ultimate_alarm_clock.
+https://github.com/CCExtractor/uac_companion
 
-### Что там реально реализовано (проверено по коду)
+Это наиболее близкий референс по передаче полного объекта Alarm.
 
-Это ближе к тому, что тебе нужно — **полный объект будильника гоняется в обе
-стороны как JSON**, а не урезанный снапшот:
+### Что используем как reference
 
-- Phone → Watch (`/uac_phone_to_watch/alarm`): полный `alarm_json` (Gson) —
-  id, time, days, `unique_sync_id`, is_enabled, location/weather/activity/
-  guardian-условия и т.д. — весь объект, не только "next alarm".
-  На стороне часов `UACDataLayerListenerService` при получении сразу
-  **insert в локальную SQLite** (`wear_alarms.db`) + `AlarmScheduler.
-  scheduleNextAlarm()` + событие во Flutter UI.
-- Watch → Phone (`/uac_watch_to_phone/alarm`, `WatchAlarmSender.
-  sendAlarmToPhone`): аналогично, полный JSON + флаг `isNewAlarm`.
-- Команды действий отдельным каналом
-  (`/uac_phone_to_watch/action`, `/uac_watch_to_phone/action`):
-  `delete alarm`, `dismiss`, `snooze` — с `uniqueSyncId`, не привязано к
-  "сейчас звонит", в отличие от ACX.
-- Есть отдельный канал verdict'ов от smart-conditions (`/uac/pre_check_verdict`)
-  — если условие (погода/локация) говорит "не звонить", часы сами отменяют
-  запланированный будильник.
-- Идентификация объекта — строковый `unique_sync_id`, а не числовой id
-  устройства-источника (важно: под конфликты между двумя устройствами лучше
-  UUID, чем автоинкремент).
+- полный `alarm_json`, а не только next-alarm snapshot;
+- отдельные Phone → Watch и Watch → Phone paths;
+- `unique_sync_id` как идентификатор объекта;
+- локальное сохранение полученного будильника на Watch;
+- отдельные action messages для delete/dismiss/snooze.
 
-### Чего там НЕТ (не выдумываю — специально проверил)
+### Что НЕ копируем без изменений
 
-- **Нет version/timestamp-based conflict resolution.** Есть `timestamp`
-  в DataMap, но код его нигде не сравнивает при получении — просто
-  last-write-wins по приходу сообщения. Одновременное изменение с обеих
-  сторон отдельно не обрабатывается.
-- **Нет toggle enabled/disabled** как отдельного action-пути — только полный
-  re-send объекта или delete.
-
-### Вывод по UAC
-
-Протокол ближе к нужному "будильник как единый объект с обеих сторон", но
-если хотим устойчивость к одновременному редактированию — версионирование
-придётся добавить самим (см. раздел 4).
+UAC не реализует полноценное version/timestamp conflict resolution.
+WakeSync добавит это самостоятельно.
 
 ---
 
-## 3. Проверка: DieselBridge
+## 3. Direct BLE
 
-В прошлом обсуждении всплыл проект "DieselBridge" (прямой BLE GATT без Google
-Play Services для Wear OS). **Не найден** ни прямым поиском, ни по темам
-`bluetooth-gatt`/`android-wear` на GitHub — похоже на очередной
-галлюцинированный проект (как раньше было с фейковым файлом от Kimi в
-keenetic-local-app). Не бери за основу, пока не найдётся реальный репозиторий.
+Готовый проверенный open-source проект, который можно безопасно взять как основу
+для прямого BLE GATT транспорта, пока не найден.
 
-Direct BLE GATT без Data Layer как таковой подход рабочий и делается,
-просто готового open-source проекта под это не нашлось — если нужно, это
-Phase 2 и пишется с нуля (или переиспользуется транспортный код из WristKey,
-у тебя там уже есть BLE + связка Phone↔Watch).
+Поэтому Phase 1: Wearable Data Layer.
+
+Phase 2: собственный Direct BLE GATT transport.
+
+При этом транспорт должен быть отделён от AlarmSync Core, чтобы переход не требовал
+переписывать доменную логику.
 
 ---
 
-## 4. Предлагаемая архитектура своего Alarm Sync
+## 4. WakeSync architecture
 
-Базовая идея не меняется: форк ACX (Alarm Engine + UI + tile/complication
-готовые), а sync-слой пишем сам, забирая протокольные решения из UAC
-Companion, но с добавлением версионирования.
-
-```
-┌─────────────────────────────────────────────┐
-│                 Alarm (единый объект)         │
-│  id: UUID (не автоинкремент!)                 │
-│  time, days, label, enabled                   │
-│  version: Long        ← добавляем сами        │
-│  updatedAt: Long                              │
-│  updatedBy: "phone" | "watch"                 │
-└─────────────────────────────────────────────┘
-```
-
-### Транспорт v1 — Data Layer (как в обоих проектах)
-
-Пути по аналогии с UAC (полный объект, не снапшот):
-
-```
-/alarmsync/alarm/put      — полный Alarm JSON, phone↔watch, оба направления
-/alarmsync/alarm/delete   — { id, version }
-/alarmsync/action         — { id, action: dismiss|snooze }, без привязки к "firing"
+```text
+                 WakeSync Core
+                       |
+              AlarmSyncRepository
+                       |
+              +--------+--------+
+              |                 |
+          Phone adapter     Wear adapter
+              |                 |
+         AlarmManager       AlarmManager
+              |                 |
+              +-------+---------+
+                      |
+                SyncTransport
+                 /          \
+        Wear Data Layer      BLE (Phase 2)
 ```
 
-### Conflict resolution (то, чего нет ни в ACX, ни в UAC)
+### Alarm identity
 
-При получении `alarm/put`:
+Используем UUID, а не локальный auto-increment ID.
 
+```text
+Alarm
+├── id: UUID
+├── time
+├── days
+├── label
+├── enabled
+├── version: Long
+├── updatedAt: Long
+└── updatedBy: phone | watch
 ```
+
+Один `id` должен обозначать один логический будильник на обоих устройствах.
+
+---
+
+## 5. Sync protocol v1
+
+Предварительные Data Layer paths:
+
+```text
+/alarmsync/alarm/put
+/alarmsync/alarm/delete
+/alarmsync/action
+```
+
+`alarm/put` передаёт полный Alarm JSON.
+
+`alarm/delete` передаёт минимум `{ id, version }`.
+
+`action` используется для runtime actions:
+
+```text
+DISMISS
+SNOOZE
+RINGING
+```
+
+### Conflict resolution
+
+При получении Alarm:
+
+```text
 if incoming.version > local.version:
     apply(incoming)
 elif incoming.version == local.version and incoming.updatedAt > local.updatedAt:
-    apply(incoming)   # tie-break по времени
+    apply(incoming)
 else:
-    ignore  # у нас уже более новая версия — либо переслать свою в ответ
+    ignore
 ```
 
-При локальном изменении: `version += 1`, `updatedAt = now()`, отправить.
+При локальном изменении:
 
-### Выключение / dismiss — учесть баг ACX
+```text
+version += 1
+updatedAt = now()
+updatedBy = localDevice
+send()
+```
 
-В ACX snooze/dismiss с часов срабатывает только если будильник **сейчас
-звонит на телефоне** (`AlarmService.activeAlarmId` проверка). Для честной
-двусторонней синхронки "выключил на телефоне → выключился на часах" эту
-проверку убирать/переделывать — это была логика для "укротить звонящий
-будильник", а не "изменить состояние объекта".
-
-### Что забираем в свой репо буквально (с адаптацией)
-
-| Источник | Файл | Что берём |
-|---|---|---|
-| ACX | `wear/.../WearAlarmData.kt` | паттерн констант путей/ключей |
-| ACX | `WearAlarmDataListenerService.kt` | подписка на onDataChanged + апдейт tile |
-| ACX | `PlayWearNextAlarmBridge.kt` | паттерн Flow→DataClient публикации |
-| UAC | `WatchAlarmSender.kt` | полный-объект-JSON вместо снапшота |
-| UAC | `UACDataLayerListenerService.kt` | insert в локальную БД по приходу + broadcast dismiss/snooze без "firing"-ограничения |
-| свой | — | version/updatedAt conflict resolution (нет ни там, ни там) |
-| свой | — | UUID вместо числового id для alarm |
-
-### Шаги
-
-1. Форк `AlarmClockXtreme` (F-Droid flavor как база, чище от Play-специфики,
-   Data Layer добавим сами по образцу play-flavor кода).
-2. Перевести `Alarm.id` с автоинкремента на UUID + добавить `version`,
-   `updatedAt`, `updatedBy` в схему/миграцию Room (у них уже есть миграции —
-   `AlarmDatabaseMigrationTest.kt`, паттерн понятен).
-3. Написать свой `AlarmSyncBridge` (интерфейс как `WearNextAlarmBridge`, но
-   для полного объекта, не next-alarm), взяв структуру публикации из
-   `PlayWearNextAlarmBridge` + payload-формат из `WatchAlarmSender`.
-3a. На стороне часов — свой `AlarmSyncListenerService` = гибрид
-    `WearAlarmDataListenerService` (тайл/complication апдейт) +
-    `UACDataLayerListenerService` (insert в локальную БД, без ограничения
-    "только firing").
-4. Добавить conflict resolution по version/updatedAt — этого нет ни в одном
-   из источников, писать самим.
-5. Протестировать на реальном железе (часы + телефон), как обычно.
-6. Phase 2 (опционально) — прямой BLE GATT транспорт вместо Data Layer,
-   если хочется отвязаться от Google Play Services полностью. Готового
-   open-source проекта под это не нашлось, писать с нуля или переиспользовать
-   транспортный код из WristKey.
+Позже добавим offline queue/reconciliation.
 
 ---
 
-## 5. Прочее найденное (для справки, не проверено так же глубоко)
+## 6. Важное отличие от ACX
 
-- `android/wear-os-samples` → модуль `DataLayer` — официальный минимальный
-  пример от Google, если нужен чистый референс без стороннего кода.
-- Ultimate Alarm Clock (основной репо, телефон-часть) отдельно от companion —
-  если понадобится посмотреть, как они формируют `alarm_json` на телефоне.
+В ACX snooze/dismiss с часов завязаны на `AlarmService.activeAlarmId` телефона.
+Это нормально для remote control звонящего будильника, но недостаточно для WakeSync.
+
+WakeSync должен отдельно синхронизировать состояние объекта и runtime state.
+
+Например:
+
+```text
+Phone: disable alarm #42
+        ↓
+Sync
+        ↓
+Watch: disable alarm #42
+```
+
+И наоборот.
+
+---
+
+## 7. План разработки
+
+1. [ ] Форкнуть AlarmClockXtreme.
+2. [ ] Перенести его Android/Wear базу в WakeSync.
+3. [ ] Переименовать приложение и branding в WakeSync.
+4. [ ] Изучить текущую схему `Alarm` и подготовить Room migration.
+5. [ ] Добавить UUID + version + updatedAt + updatedBy.
+6. [ ] Создать `AlarmSyncBridge` / `SyncTransport` интерфейсы.
+7. [ ] Реализовать Phone → Watch full Alarm sync.
+8. [ ] Реализовать Watch → Phone full Alarm sync.
+9. [ ] Create / Update / Enable / Disable / Delete.
+10. [ ] Dismiss / Snooze / Ringing state.
+11. [ ] Offline queue + reconnect reconciliation.
+12. [ ] Tile/complication отражают синхронизированный Alarm state.
+13. [ ] Реальное тестирование на Galaxy Watch.
+14. [ ] Phase 2: Direct BLE GATT transport.
+
+---
+
+## 8. Правила проекта
+
+- Не писать существующую alarm-инфраструктуру заново без причины.
+- Не привязывать sync core к Google Play Services.
+- Транспорт должен быть заменяемым.
+- Все изменения схемы БД — через миграции.
+- Для синхронизации использовать UUID.
+- Комментарии внутри кода — на английском.
+- Важные архитектурные решения фиксировать в `docs/`.
+- Частые изменения фиксировать небольшими понятными коммитами.
