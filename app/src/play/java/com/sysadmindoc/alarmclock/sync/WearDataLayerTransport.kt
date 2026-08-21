@@ -1,6 +1,8 @@
 package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -29,20 +31,20 @@ class WearDataLayerTransport(
             )
         ).toByteArray(Charsets.UTF_8)
 
-        val nodes = awaitTask {
+        val nodes = awaitTask<List<Node>> {
             Wearable.getNodeClient(appContext).connectedNodes
         }
         require(nodes.isNotEmpty()) { "No connected Wear OS node" }
 
         nodes.forEach { node ->
-            awaitTask {
+            awaitTask<Int> {
                 Wearable.getMessageClient(appContext)
                     .sendMessage(node.id, AlarmSyncTransportPaths.ALARM_MUTATION, payload)
             }
         }
     }
 
-    private suspend fun <T> awaitTask(factory: () -> com.google.android.gms.tasks.Task<T>): T =
+    private suspend fun <T> awaitTask(factory: () -> Task<T>): T =
         suspendCancellableCoroutine { continuation ->
             factory()
                 .addOnSuccessListener { value ->
