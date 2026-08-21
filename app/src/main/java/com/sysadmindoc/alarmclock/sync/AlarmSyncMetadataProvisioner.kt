@@ -3,15 +3,15 @@ package com.sysadmindoc.alarmclock.sync
 import com.sysadmindoc.alarmclock.data.local.AlarmSyncMetadataDao
 import com.sysadmindoc.alarmclock.data.local.entity.AlarmSyncMetadata
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Creates the stable cross-device identity for an alarm without changing the
  * existing local Room primary key.
+ *
+ * This class intentionally has no DI annotation yet. The DAO becomes a Room
+ * database dependency in the next storage integration block.
  */
-@Singleton
-class AlarmSyncMetadataProvisioner @Inject constructor(
+class AlarmSyncMetadataProvisioner(
     private val dao: AlarmSyncMetadataDao
 ) {
     suspend fun getOrCreate(alarmId: Long): AlarmSyncMetadata {
