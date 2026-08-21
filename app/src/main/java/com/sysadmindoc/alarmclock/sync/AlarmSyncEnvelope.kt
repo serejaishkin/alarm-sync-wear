@@ -3,13 +3,14 @@ package com.sysadmindoc.alarmclock.sync
 /**
  * Transport-neutral envelope for one alarm synchronization mutation.
  *
- * alarmId is the current local Room id. A future stable syncId will identify
- * the same alarm across devices; keeping that identity separate from Room's
- * local primary key avoids coupling sync to the existing database schema.
+ * alarmId is the current local Room id. syncId is the stable identity shared
+ * by the same alarm on the phone and watch. Keeping those identities separate
+ * avoids coupling sync to Room's local primary key.
  */
 data class AlarmSyncEnvelope(
     val protocolVersion: Int = CURRENT_PROTOCOL_VERSION,
     val deviceId: String,
+    val syncId: String,
     val alarmId: Long,
     val operation: AlarmSyncOperation,
     val source: AlarmSyncSource,
