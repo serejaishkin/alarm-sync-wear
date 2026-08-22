@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <uses-feature android:name="android.hardware.type.watch" android:required="true" />
-
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,49 +9,29 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlarmClockXtreme.Wear">
         <meta-data android:name="com.google.android.wearable.standalone" android:value="false" />
-
-        <activity
-            android:name=".WakeSyncAlarmEditorActivity"
-            android:exported="true"
-            android:label="WakeSync">
+        <activity android:name=".WakeSyncAlarmListActivity" android:exported="true" android:label="WakeSync">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".NextAlarmTileService"
-            android:description="@string/wear_tile_description"
-            android:exported="true"
-            android:icon="@drawable/ic_alarm"
-            android:label="@string/wear_tile_label"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+        <activity android:name=".WakeSyncAlarmEditorActivity" android:exported="false" android:label="WakeSync" />
+        <service android:name=".NextAlarmTileService" android:description="@string/wear_tile_description" android:exported="true" android:icon="@drawable/ic_alarm" android:label="@string/wear_tile_label" android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
             <intent-filter><action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" /></intent-filter>
             <meta-data android:name="androidx.wear.tiles.PREVIEW" android:resource="@drawable/wear_tile_preview" />
         </service>
-
-        <service
-            android:name=".NextAlarmComplicationDataSourceService"
-            android:description="@string/wear_complication_description"
-            android:directBootAware="true"
-            android:exported="true"
-            android:icon="@drawable/ic_alarm"
-            android:label="@string/wear_complication_label"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+        <service android:name=".NextAlarmComplicationDataSourceService" android:description="@string/wear_complication_description" android:directBootAware="true" android:exported="true" android:icon="@drawable/ic_alarm" android:label="@string/wear_complication_label" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
             <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT,LONG_TEXT" />
             <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300" />
             <meta-data android:name="androidx.watchface.complications.datasource.DEFAULT_CONFIG_SUPPORTED" android:value="true" />
         </service>
-
         <service android:name=".WearAlarmDataListenerService" android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:host="*" android:path="/alarmclockxtreme/next_alarm" android:scheme="wear" />
             </intent-filter>
         </service>
-
         <service android:name=".WakeSyncMessageService" android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
