@@ -3,7 +3,6 @@ package com.sysadmindoc.alarmclock.sync
 import android.content.Context
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.wearable.DataMap
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
@@ -12,12 +11,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/**
- * Play-flavor transport using the Wear OS Data Layer.
- *
- * Messages carry synchronization mutations; a DataItem carries the compact
- * next-alarm snapshot used by the Wear Tile and complication.
- */
+/** Play-flavor transport using the Wear OS Data Layer. */
 class WearDataLayerTransport(
     context: Context
 ) : AlarmSyncTransport {
@@ -35,29 +29,24 @@ class WearDataLayerTransport(
                 alarmToken = envelope.payload
             )
         ).toByteArray(Charsets.UTF_8)
-
         val nodes = awaitConnectedNodes()
         require(nodes.isNotEmpty()) { "No connected Wear OS node" }
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
     override suspend fun publishSnapshot(alarm: Alarm?): Result<Unit> = runCatching {
-        val dataMap = DataMap().apply {
-            putBoolean(KEY_HAS_ALARM, alarm != null)
-            putLong(KEY_ALARM_ID, alarm?.id ?: -1L)
-            putString(KEY_LABEL, alarm?.label.orEmpty())
-            putString(KEY_TIME_LABEL, alarm?.let { "%02d:%02d".format(it.hour, it.minute) }.orEmpty())
-            putLong(KEY_TRIGGER_TIME, alarm?.nextTriggerTime ?: 0L)
-            putBoolean(KEY_IS_FIRING, false)
-            putLong(KEY_UPDATED_AT, System.currentTimeMillis())
-            putString(KEY_TIMEZONE_POLICY, alarm?.timezonePolicy ?: "LOCAL")
-            putString(KEY_FIXED_TIMEZONE_ID, alarm?.fixedTimezoneId.orEmpty())
+        val request = PutDataMapRequest.create(PATH_NEXT_ALARM).apply {
+            dataMap.putBoolean(KEY_HAS_ALARM, alarm != null)
+            dataMap.putLong(KEY_ALARM_ID, alarm?.id ?: -1L)
+            dataMap.putString(KEY_LABEL, alarm?.label.orEmpty())
+            dataMap.putString(KEY_TIME_LABEL, alarm?.let { "%02d:%02d".format(it.hour, it.minute) }.orEmpty())
+            dataMap.putLong(KEY_TRIGGER_TIME, alarm?.nextTriggerTime ?: 0L)
+            dataMap.putBoolean(KEY_IS_FIRING, false)
+            dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
+            dataMap.putString(KEY_TIMEZONE_POLICY, alarm?.timezonePolicy ?: "LOCAL")
+            dataMap.putString(KEY_FIXED_TIMEZONE_ID, alarm?.fixedTimezoneId.orEmpty())
         }
-        awaitPutDataItem(
-            PutDataMapRequest.create(PATH_NEXT_ALARM).apply {
-                dataMap.putAll(dataMap)
-            }.asPutDataRequest().setUrgent()
-        )
+        awaitPutDataItem(request.asPutDataRequest().setUrgent())
     }
 
     private suspend fun awaitConnectedNodes(): List<Node> =
