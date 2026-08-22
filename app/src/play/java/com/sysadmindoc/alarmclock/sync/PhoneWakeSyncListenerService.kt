@@ -10,7 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
+import java.time.DayOfWeek
 import javax.inject.Inject
 
 /** Receives mutations initiated by the Wear peer. */
@@ -40,18 +42,36 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         runCatching {
             val json = JSONObject(raw)
             require(json.optString("operation") == "CREATE_REQUEST")
-            val hour = json.optInt("hour", 7).coerceIn(0, 23)
-            val minute = json.optInt("minute", 0).coerceIn(0, 59)
-            val label = json.optString("label").take(120)
-            alarmRepository.save(
-                Alarm(
-                    hour = hour,
-                    minute = minute,
-                    label = label,
-                    isEnabled = true
-                )
+            val repeatDays = parseRepeatDays(json.optJSONArray("repeatDays"))
+            val alarm = Alarm(
+                hour = json.optInt("hour", 7).coerceIn(0, 23),
+                minute = json.optInt("minute", 0).coerceIn(0, 59),
+                label = json.optString("label").take(120),
+                isEnabled = true,
+                repeatDays = repeatDays,
+                vibrationEnabled = json.optBoolean("vibrationEnabled", true),
+                volume = json.optInt("volume", 100).coerceIn(0, 100),
+                snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60)
             )
+            alarmRepository.save(alarm)
             coordinator.start()
+        }
+    }
+
+    private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> {
+        if (array == null) return emptySet()
+        return buildSet {
+            for (i in 0 until array.length()) {
+                when (array.optInt(i, 0)) {
+                    1 -> add(DayOfWeek.MONDAY)
+                    2 -> add(DayOfWeek.TUESDAY)
+                    3 -> add(DayOfWeek.WEDNESDAY)
+                    4 -> add(DayOfWeek.THURSDAY)
+                    5 -> add(DayOfWeek.FRIDAY)
+                    6 -> add(DayOfWeek.SATURDAY)
+                    7 -> add(DayOfWeek.SUNDAY)
+                }
+            }
         }
     }
 
