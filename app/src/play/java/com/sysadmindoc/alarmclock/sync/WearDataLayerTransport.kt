@@ -3,17 +3,20 @@ package com.sysadmindoc.alarmclock.sync
 import android.content.Context
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.wearable.DataMap
 import com.google.android.gms.wearable.Node
+import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
+import com.sysadmindoc.alarmclock.data.model.Alarm
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * Play-flavor transport using the Wear OS Data Layer message API.
+ * Play-flavor transport using the Wear OS Data Layer.
  *
- * F-Droid does not compile this source set, so the core sync layer remains free
- * of the proprietary Google Play Services dependency.
+ * Messages carry synchronization mutations; a DataItem carries the compact
+ * next-alarm snapshot used by the Wear Tile and complication.
  */
 class WearDataLayerTransport(
     context: Context
@@ -35,14 +38,30 @@ class WearDataLayerTransport(
 
         val nodes = awaitConnectedNodes()
         require(nodes.isNotEmpty()) { "No connected Wear OS node" }
+        nodes.forEach { node -> awaitSendMessage(node, payload) }
+    }
 
-        nodes.forEach { node ->
-            awaitSendMessage(node, payload)
+    override suspend fun publishSnapshot(alarm: Alarm?): Result<Unit> = runCatching {
+        val dataMap = DataMap().apply {
+            putBoolean(KEY_HAS_ALARM, alarm != null)
+            putLong(KEY_ALARM_ID, alarm?.id ?: -1L)
+            putString(KEY_LABEL, alarm?.label.orEmpty())
+            putString(KEY_TIME_LABEL, alarm?.let { "%02d:%02d".format(it.hour, it.minute) }.orEmpty())
+            putLong(KEY_TRIGGER_TIME, alarm?.nextTriggerTime ?: 0L)
+            putBoolean(KEY_IS_FIRING, false)
+            putLong(KEY_UPDATED_AT, System.currentTimeMillis())
+            putString(KEY_TIMEZONE_POLICY, alarm?.timezonePolicy ?: "LOCAL")
+            putString(KEY_FIXED_TIMEZONE_ID, alarm?.fixedTimezoneId.orEmpty())
         }
+        awaitPutDataItem(
+            PutDataMapRequest.create(PATH_NEXT_ALARM).apply {
+                dataMap.putAll(dataMap)
+            }.asPutDataRequest().setUrgent()
+        )
     }
 
     private suspend fun awaitConnectedNodes(): List<Node> =
-        suspendCancellableCoroutine { continuation ->
+        suspendCancellableCoroutine<List<Node>> { continuation ->
             Wearable.getNodeClient(appContext).connectedNodes
                 .addOnSuccessListener(OnSuccessListener { nodes ->
                     if (continuation.isActive) continuation.resume(nodes)
@@ -53,9 +72,9 @@ class WearDataLayerTransport(
         }
 
     private suspend fun awaitSendMessage(node: Node, payload: ByteArray): Int =
-        suspendCancellableCoroutine { continuation ->
+        suspendCancellableCoroutine<Int> { continuation ->
             Wearable.getMessageClient(appContext)
-                .sendMessage(node.id, AlarmSyncTransportPaths.ALARM_MUTATION, payload)
+                .sendMessage(node.id, ALARM_MUTATION_PATH, payload)
                 .addOnSuccessListener(OnSuccessListener { result ->
                     if (continuation.isActive) continuation.resume(result)
                 })
@@ -63,4 +82,32 @@ class WearDataLayerTransport(
                     if (continuation.isActive) continuation.resumeWithException(error)
                 })
         }
+
+    private suspend fun awaitPutDataItem(
+        request: com.google.android.gms.wearable.PutDataRequest
+    ): com.google.android.gms.wearable.DataItem =
+        suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { continuation ->
+            Wearable.getDataClient(appContext)
+                .putDataItem(request)
+                .addOnSuccessListener(OnSuccessListener { item ->
+                    if (continuation.isActive) continuation.resume(item)
+                })
+                .addOnFailureListener(OnFailureListener { error ->
+                    if (continuation.isActive) continuation.resumeWithException(error)
+                })
+        }
+
+    companion object {
+        const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
+        const val PATH_NEXT_ALARM = "/alarmclockxtreme/next_alarm"
+        private const val KEY_HAS_ALARM = "has_alarm"
+        private const val KEY_ALARM_ID = "alarm_id"
+        private const val KEY_LABEL = "label"
+        private const val KEY_TIME_LABEL = "time_label"
+        private const val KEY_TRIGGER_TIME = "trigger_time"
+        private const val KEY_IS_FIRING = "is_firing"
+        private const val KEY_UPDATED_AT = "updated_at"
+        private const val KEY_TIMEZONE_POLICY = "timezone_policy"
+        private const val KEY_FIXED_TIMEZONE_ID = "fixed_timezone_id"
+    }
 }
