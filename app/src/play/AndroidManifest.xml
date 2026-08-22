@@ -5,4 +5,13 @@
          explicit in-app opt-in and Health Connect permission grant. -->
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
+    <service
+        android:name=".sync.PhoneWakeSyncListenerService"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+            <data android:scheme="wear" android:host="*" android:pathPrefix="/wakesync/" />
+        </intent-filter>
+    </service>
+
 </manifest>
