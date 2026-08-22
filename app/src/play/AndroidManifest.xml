@@ -14,4 +14,10 @@
         </intent-filter>
     </service>
 
+    <provider
+        android:name=".sync.WakeSyncStartupProvider"
+        android:authorities="${applicationId}.wakesync.startup"
+        android:exported="false"
+        android:initOrder="100" />
+
 </manifest>
