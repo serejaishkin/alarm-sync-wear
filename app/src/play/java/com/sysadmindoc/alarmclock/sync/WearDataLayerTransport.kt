@@ -32,7 +32,6 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
-    /** Publishes the complete local alarm collection. */
     suspend fun publishAlarms(alarms: List<Alarm>): Result<Unit> = runCatching {
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
             dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
@@ -44,41 +43,23 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     override suspend fun publishSnapshot(alarm: Alarm?): Result<Unit> =
         publishAlarms(alarm?.let(::listOf).orEmpty())
 
-    private suspend fun awaitConnectedNodes(): List<Node> =
-        suspendCancellableCoroutine { continuation ->
-            Wearable.getNodeClient(appContext).connectedNodes
-                .addOnSuccessListener(OnSuccessListener { nodes ->
-                    if (continuation.isActive) continuation.resume(nodes)
-                })
-                .addOnFailureListener(OnFailureListener { error ->
-                    if (continuation.isActive) continuation.resumeWithException(error)
-                })
-        }
+    private suspend fun awaitConnectedNodes(): List<Node> = suspendCancellableCoroutine { c ->
+        Wearable.getNodeClient(appContext).connectedNodes
+            .addOnSuccessListener(OnSuccessListener { nodes -> if (c.isActive) c.resume(nodes) })
+            .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
+    }
 
-    private suspend fun awaitSendMessage(node: Node, payload: ByteArray): Int =
-        suspendCancellableCoroutine { continuation ->
-            Wearable.getMessageClient(appContext)
-                .sendMessage(node.id, ALARM_MUTATION_PATH, payload)
-                .addOnSuccessListener(OnSuccessListener { result ->
-                    if (continuation.isActive) continuation.resume(result)
-                })
-                .addOnFailureListener(OnFailureListener { error ->
-                    if (continuation.isActive) continuation.resumeWithException(error)
-                })
-        }
+    private suspend fun awaitSendMessage(node: Node, payload: ByteArray): Int = suspendCancellableCoroutine { c ->
+        Wearable.getMessageClient(appContext).sendMessage(node.id, ALARM_MUTATION_PATH, payload)
+            .addOnSuccessListener(OnSuccessListener { result -> if (c.isActive) c.resume(result) })
+            .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
+    }
 
-    private suspend fun awaitPutDataItem(
-        request: com.google.android.gms.wearable.PutDataRequest
-    ): com.google.android.gms.wearable.DataItem =
-        suspendCancellableCoroutine { continuation ->
-            Wearable.getDataClient(appContext)
-                .putDataItem(request)
-                .addOnSuccessListener(OnSuccessListener { item ->
-                    if (continuation.isActive) continuation.resume(item)
-                })
-                .addOnFailureListener(OnFailureListener { error ->
-                    if (continuation.isActive) continuation.resumeWithException(error)
-                })
+    private suspend fun awaitPutDataItem(request: com.google.android.gms.wearable.PutDataRequest): com.google.android.gms.wearable.DataItem =
+        suspendCancellableCoroutine { c ->
+            Wearable.getDataClient(appContext).putDataItem(request)
+                .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
+                .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
         }
 
     companion object {
