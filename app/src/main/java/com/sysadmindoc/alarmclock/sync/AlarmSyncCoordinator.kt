@@ -1,8 +1,12 @@
 package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
+import com.sysadmindoc.alarmclock.domain.AlarmScheduler
+import com.sysadmindoc.alarmclock.service.AlarmService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -100,11 +104,39 @@ class AlarmSyncCoordinator @Inject constructor(
                 }
             }
 
-            AlarmSyncOperation.SNOOZE,
-            AlarmSyncOperation.DISMISS,
             AlarmSyncOperation.RINGING -> {
-                // Firing-state commands are handled by the dedicated alarm
-                // runtime layer. The phone-side data model is already synced.
+                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+                if (alarmId != 0L) {
+                    val scheduledAt = payload.timestamp
+                    val intent = Intent(context, AlarmService::class.java).apply {
+                        action = AlarmService.ACTION_START_ALARM
+                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, scheduledAt)
+                    }
+                    ContextCompat.startForegroundService(context, intent)
+                }
+            }
+
+            AlarmSyncOperation.SNOOZE -> {
+                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+                if (alarmId != 0L) {
+                    context.startService(Intent(context, AlarmService::class.java).apply {
+                        action = AlarmService.ACTION_SNOOZE
+                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
+                    })
+                }
+            }
+
+            AlarmSyncOperation.DISMISS -> {
+                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+                if (alarmId != 0L) {
+                    context.startService(Intent(context, AlarmService::class.java).apply {
+                        action = AlarmService.ACTION_DISMISS
+                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
+                    })
+                }
             }
         }
 
