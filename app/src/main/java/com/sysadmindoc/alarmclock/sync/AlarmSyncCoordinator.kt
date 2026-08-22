@@ -18,12 +18,6 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Owns the phone-side synchronization lifecycle.
- *
- * Alarm.id remains local. A stable syncId is persisted in private preferences
- * and follows the logical alarm across local Room changes and app restarts.
- */
 @Singleton
 class AlarmSyncCoordinator @Inject constructor(
     private val context: Context,
@@ -54,7 +48,6 @@ class AlarmSyncCoordinator @Inject constructor(
         observationJob = null
     }
 
-    /** Apply one mutation received from the Wear companion. */
     suspend fun applyRemote(payload: AlarmSyncPayload): Result<Unit> = runCatching {
         val currentRevision = preferences.getLong(revisionKey(payload.syncId), 0L)
         if (payload.revision < currentRevision) return@runCatching
@@ -68,7 +61,6 @@ class AlarmSyncCoordinator @Inject constructor(
                 if (alarmId != 0L) alarmRepository.deleteById(alarmId)
                 forgetIdentity(payload.syncId, alarmId)
             }
-
             AlarmSyncOperation.CREATE,
             AlarmSyncOperation.UPDATE,
             AlarmSyncOperation.ENABLE,
@@ -99,45 +91,11 @@ class AlarmSyncCoordinator @Inject constructor(
                     alarmRepository.save(prepared)
                 }
                 rememberIdentity(payload.syncId, savedId, payload.revision, payload.timestamp, payload.alarmToken)
-                if (payload.alarmToken != null) {
-                    remoteSuppressions[savedId] = hash(payload.alarmToken)
-                }
+                if (payload.alarmToken != null) remoteSuppressions[savedId] = hash(payload.alarmToken)
             }
-
-            AlarmSyncOperation.RINGING -> {
-                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
-                if (alarmId != 0L) {
-                    val scheduledAt = payload.timestamp
-                    val intent = Intent(context, AlarmService::class.java).apply {
-                        action = AlarmService.ACTION_START_ALARM
-                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, scheduledAt)
-                    }
-                    ContextCompat.startForegroundService(context, intent)
-                }
-            }
-
-            AlarmSyncOperation.SNOOZE -> {
-                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
-                if (alarmId != 0L) {
-                    context.startService(Intent(context, AlarmService::class.java).apply {
-                        action = AlarmService.ACTION_SNOOZE
-                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
-                    })
-                }
-            }
-
-            AlarmSyncOperation.DISMISS -> {
-                val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
-                if (alarmId != 0L) {
-                    context.startService(Intent(context, AlarmService::class.java).apply {
-                        action = AlarmService.ACTION_DISMISS
-                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-                        putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
-                    })
-                }
-            }
+            AlarmSyncOperation.RINGING -> startAlarm(payload)
+            AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
+            AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
         }
 
         preferences.edit()
@@ -146,51 +104,73 @@ class AlarmSyncCoordinator @Inject constructor(
             .apply()
     }
 
+    /** Called by the Wear listener for a wrist-side action. */
+    suspend fun sendWearAction(alarmId: Long, operation: AlarmSyncOperation): Result<Unit> = runCatching {
+        require(operation == AlarmSyncOperation.SNOOZE || operation == AlarmSyncOperation.DISMISS || operation == AlarmSyncOperation.ENABLE || operation == AlarmSyncOperation.DISABLE) {
+            "Unsupported Wear action: $operation"
+        }
+        val syncId = preferences.getString(syncIdKey(alarmId), null)
+            ?: throw IllegalStateException("Alarm $alarmId is not synchronized yet")
+        val revision = nextRevision(syncId)
+        val payload = AlarmSyncCodec.create(
+            alarm = alarmRepository.getById(alarmId) ?: throw IllegalArgumentException("Alarm not found"),
+            syncId = syncId,
+            operation = operation,
+            source = AlarmSyncSource.WEAR,
+            revision = revision
+        )
+        val envelope = AlarmSyncEnvelope(
+            deviceId = deviceId,
+            syncId = syncId,
+            alarmId = alarmId,
+            operation = operation,
+            source = AlarmSyncSource.WEAR,
+            revision = revision,
+            timestamp = payload.timestamp,
+            payload = payload.alarmToken
+        )
+        transportProvider.transport().send(envelope).getOrThrow()
+        when (operation) {
+            AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
+            AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
+            AlarmSyncOperation.ENABLE,
+            AlarmSyncOperation.DISABLE -> alarmRepository.setEnabled(alarmId, operation == AlarmSyncOperation.ENABLE, 0L)
+            else -> Unit
+        }
+        preferences.edit()
+            .putLong(revisionKey(syncId), revision)
+            .putLong(timestampKey(syncId), payload.timestamp)
+            .apply()
+    }
+
     private suspend fun synchronizeSnapshot(alarms: List<Alarm>) {
         val currentIds = alarms.map { it.id }.filter { it != 0L }.toSet()
         val previousIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet())
-            ?.mapNotNull { it.toLongOrNull() }
-            ?.toSet()
-            ?: emptySet()
+            ?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet()
+
+        val nextAlarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }
+            .minByOrNull { it.nextTriggerTime }
+        transportProvider.transport().publishSnapshot(nextAlarm)
 
         for (alarm in alarms) {
             if (alarm.id == 0L) continue
             val syncId = ensureSyncId(alarm.id)
             val token = AlarmSyncCodec.create(
-                alarm = alarm,
-                syncId = syncId,
-                operation = AlarmSyncOperation.UPDATE,
-                source = AlarmSyncSource.PHONE,
-                revision = nextRevision(syncId)
+                alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, nextRevision(syncId)
             ).alarmToken ?: continue
             val tokenHash = hash(token)
-
             if (remoteSuppressions.remove(alarm.id) == tokenHash) {
                 preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply()
                 continue
             }
+            if (preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
 
-            val previousHash = preferences.getString(tokenKey(alarm.id), null)
-            if (previousHash == tokenHash) continue
-
-            val operation = if (previousHash == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
+            val operation = if (preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
             val revision = nextRevision(syncId)
-            val payload = AlarmSyncCodec.create(
-                alarm = alarm,
-                syncId = syncId,
-                operation = operation,
-                source = AlarmSyncSource.PHONE,
-                revision = revision
-            )
+            val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision)
             val envelope = AlarmSyncEnvelope(
-                deviceId = deviceId,
-                syncId = syncId,
-                alarmId = alarm.id,
-                operation = operation,
-                source = AlarmSyncSource.PHONE,
-                revision = revision,
-                timestamp = payload.timestamp,
-                payload = AlarmSyncCodec.encode(payload)
+                deviceId, syncId, alarm.id, operation, AlarmSyncSource.PHONE,
+                revision, payload.timestamp, AlarmSyncCodec.encode(payload)
             )
             if (transportProvider.transport().send(envelope).isSuccess) {
                 preferences.edit()
@@ -201,66 +181,59 @@ class AlarmSyncCoordinator @Inject constructor(
             }
         }
 
-        val deletedIds = previousIds - currentIds
-        for (alarmId in deletedIds) {
+        for (alarmId in previousIds - currentIds) {
             val syncId = preferences.getString(syncIdKey(alarmId), null) ?: continue
             val revision = nextRevision(syncId)
-            val payload = AlarmSyncCodec.create(
-                alarm = Alarm(id = alarmId),
-                syncId = syncId,
-                operation = AlarmSyncOperation.DELETE,
-                source = AlarmSyncSource.PHONE,
-                revision = revision
-            )
+            val payload = AlarmSyncCodec.create(Alarm(id = alarmId), syncId, AlarmSyncOperation.DELETE, AlarmSyncSource.PHONE, revision)
             val envelope = AlarmSyncEnvelope(
-                deviceId = deviceId,
-                syncId = syncId,
-                alarmId = alarmId,
-                operation = AlarmSyncOperation.DELETE,
-                source = AlarmSyncSource.PHONE,
-                revision = revision,
-                timestamp = payload.timestamp,
-                payload = null
+                deviceId, syncId, alarmId, AlarmSyncOperation.DELETE, AlarmSyncSource.PHONE,
+                revision, payload.timestamp, null
             )
             if (transportProvider.transport().send(envelope).isSuccess) forgetIdentity(syncId, alarmId)
         }
-
         preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, currentIds.map(Long::toString).toSet()).apply()
     }
 
-    private fun ensureSyncId(alarmId: Long): String {
-        preferences.getString(syncIdKey(alarmId), null)?.let { return it }
-        val id = UUID.randomUUID().toString()
-        preferences.edit().putString(syncIdKey(alarmId), id).apply()
-        return id
+    private fun startAlarm(payload: AlarmSyncPayload) {
+        val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+        if (alarmId == 0L) return
+        ContextCompat.startForegroundService(context, Intent(context, AlarmService::class.java).apply {
+            action = AlarmService.ACTION_START_ALARM
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
+        })
     }
 
+    private fun alarmCommand(payload: AlarmSyncPayload, action: String) {
+        val alarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+        if (alarmId == 0L) return
+        context.startService(Intent(context, AlarmService::class.java).apply {
+            this.action = action
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
+        })
+    }
+
+    private fun ensureSyncId(alarmId: Long): String =
+        preferences.getString(syncIdKey(alarmId), null) ?: UUID.randomUUID().toString().also {
+            preferences.edit().putString(syncIdKey(alarmId), it).apply()
+        }
+
     private fun rememberIdentity(syncId: String, alarmId: Long, revision: Long, timestamp: Long, token: String?) {
-        preferences.edit()
-            .putLong(alarmIdKey(syncId), alarmId)
-            .putString(syncIdKey(alarmId), syncId)
-            .putLong(revisionKey(syncId), revision)
-            .putLong(timestampKey(syncId), timestamp)
-            .apply()
+        preferences.edit().putLong(alarmIdKey(syncId), alarmId).putString(syncIdKey(alarmId), syncId)
+            .putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), timestamp).apply()
         token?.let { preferences.edit().putString(tokenKey(alarmId), hash(it)).apply() }
     }
 
     private fun forgetIdentity(syncId: String, alarmId: Long) {
-        preferences.edit()
-            .remove(alarmIdKey(syncId))
-            .remove(revisionKey(syncId))
-            .remove(timestampKey(syncId))
-            .remove(syncIdKey(alarmId))
-            .remove(tokenKey(alarmId))
-            .apply()
+        preferences.edit().remove(alarmIdKey(syncId)).remove(revisionKey(syncId)).remove(timestampKey(syncId))
+            .remove(syncIdKey(alarmId)).remove(tokenKey(alarmId)).apply()
     }
 
-    private fun nextRevision(syncId: String): Long =
-        preferences.getLong(revisionKey(syncId), 0L) + 1L
+    private fun nextRevision(syncId: String): Long = preferences.getLong(revisionKey(syncId), 0L) + 1L
 
     private fun hash(value: String): String = MessageDigest.getInstance("SHA-256")
-        .digest(value.toByteArray(Charsets.UTF_8))
-        .joinToString("") { "%02x".format(it) }
+        .digest(value.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
 
     private fun syncIdKey(alarmId: Long) = "sync_id_$alarmId"
     private fun alarmIdKey(syncId: String) = "alarm_id_$syncId"
