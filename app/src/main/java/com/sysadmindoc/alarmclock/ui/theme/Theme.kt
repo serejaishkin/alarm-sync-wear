@@ -38,38 +38,40 @@ data class AppShapeTokens(
     val bottomNav: Shape
 )
 
+// Material 3 / Google Clock inspired geometry: large, soft surfaces rather
+// than the old almost-square 8dp cards. Personal accent colours are untouched.
 private val StandardShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(8.dp),
-    tile = RoundedCornerShape(8.dp),
-    chip = RoundedCornerShape(8.dp),
-    iconContainer = RoundedCornerShape(8.dp),
-    bottomNav = RoundedCornerShape(8.dp)
+    card = RoundedCornerShape(20.dp),
+    tile = RoundedCornerShape(18.dp),
+    chip = RoundedCornerShape(50),
+    iconContainer = RoundedCornerShape(16.dp),
+    bottomNav = RoundedCornerShape(28.dp)
 )
 
 private val ExpressiveShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(12.dp),
-    tile = RoundedCornerShape(10.dp),
-    chip = RoundedCornerShape(8.dp),
-    iconContainer = RoundedCornerShape(12.dp),
-    bottomNav = RoundedCornerShape(12.dp)
+    card = RoundedCornerShape(24.dp),
+    tile = RoundedCornerShape(22.dp),
+    chip = RoundedCornerShape(50),
+    iconContainer = RoundedCornerShape(18.dp),
+    bottomNav = RoundedCornerShape(30.dp)
 )
 
 val LocalAppShapeTokens = compositionLocalOf { StandardShapeTokens }
 
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(8.dp),
-    large = RoundedCornerShape(8.dp),
-    extraLarge = RoundedCornerShape(8.dp)
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
 
 private val ExpressiveMaterialShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(10.dp),
-    large = RoundedCornerShape(12.dp),
-    extraLarge = RoundedCornerShape(12.dp)
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(26.dp),
+    extraLarge = RoundedCornerShape(30.dp)
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -128,8 +130,6 @@ fun AlarmClockXtremeTheme(
 
     val supportsDynamic = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val baseColorScheme = if (supportsDynamic) {
-        // Material You: derive the palette from the user's wallpaper. Keep the
-        // app's deep-dark surfaces so the identity of the dark theme isn't lost.
         dynamicDarkColorScheme(context).copy(
             background = SurfaceDark,
             surface = SurfaceMedium,
@@ -158,24 +158,13 @@ fun AlarmClockXtremeTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            // `view.context as Activity` would crash in any non-Activity host
-            // (preview, ContextWrapper from a service, etc.). Bail safely.
             val window = (view.context as? Activity)?.window ?: return@SideEffect
-
-            // v1.5.2: The direct `statusBarColor` / `navigationBarColor`
-            // setters were deprecated in Android 15 (API 35) because edge-
-            // to-edge is now enforced system-wide and the host activities
-            // already call `enableEdgeToEdge()`. Keep the setters for
-            // older OS versions so nav-bar contrast stays correct below
-            // the transparent region, but suppress the deprecation noise
-            // and skip the call on API 35+ where it is a no-op.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 @Suppress("DEPRECATION")
                 window.statusBarColor = android.graphics.Color.TRANSPARENT
                 @Suppress("DEPRECATION")
                 window.navigationBarColor = SurfaceDark.toArgb()
             }
-
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
