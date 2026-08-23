@@ -6,28 +6,21 @@ import android.database.Cursor
 import android.net.Uri
 import androidx.annotation.Keep
 import dagger.hilt.EntryPoint
-import dagger.hilt.EntryPointAccessors
+import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
-/**
- * Starts the phone-side sync observer as soon as the Play app process exists.
- * No UI activity is required for normal alarm edits made while the process is
- * alive; incoming Wear messages are handled independently by the listener.
- */
 @Keep
 class WakeSyncStartupProvider : ContentProvider() {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
-    interface EntryPoint {
+    interface StartupEntryPoint {
         fun coordinator(): AlarmSyncCoordinator
     }
 
     override fun onCreate(): Boolean {
         val app = context?.applicationContext ?: return false
-        EntryPointAccessors.fromApplication(app, EntryPoint::class.java)
-            .coordinator()
-            .start()
+        EntryPoints.get(app, StartupEntryPoint::class.java).coordinator().start()
         return true
     }
 
