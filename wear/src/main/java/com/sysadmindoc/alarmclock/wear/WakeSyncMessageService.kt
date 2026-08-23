@@ -3,11 +3,9 @@ package com.sysadmindoc.alarmclock.wear
 import android.content.ComponentName
 import android.content.Context
 import com.google.android.gms.wearable.MessageEvent
-import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
-import org.json.JSONArray
 import org.json.JSONObject
 
 /** Applies phone-side WakeSync mutations to the local Wear alarm collection. */
@@ -27,6 +25,12 @@ class WakeSyncMessageService : WearableListenerService() {
                     "DISABLE" -> false
                     else -> payload.optBoolean("enabled", current?.enabled ?: true)
                 }
+                val repeatDays = if (payload.has("repeatDays")) {
+                    buildSet {
+                        val array = payload.optJSONArray("repeatDays")
+                        if (array != null) for (i in 0 until array.length()) add(array.optInt(i))
+                    }
+                } else current?.repeatDays.orEmpty()
                 WearAlarmListStore.upsert(
                     applicationContext,
                     WearAlarmListStore.Entry(
@@ -35,7 +39,7 @@ class WakeSyncMessageService : WearableListenerService() {
                         hour = payload.optInt("hour", current?.hour ?: 0),
                         minute = payload.optInt("minute", current?.minute ?: 0),
                         enabled = enabled,
-                        repeatDays = parseRepeatDays(payload.optJSONArray("repeatDays"), current?.repeatDays ?: emptySet()),
+                        repeatDays = repeatDays,
                         snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
                         vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
                         volume = payload.optInt("volume", current?.volume ?: 100),
@@ -55,11 +59,6 @@ class WakeSyncMessageService : WearableListenerService() {
             .putLong(KEY_RECEIVED_AT, System.currentTimeMillis())
             .apply()
         requestUiRefresh()
-    }
-
-    private fun parseRepeatDays(array: JSONArray?, fallback: Set<Int>): Set<Int> {
-        if (array == null) return fallback
-        return buildSet { for (i in 0 until array.length()) add(array.optInt(i)) }
     }
 
     private fun requestUiRefresh() {
