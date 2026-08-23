@@ -129,8 +129,16 @@ class AlarmSyncCoordinator @Inject constructor(
         val revision = nextRevision(syncId)
         val alarm = alarmRepository.getById(alarmId) ?: error("Alarm not found")
         val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.WATCH, revision)
-        val envelope = AlarmSyncEnvelope(deviceId, syncId, alarmId, operation, AlarmSyncSource.WATCH,
-            revision, payload.timestamp, AlarmSyncCodec.encode(payload))
+        val envelope = AlarmSyncEnvelope(
+            deviceId = deviceId,
+            syncId = syncId,
+            alarmId = alarmId,
+            operation = operation,
+            source = AlarmSyncSource.WATCH,
+            revision = revision,
+            timestamp = payload.timestamp,
+            payload = AlarmSyncCodec.encode(payload)
+        )
         transportProvider.transport().send(envelope).getOrThrow()
         when (operation) {
             AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
@@ -164,8 +172,16 @@ class AlarmSyncCoordinator @Inject constructor(
                 AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
             val revision = nextRevision(syncId)
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision)
-            val envelope = AlarmSyncEnvelope(deviceId, syncId, alarm.id, operation, AlarmSyncSource.PHONE,
-                revision, payload.timestamp, AlarmSyncCodec.encode(payload))
+            val envelope = AlarmSyncEnvelope(
+                deviceId = deviceId,
+                syncId = syncId,
+                alarmId = alarm.id,
+                operation = operation,
+                source = AlarmSyncSource.PHONE,
+                revision = revision,
+                timestamp = payload.timestamp,
+                payload = AlarmSyncCodec.encode(payload)
+            )
             if (transportProvider.transport().send(envelope).isSuccess) {
                 preferences.edit().putString(tokenKey(alarm.id), tokenHash)
                     .putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), payload.timestamp).apply()
@@ -174,8 +190,16 @@ class AlarmSyncCoordinator @Inject constructor(
         for (alarmId in previousIds - currentIds) {
             val syncId = preferences.getString(syncIdKey(alarmId), null) ?: continue
             val revision = nextRevision(syncId)
-            val envelope = AlarmSyncEnvelope(deviceId, syncId, alarmId, AlarmSyncOperation.DELETE,
-                AlarmSyncSource.PHONE, revision, System.currentTimeMillis(), null)
+            val envelope = AlarmSyncEnvelope(
+                deviceId = deviceId,
+                syncId = syncId,
+                alarmId = alarmId,
+                operation = AlarmSyncOperation.DELETE,
+                source = AlarmSyncSource.PHONE,
+                revision = revision,
+                timestamp = System.currentTimeMillis(),
+                payload = null
+            )
             if (transportProvider.transport().send(envelope).isSuccess) forgetIdentity(syncId, alarmId)
         }
         preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, currentIds.map(Long::toString).toSet()).apply()
