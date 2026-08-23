@@ -26,7 +26,7 @@ class WearAlarmReceiver : BroadcastReceiver() {
         // not wait for Bluetooth/Wear Data Layer. If a peer is connected,
         // this event is mirrored to the phone in parallel.
         WearAlarmFeedbackService.start(context, syncId, entry.label)
-        WakeSyncPeerController.sendMutation(context, "RINGING", syncId, entry.alarmToken)
+        WakeSyncPeerController.sendMutation(context, "RINGING", syncId, null)
 
         val firing = Intent(context, WearAlarmFiringActivity::class.java).apply {
             putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
