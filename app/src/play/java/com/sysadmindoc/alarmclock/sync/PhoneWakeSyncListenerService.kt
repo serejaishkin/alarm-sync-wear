@@ -15,7 +15,7 @@ import org.json.JSONObject
 import java.time.DayOfWeek
 import javax.inject.Inject
 
-/** Receives mutations initiated by the Wear peer. */
+/** Receives mutations and reconciliation requests initiated by the Wear peer. */
 @AndroidEntryPoint
 class PhoneWakeSyncListenerService : WearableListenerService() {
     @Inject lateinit var coordinator: AlarmSyncCoordinator
@@ -29,12 +29,9 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                 val encoded = messageEvent.data.toString(Charsets.UTF_8)
                 scope.launch { AlarmSyncCodec.decode(encoded).onSuccess { coordinator.applyRemote(it) } }
             }
-            PATH_CREATE_REQUEST -> {
-                scope.launch { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
-            }
-            PATH_UPDATE_REQUEST -> {
-                scope.launch { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
-            }
+            PATH_CREATE_REQUEST -> scope.launch { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
+            PATH_UPDATE_REQUEST -> scope.launch { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
+            PATH_REQUEST_SNAPSHOT -> scope.launch { coordinator.syncNow() }
         }
     }
 
@@ -54,6 +51,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
             )
             alarmRepository.save(alarm)
             coordinator.start()
+            coordinator.syncNow()
         }
     }
 
@@ -68,8 +66,10 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                 label = json.optString("label"),
                 snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10),
                 vibrationEnabled = json.optBoolean("vibrationEnabled", true),
-                volume = json.optInt("volume", 100)
+                volume = json.optInt("volume", 100),
+                repeatDays = parseRepeatDays(json.optJSONArray("repeatDays"))
             ).getOrThrow()
+            coordinator.syncNow()
         }
     }
 
@@ -78,8 +78,13 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         return buildSet {
             for (i in 0 until array.length()) {
                 when (array.optInt(i, 0)) {
-                    1 -> add(DayOfWeek.MONDAY); 2 -> add(DayOfWeek.TUESDAY); 3 -> add(DayOfWeek.WEDNESDAY)
-                    4 -> add(DayOfWeek.THURSDAY); 5 -> add(DayOfWeek.FRIDAY); 6 -> add(DayOfWeek.SATURDAY); 7 -> add(DayOfWeek.SUNDAY)
+                    1 -> add(DayOfWeek.MONDAY)
+                    2 -> add(DayOfWeek.TUESDAY)
+                    3 -> add(DayOfWeek.WEDNESDAY)
+                    4 -> add(DayOfWeek.THURSDAY)
+                    5 -> add(DayOfWeek.FRIDAY)
+                    6 -> add(DayOfWeek.SATURDAY)
+                    7 -> add(DayOfWeek.SUNDAY)
                 }
             }
         }
@@ -90,5 +95,6 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     companion object {
         const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
         const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
+        const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
     }
 }
