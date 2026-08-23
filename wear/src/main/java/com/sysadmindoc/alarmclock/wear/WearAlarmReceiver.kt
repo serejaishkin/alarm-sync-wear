@@ -4,18 +4,26 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 
-/** Wakes the Wear firing UI at the scheduled time. */
+/** Wakes the Wear firing UI and restores the independent schedule after reboot/update. */
 class WearAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != WearAlarmScheduler.ACTION) return
+        when (intent.action) {
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                WearAlarmListStore.load(context).forEach { WearAlarmScheduler.schedule(context, it) }
+                return
+            }
+            WearAlarmScheduler.ACTION -> Unit
+            else -> return
+        }
+
         val syncId = WearAlarmScheduler.syncId(intent)
         if (syncId.isBlank()) return
         val entry = WearAlarmListStore.load(context).firstOrNull { it.syncId == syncId } ?: return
         if (!entry.enabled) return
 
         if (!WearAlarmScheduler.isSnooze(intent) && entry.repeatDays.isEmpty()) {
-            // One-shot alarms stay disabled after firing; the firing screen still
-            // knows which alarm woke the user and can dismiss it normally.
+            // One-shot alarms stop being scheduled after this firing.
             WearAlarmListStore.upsert(context, entry.copy(enabled = false))
         }
 
