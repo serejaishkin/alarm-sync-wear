@@ -1,11 +1,6 @@
 package com.sysadmindoc.alarmclock.wear
 
-import android.media.AudioAttributes
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.view.Gravity
 import android.view.WindowManager
 import android.widget.Button
@@ -13,10 +8,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 
-/** Alarm UI that is independent from MediaSession/media controls. */
+/** Alarm UI. Audio/haptics are owned by WearAlarmFeedbackService. */
 class WearAlarmFiringActivity : ComponentActivity() {
-    private var ringtone: Ringtone? = null
-    private var vibrator: Vibrator? = null
     private var syncId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,59 +41,28 @@ class WearAlarmFiringActivity : ComponentActivity() {
             gravity = Gravity.CENTER
         })
 
-        val snooze = Button(this).apply {
+        root.addView(Button(this).apply {
             text = "Отложить ${entry.snoozeDurationMinutes} мин"
             setOnClickListener { snooze(entry) }
-        }
-        val dismiss = Button(this).apply {
+        })
+        root.addView(Button(this).apply {
             text = "Выключить"
             setOnClickListener { dismiss(entry) }
-        }
-        root.addView(snooze)
-        root.addView(dismiss)
+        })
         setContentView(root)
 
         activeSyncId = syncId
-        if (intent.action != ACTION_REMOTE_SNOOZE && intent.action != ACTION_REMOTE_DISMISS) {
-            startAlarmFeedback(entry)
-        } else {
-            finish()
-        }
+        if (intent.action == ACTION_REMOTE_SNOOZE || intent.action == ACTION_REMOTE_DISMISS) finish()
     }
 
     override fun onNewIntent(intent: android.content.Intent?) {
         super.onNewIntent(intent)
         if (intent == null) return
         setIntent(intent)
-        when (intent.action) {
-            ACTION_REMOTE_SNOOZE, ACTION_REMOTE_DISMISS -> {
-                stopFeedback()
-                finish()
-            }
-        }
+        if (intent.action == ACTION_REMOTE_SNOOZE || intent.action == ACTION_REMOTE_DISMISS) finish()
     }
 
-    private fun startAlarmFeedback(entry: WearAlarmListStore.Entry) {
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        ringtone = RingtoneManager.getRingtone(this, uri)?.also {
-            it.audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-            it.play()
-        }
-        if (entry.vibrationEnabled) {
-            vibrator = getSystemService(Vibrator::class.java)
-            vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 400), 0))
-        }
-    }
-
-    private fun stopFeedback() {
-        ringtone?.stop()
-        ringtone = null
-        vibrator?.cancel()
-    }
+    private fun stopFeedback() = WearAlarmFeedbackService.stop(this)
 
     private fun snooze(entry: WearAlarmListStore.Entry) {
         stopFeedback()
@@ -117,7 +79,6 @@ class WearAlarmFiringActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        stopFeedback()
         if (activeSyncId == syncId) activeSyncId = null
         super.onDestroy()
     }
