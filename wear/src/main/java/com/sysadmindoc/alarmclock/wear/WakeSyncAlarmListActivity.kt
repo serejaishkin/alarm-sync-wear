@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import java.util.Locale
 
+/** Equal peer list: alarms received from phone and alarms created on Wear live here. */
 class WakeSyncAlarmListActivity : Activity() {
     private lateinit var list: LinearLayout
 
@@ -58,9 +59,11 @@ class WakeSyncAlarmListActivity : Activity() {
             })
             return
         }
+
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
-            list.addView(Button(this).apply {
+            val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            row.addView(Button(this).apply {
                 text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n${if (alarm.enabled) "Включён" else "Выключен"}"
                 isAllCaps = false
                 setOnClickListener {
@@ -68,7 +71,31 @@ class WakeSyncAlarmListActivity : Activity() {
                         .putExtra("syncId", alarm.syncId)
                         .putExtra("alarmToken", alarm.alarmToken))
                 }
-            }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 6 })
+            })
+            val actions = LinearLayout(this).apply { gravity = Gravity.CENTER }
+            actions.addView(Button(this).apply {
+                text = if (alarm.enabled) "Выкл" else "Вкл"
+                setOnClickListener {
+                    if (alarm.enabled) {
+                        WakeSyncPeerController.sendDisable(this@WakeSyncAlarmListActivity, alarm.syncId, alarm.alarmToken)
+                        WearAlarmListStore.upsert(this@WakeSyncAlarmListActivity, alarm.copy(enabled = false, revision = alarm.revision + 1, updatedAt = System.currentTimeMillis()))
+                    } else {
+                        WakeSyncPeerController.sendEnable(this@WakeSyncAlarmListActivity, alarm.syncId, alarm.alarmToken)
+                        WearAlarmListStore.upsert(this@WakeSyncAlarmListActivity, alarm.copy(enabled = true, revision = alarm.revision + 1, updatedAt = System.currentTimeMillis()))
+                    }
+                    render()
+                }
+            })
+            actions.addView(Button(this).apply {
+                text = "Удалить"
+                setOnClickListener {
+                    WakeSyncPeerController.sendDelete(this@WakeSyncAlarmListActivity, alarm.syncId)
+                    WearAlarmListStore.remove(this@WakeSyncAlarmListActivity, alarm.syncId)
+                    render()
+                }
+            })
+            row.addView(actions)
+            list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 6 })
         }
     }
 }
