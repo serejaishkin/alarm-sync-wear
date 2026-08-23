@@ -45,10 +45,11 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         }
     }
 
-    /** Control commands bypass snapshot revision ordering and act on the current phone alarm. */
+    /** Realtime controls bypass snapshot revision ordering. */
     private fun handleWearAlarmCommand(syncId: String, action: String) {
-        val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
-        if (alarmId == 0L) return
+        val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .getLong("alarm_id_$syncId", 0L)
+            .takeIf { it > 0L } ?: return
         startService(Intent(this, AlarmService::class.java).apply {
             this.action = action
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
