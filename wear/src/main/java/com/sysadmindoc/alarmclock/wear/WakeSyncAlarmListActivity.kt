@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
+import com.google.android.gms.wearable.Wearable
 import java.util.Locale
 
 /** Equal peer list: alarms received from phone and alarms created on Wear live here. */
@@ -20,6 +22,7 @@ class WakeSyncAlarmListActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        requestPhoneSnapshot()
         render()
     }
 
@@ -27,18 +30,17 @@ class WakeSyncAlarmListActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(14, 12, 14, 12)
+            setPadding(14, 12, 14, 18)
         }
         root.addView(TextView(this).apply {
             text = "WakeSync\nБудильники"
             textSize = 18f
             gravity = Gravity.CENTER
         })
-        list = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(-1, 0, 1f)
-        }
-        root.addView(list)
+        val scroll = ScrollView(this)
+        list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        scroll.addView(list)
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         root.addView(Button(this).apply {
             text = "+ Новый будильник"
             setOnClickListener {
@@ -48,12 +50,21 @@ class WakeSyncAlarmListActivity : Activity() {
         setContentView(root)
     }
 
+    private fun requestPhoneSnapshot() {
+        Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
+            nodes.forEach { node ->
+                Wearable.getMessageClient(this)
+                    .sendMessage(node.id, PATH_REQUEST_SNAPSHOT, ByteArray(0))
+            }
+        }
+    }
+
     private fun render() {
         list.removeAllViews()
         val alarms = WearAlarmListStore.load(this)
         if (alarms.isEmpty()) {
             list.addView(TextView(this).apply {
-                text = "Нет будильников"
+                text = "Нет будильников\nСинхронизация запрошена"
                 gravity = Gravity.CENTER
                 setPadding(8, 30, 8, 30)
             })
@@ -62,9 +73,10 @@ class WakeSyncAlarmListActivity : Activity() {
 
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
+            val repeat = repeatLabel(alarm.repeatDays)
             val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             row.addView(Button(this).apply {
-                text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n${if (alarm.enabled) "Включён" else "Выключен"}"
+                text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n$repeat · ${if (alarm.enabled) "Включён" else "Выключен"}"
                 isAllCaps = false
                 setOnClickListener {
                     startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java)
@@ -97,5 +109,18 @@ class WakeSyncAlarmListActivity : Activity() {
             row.addView(actions)
             list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 6 })
         }
+    }
+
+    private fun repeatLabel(days: Set<Int>): String = when {
+        days.size == 7 -> "Каждый день"
+        days == setOf(1, 2, 3, 4, 5) -> "Будни"
+        days == setOf(6, 7) -> "Выходные"
+        days.isEmpty() -> "Один раз"
+        else -> days.sorted().joinToString(" ") { DAY_NAMES[it - 1] ?: "" }.trim()
+    }
+
+    companion object {
+        const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
+        private val DAY_NAMES = mapOf(1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт", 5 to "Пт", 6 to "Сб", 7 to "Вс")
     }
 }
