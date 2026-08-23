@@ -83,9 +83,11 @@ object WearAlarmListStore {
 
     fun upsert(context: Context, entry: Entry) {
         save(context, load(context).filterNot { it.syncId == entry.syncId } + entry)
+        WearAlarmScheduler.schedule(context, entry)
     }
 
     fun remove(context: Context, syncId: String) {
+        WearAlarmScheduler.cancel(context, syncId)
         save(context, load(context).filterNot { it.syncId == syncId })
     }
 }
