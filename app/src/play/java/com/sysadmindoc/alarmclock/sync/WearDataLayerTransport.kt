@@ -34,12 +34,20 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
-    /** Publishes both the next-alarm presentation and the complete peer collection. */
-    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = runCatching {
+    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> =
+        publishDataItem(alarms, emptyMap())
+
+    override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
+        publishDataItem(entries.map { it.alarm }, entries.associate { it.alarm.id to it.syncId })
+
+    private suspend fun publishDataItem(
+        alarms: List<Alarm>,
+        syncIds: Map<Long, String>
+    ): Result<Unit> = runCatching {
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
         alarms.filter { it.id != 0L }.forEach { item ->
-            val syncId = "snapshot-${item.id}"
+            val syncId = syncIds[item.id] ?: "snapshot-${item.id}"
             val token = com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)
             list.put(JSONObject()
                 .put("syncId", syncId)
@@ -90,7 +98,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
 
     companion object {
         const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
-        const val PATH_ALARM_SNAPSHOT = "/wakesync/alarm/snapshot"
+        const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
         const val KEY_ALARM_LIST = "alarm_list"
         private const val KEY_HAS_ALARM = "has_alarm"
         private const val KEY_ALARM_ID = "alarm_id"
