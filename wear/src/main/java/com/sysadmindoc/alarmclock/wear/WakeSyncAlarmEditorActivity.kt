@@ -14,7 +14,6 @@ import com.google.android.gms.wearable.Wearable
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Equal-peer alarm editor. New alarms use CREATE_REQUEST; existing alarms use UPDATE_REQUEST. */
 class WakeSyncAlarmEditorActivity : Activity() {
     private lateinit var hour: NumberPicker
     private lateinit var minute: NumberPicker
@@ -37,7 +36,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
         val time = LinearLayout(this).apply { gravity = Gravity.CENTER }
         hour = picker(0, 23, 7); minute = picker(0, 59, 0)
         time.addView(hour); time.addView(TextView(this).apply { text = ":" }); time.addView(minute); root.addView(time)
-        label = EditText(this).apply { hint = "Название"; singleLine = true }; root.addView(label)
+        label = EditText(this).apply { hint = "Название"; setSingleLine(true) }; root.addView(label)
         root.addView(TextView(this).apply { text = "Повтор" })
         repeatChecks = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс").map { CheckBox(this).apply { text = it } }
         repeatChecks.forEach(root::addView)
@@ -56,7 +55,6 @@ class WakeSyncAlarmEditorActivity : Activity() {
         hour.value = alarm.hour.coerceIn(hour.minValue, hour.maxValue)
         minute.value = alarm.minute.coerceIn(minute.minValue, minute.maxValue)
         label.setText(alarm.label)
-        vibration.isChecked = true
     }
 
     private fun commonJson(operation: String): JSONObject = JSONObject()
