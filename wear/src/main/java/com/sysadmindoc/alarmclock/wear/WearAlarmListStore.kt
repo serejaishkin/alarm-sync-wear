@@ -16,6 +16,10 @@ object WearAlarmListStore {
         val hour: Int,
         val minute: Int,
         val enabled: Boolean,
+        val repeatDays: Set<Int> = emptySet(),
+        val snoozeDurationMinutes: Int = 10,
+        val vibrationEnabled: Boolean = true,
+        val volume: Int = 100,
         val revision: Long,
         val updatedAt: Long,
         val alarmToken: String
@@ -29,6 +33,9 @@ object WearAlarmListStore {
             buildList(array.length()) {
                 for (i in 0 until array.length()) {
                     val o = array.getJSONObject(i)
+                    val days = o.optJSONArray("repeatDays")?.let { a ->
+                        buildSet { for (j in 0 until a.length()) add(a.optInt(j)) }
+                    } ?: emptySet()
                     add(
                         Entry(
                             syncId = o.optString("syncId"),
@@ -36,6 +43,10 @@ object WearAlarmListStore {
                             hour = o.optInt("hour"),
                             minute = o.optInt("minute"),
                             enabled = o.optBoolean("enabled", true),
+                            repeatDays = days,
+                            snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10),
+                            vibrationEnabled = o.optBoolean("vibrationEnabled", true),
+                            volume = o.optInt("volume", 100),
                             revision = o.optLong("revision"),
                             updatedAt = o.optLong("updatedAt"),
                             alarmToken = o.optString("alarmToken")
@@ -48,13 +59,19 @@ object WearAlarmListStore {
 
     fun save(context: Context, entries: List<Entry>) {
         val array = JSONArray()
-        entries.sortedBy { it.hour * 60 + it.minute }.forEach { e ->
+        entries.sortedWith(compareBy<Entry> { it.hour * 60 + it.minute }.thenBy { it.syncId }).forEach { e ->
+            val days = JSONArray()
+            e.repeatDays.sorted().forEach(days::put)
             array.put(JSONObject()
                 .put("syncId", e.syncId)
                 .put("label", e.label)
                 .put("hour", e.hour)
                 .put("minute", e.minute)
                 .put("enabled", e.enabled)
+                .put("repeatDays", days)
+                .put("snoozeDurationMinutes", e.snoozeDurationMinutes)
+                .put("vibrationEnabled", e.vibrationEnabled)
+                .put("volume", e.volume)
                 .put("revision", e.revision)
                 .put("updatedAt", e.updatedAt)
                 .put("alarmToken", e.alarmToken))
