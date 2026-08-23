@@ -37,8 +37,13 @@ class AlarmSyncCoordinator @Inject constructor(
     fun start() {
         if (observationJob?.isActive == true) return
         observationJob = scope.launch {
-            alarmRepository.observeAll().collectLatest { alarms -> synchronizeSnapshot(alarms) }
+            alarmRepository.observeAll().collectLatest { alarms -> synchronizeSnapshot(alarms, force = false) }
         }
+    }
+
+    /** Force a complete phone -> Wear reconciliation, used when a peer connects or requests a snapshot. */
+    suspend fun syncNow() {
+        synchronizeSnapshot(alarmRepository.getAll(), force = true)
     }
 
     fun stop() { observationJob?.cancel(); observationJob = null }
@@ -50,7 +55,8 @@ class AlarmSyncCoordinator @Inject constructor(
         label: String,
         snoozeDurationMinutes: Int,
         vibrationEnabled: Boolean,
-        volume: Int
+        volume: Int,
+        repeatDays: Set<java.time.DayOfWeek> = emptySet()
     ): Result<Unit> = runCatching {
         val alarmId = preferences.getLong(alarmIdKey(syncId), 0L)
         require(alarmId != 0L) { "Unknown synchronized alarm: $syncId" }
@@ -63,7 +69,8 @@ class AlarmSyncCoordinator @Inject constructor(
                 label = label.take(120),
                 snoozeDurationMinutes = snoozeDurationMinutes.coerceIn(1, 60),
                 vibrationEnabled = vibrationEnabled,
-                volume = volume.coerceIn(0, 100)
+                volume = volume.coerceIn(0, 100),
+                repeatDays = repeatDays
             ).sanitized()
         )
         start()
@@ -146,7 +153,7 @@ class AlarmSyncCoordinator @Inject constructor(
         preferences.edit().putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), payload.timestamp).apply()
     }
 
-    private suspend fun synchronizeSnapshot(alarms: List<Alarm>) {
+    private suspend fun synchronizeSnapshot(alarms: List<Alarm>, force: Boolean) {
         val currentIds = alarms.map { it.id }.filter { it != 0L }.toSet()
         val previousIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet())?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet()
         transportProvider.transport().publishSnapshot(alarms)
@@ -155,12 +162,12 @@ class AlarmSyncCoordinator @Inject constructor(
             val syncId = ensureSyncId(alarm.id)
             val token = AlarmSyncCodec.create(alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, nextRevision(syncId)).alarmToken ?: continue
             val tokenHash = hash(token)
-            if (remoteSuppressions.remove(alarm.id) == tokenHash) {
+            if (!force && remoteSuppressions.remove(alarm.id) == tokenHash) {
                 preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply()
                 continue
             }
-            if (preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
-            val operation = if (preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
+            if (!force && preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
+            val operation = if (!force && preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
             val revision = nextRevision(syncId)
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision)
             val envelope = AlarmSyncEnvelope(
