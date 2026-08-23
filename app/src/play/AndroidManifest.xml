@@ -2,27 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
-    <service
-        android:name=".sync.PhoneWakeSyncListenerService"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-            <data android:scheme="wear" android:host="*" android:pathPrefix="/wakesync/" />
-        </intent-filter>
-    </service>
+    <application>
+        <service
+            android:name=".sync.PhoneWakeSyncListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/wakesync/" />
+            </intent-filter>
+        </service>
 
-    <service
-        android:name=".sync.WearActionListenerService"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-            <data android:scheme="wear" android:host="*" android:pathPrefix="/alarmclockxtreme/action/" />
-        </intent-filter>
-    </service>
+        <service
+            android:name=".sync.WearActionListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/alarmclockxtreme/action/" />
+            </intent-filter>
+        </service>
 
-    <provider
-        android:name=".sync.WakeSyncStartupProvider"
-        android:authorities="${applicationId}.wakesync.startup"
-        android:exported="false"
-        android:initOrder="100" />
+        <provider
+            android:name=".sync.WakeSyncStartupProvider"
+            android:authorities="${applicationId}.wakesync.startup"
+            android:exported="false"
+            android:initOrder="100" />
+    </application>
 </manifest>
