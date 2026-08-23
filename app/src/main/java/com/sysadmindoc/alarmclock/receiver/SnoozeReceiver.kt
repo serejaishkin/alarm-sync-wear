@@ -19,6 +19,14 @@ class SnoozeReceiver : BroadcastReceiver() {
         val fireId = intent.getStringExtra(AlarmScheduler.EXTRA_ALARM_FIRE_ID)
             ?: AlarmIncidentEvent.fireIdFor(alarmId, scheduledAt)
 
+        context.sendBroadcast(Intent("com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_ACTION").apply {
+            setPackage(context.packageName)
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, scheduledAt)
+            putExtra(AlarmScheduler.EXTRA_ALARM_FIRE_ID, fireId)
+            putExtra("operation", "SNOOZE")
+        })
+
         val serviceIntent = AlarmFireDismissContract.snoozeServiceIntent(context, alarmId, scheduledAt, fireId)
         try {
             context.startForegroundService(serviceIntent)
