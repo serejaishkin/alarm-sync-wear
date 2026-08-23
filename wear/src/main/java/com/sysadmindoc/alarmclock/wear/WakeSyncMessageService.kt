@@ -3,28 +3,25 @@ package com.sysadmindoc.alarmclock.wear
 import android.content.ComponentName
 import android.content.Context
 import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
+import org.json.JSONArray
 import org.json.JSONObject
 
 /** Applies phone-side WakeSync mutations to the local Wear alarm collection. */
 class WakeSyncMessageService : WearableListenerService() {
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path != PATH_MUTATION) return
-        val payload = runCatching {
-            JSONObject(String(messageEvent.data, Charsets.UTF_8))
-        }.getOrElse { return }
-
+        val payload = runCatching { JSONObject(String(messageEvent.data, Charsets.UTF_8)) }.getOrElse { return }
         val operation = payload.optString("operation")
         val syncId = payload.optString("syncId")
         if (syncId.isBlank()) return
 
         when (operation) {
             "CREATE", "UPDATE", "ENABLE", "DISABLE" -> {
-                val token = payload.optString("alarmToken", "")
-                val current = WearAlarmListStore.load(applicationContext)
-                    .firstOrNull { it.syncId == syncId }
+                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 val enabled = when (operation) {
                     "ENABLE" -> true
                     "DISABLE" -> false
@@ -38,9 +35,13 @@ class WakeSyncMessageService : WearableListenerService() {
                         hour = payload.optInt("hour", current?.hour ?: 0),
                         minute = payload.optInt("minute", current?.minute ?: 0),
                         enabled = enabled,
+                        repeatDays = parseRepeatDays(payload.optJSONArray("repeatDays"), current?.repeatDays ?: emptySet()),
+                        snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
+                        vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
+                        volume = payload.optInt("volume", current?.volume ?: 100),
                         revision = payload.optLong("revision", current?.revision ?: 0L),
                         updatedAt = payload.optLong("timestamp", System.currentTimeMillis()),
-                        alarmToken = if (token.isNotBlank()) token else current?.alarmToken.orEmpty()
+                        alarmToken = payload.optString("alarmToken").ifBlank { current?.alarmToken.orEmpty() }
                     )
                 )
             }
@@ -49,12 +50,16 @@ class WakeSyncMessageService : WearableListenerService() {
             else -> return
         }
 
-        // Keep the legacy single-alarm presentation in step with sync state.
         getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_LAST_PAYLOAD, payload.toString())
             .putLong(KEY_RECEIVED_AT, System.currentTimeMillis())
             .apply()
         requestUiRefresh()
+    }
+
+    private fun parseRepeatDays(array: JSONArray?, fallback: Set<Int>): Set<Int> {
+        if (array == null) return fallback
+        return buildSet { for (i in 0 until array.length()) add(array.optInt(i)) }
     }
 
     private fun requestUiRefresh() {
