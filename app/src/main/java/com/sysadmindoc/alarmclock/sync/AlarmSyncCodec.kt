@@ -8,9 +8,7 @@ import com.sysadmindoc.alarmclock.data.share.AlarmShareCodec
 object AlarmSyncCodec {
     private const val MAX_PAYLOAD_LENGTH = 32 * 1024
 
-    private val adapter = Moshi.Builder()
-        .build()
-        .adapter(AlarmSyncPayload::class.java)
+    private val adapter = Moshi.Builder().build().adapter(AlarmSyncPayload::class.java)
 
     fun encode(payload: AlarmSyncPayload): String {
         require(payload.syncId.isNotBlank()) { "syncId must not be blank" }
@@ -21,8 +19,7 @@ object AlarmSyncCodec {
     fun decode(encoded: String): Result<AlarmSyncPayload> = runCatching {
         require(encoded.isNotBlank()) { "Empty sync payload" }
         require(encoded.length <= MAX_PAYLOAD_LENGTH) { "Sync payload exceeds maximum size" }
-        val payload = adapter.fromJson(encoded)
-            ?: throw IllegalArgumentException("Invalid sync payload")
+        val payload = adapter.fromJson(encoded) ?: throw IllegalArgumentException("Invalid sync payload")
         require(payload.protocolVersion == AlarmSyncEnvelope.CURRENT_PROTOCOL_VERSION) {
             "Unsupported sync protocol ${payload.protocolVersion}"
         }
@@ -55,12 +52,15 @@ object AlarmSyncCodec {
             AlarmSyncOperation.ENABLE -> true
             AlarmSyncOperation.DISABLE -> false
             else -> alarm.isEnabled
-        }
+        },
+        repeatDays = alarm.repeatDays.map { it.value }.sorted(),
+        snoozeDurationMinutes = alarm.snoozeDurationMinutes,
+        vibrationEnabled = alarm.vibrationEnabled,
+        volume = alarm.volume
     )
 
     fun decodeAlarm(payload: AlarmSyncPayload): Result<Alarm> = runCatching {
-        val token = payload.alarmToken
-            ?: throw IllegalArgumentException("Sync operation has no alarm payload")
+        val token = payload.alarmToken ?: throw IllegalArgumentException("Sync operation has no alarm payload")
         AlarmShareCodec.decodeToken(token).getOrThrow()
     }
 }
