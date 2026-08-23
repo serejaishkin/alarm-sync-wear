@@ -23,6 +23,7 @@ import javax.inject.Singleton
 class AlarmSyncCoordinator @Inject constructor(
     @ApplicationContext private val context: Context,
     private val alarmRepository: AlarmRepository,
+    private val alarmScheduler: AlarmScheduler,
     private val transportProvider: AlarmSyncTransportProvider
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -68,7 +69,7 @@ class AlarmSyncCoordinator @Inject constructor(
         val alarmId = preferences.getLong(alarmIdKey(syncId), 0L)
         require(alarmId != 0L) { "Unknown synchronized alarm: $syncId" }
         val current = alarmRepository.getById(alarmId) ?: error("Alarm $alarmId no longer exists")
-        alarmRepository.update(current.copy(
+        val updated = current.copy(
             hour = hour.coerceIn(0, 23),
             minute = minute.coerceIn(0, 59),
             label = label.take(120),
@@ -77,7 +78,14 @@ class AlarmSyncCoordinator @Inject constructor(
             volume = volume.coerceIn(0, 100),
             repeatDays = repeatDays,
             nextTriggerTime = 0L
-        ).sanitized())
+        ).sanitized()
+        alarmRepository.update(updated)
+
+        // A Wear edit is a real alarm edit, not merely a database mutation.
+        // Re-arm/cancel AlarmManager immediately so the phone uses the new
+        // time/repeat settings even when the normal UI is not open.
+        alarmScheduler.schedule(updated, requestWidgetUpdate = true)
+
         start()
     }
 
@@ -98,7 +106,7 @@ class AlarmSyncCoordinator @Inject constructor(
                 val incoming = AlarmSyncCodec.decodeAlarm(payload).getOrThrow()
                 val existingId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
                 val savedId = if (existingId != 0L && alarmRepository.getById(existingId) != null) {
-                    alarmRepository.update(incoming.copy(
+                    val updated = incoming.copy(
                         id = existingId,
                         isEnabled = when (payload.operation) {
                             AlarmSyncOperation.ENABLE -> true
@@ -106,10 +114,16 @@ class AlarmSyncCoordinator @Inject constructor(
                             else -> incoming.isEnabled
                         },
                         nextTriggerTime = 0L
-                    ).sanitized())
+                    ).sanitized()
+                    alarmRepository.update(updated)
+                    alarmScheduler.schedule(updated, requestWidgetUpdate = true)
                     existingId
                 } else {
-                    alarmRepository.save(incoming.copy(id = 0L, nextTriggerTime = 0L).sanitized())
+                    val newAlarm = incoming.copy(id = 0L, nextTriggerTime = 0L).sanitized()
+                    val newId = alarmRepository.save(newAlarm)
+                    val savedAlarm = alarmRepository.getById(newId)
+                    if (savedAlarm != null) alarmScheduler.schedule(savedAlarm, requestWidgetUpdate = true)
+                    newId
                 }
                 rememberIdentity(payload.syncId, savedId, payload.revision, payload.timestamp, payload.alarmToken)
                 payload.alarmToken?.let { remoteSuppressions[savedId] = hash(it) }
@@ -143,8 +157,10 @@ class AlarmSyncCoordinator @Inject constructor(
         when (operation) {
             AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
             AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
-            AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE ->
+            AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
                 alarmRepository.setEnabled(alarmId, operation == AlarmSyncOperation.ENABLE, 0L)
+                alarmRepository.getById(alarmId)?.let { alarmScheduler.schedule(it, requestWidgetUpdate = true) }
+            }
             else -> Unit
         }
         preferences.edit().putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), payload.timestamp).apply()
