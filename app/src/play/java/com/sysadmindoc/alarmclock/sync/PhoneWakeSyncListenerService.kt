@@ -18,7 +18,6 @@ import org.json.JSONObject
 import java.time.DayOfWeek
 import javax.inject.Inject
 
-/** Receives mutations and reconciliation requests initiated by the Wear peer. */
 @AndroidEntryPoint
 class PhoneWakeSyncListenerService : WearableListenerService() {
     @Inject lateinit var coordinator: AlarmSyncCoordinator
@@ -45,7 +44,6 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         }
     }
 
-    /** Realtime controls bypass snapshot revision ordering. */
     private fun handleWearAlarmCommand(syncId: String, action: String) {
         val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getLong("alarm_id_$syncId", 0L)
@@ -61,17 +59,26 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         runCatching {
             val json = JSONObject(raw)
             require(json.optString("operation") == "CREATE_REQUEST")
+            val syncId = json.optString("syncId").takeIf { it.isNotBlank() }
+                ?: throw IllegalArgumentException("Wear create request has no syncId")
             val alarm = Alarm(
                 hour = json.optInt("hour", 7).coerceIn(0, 23),
                 minute = json.optInt("minute", 0).coerceIn(0, 59),
                 label = json.optString("label").take(120),
-                isEnabled = true,
+                isEnabled = json.optBoolean("enabled", true),
                 repeatDays = parseRepeatDays(json.optJSONArray("repeatDays")),
                 vibrationEnabled = json.optBoolean("vibrationEnabled", true),
                 volume = json.optInt("volume", 100).coerceIn(0, 100),
                 snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60)
             )
-            alarmRepository.save(alarm)
+            val alarmId = alarmRepository.save(alarm)
+            coordinator.registerWearCreatedAlarm(
+                syncId = syncId,
+                alarmId = alarmId,
+                revision = json.optLong("revision", 1L),
+                timestamp = System.currentTimeMillis(),
+                alarmToken = json.optString("alarmToken").ifBlank { null }
+            )
             coordinator.start()
             coordinator.syncNow()
         }
@@ -81,8 +88,9 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         runCatching {
             val json = JSONObject(raw)
             require(json.optString("operation") == "UPDATE_REQUEST")
+            val syncId = json.getString("syncId")
             coordinator.updateFromWear(
-                syncId = json.getString("syncId"),
+                syncId = syncId,
                 hour = json.optInt("hour", 7),
                 minute = json.optInt("minute", 0),
                 label = json.optString("label"),
