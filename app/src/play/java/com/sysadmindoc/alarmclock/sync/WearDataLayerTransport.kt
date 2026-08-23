@@ -34,28 +34,25 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
-    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> =
-        publishDataItem(alarms, emptyMap())
+    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(alarms, emptyMap())
 
     override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
         publishDataItem(entries.map { it.alarm }, entries.associate { it.alarm.id to it.syncId })
 
-    private suspend fun publishDataItem(
-        alarms: List<Alarm>,
-        syncIds: Map<Long, String>
-    ): Result<Unit> = runCatching {
+    private suspend fun publishDataItem(alarms: List<Alarm>, syncIds: Map<Long, String>): Result<Unit> = runCatching {
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
         alarms.filter { it.id != 0L }.forEach { item ->
             val syncId = syncIds[item.id] ?: "snapshot-${item.id}"
             val token = com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)
+            val repeatDays = JSONArray().also { array -> item.repeatDays.map { it.value }.sorted().forEach(array::put) }
             list.put(JSONObject()
                 .put("syncId", syncId)
                 .put("label", item.label)
                 .put("hour", item.hour)
                 .put("minute", item.minute)
                 .put("enabled", item.isEnabled)
-                .put("repeatDays", JSONArray(item.repeatDays.map { it.value }.sorted()))
+                .put("repeatDays", repeatDays)
                 .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
                 .put("vibrationEnabled", item.vibrationEnabled)
                 .put("volume", item.volume)
