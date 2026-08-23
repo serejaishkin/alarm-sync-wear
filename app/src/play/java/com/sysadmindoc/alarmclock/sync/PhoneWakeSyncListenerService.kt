@@ -27,13 +27,13 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         when (messageEvent.path) {
             AlarmSyncTransportPaths.ALARM_MUTATION -> {
                 val encoded = messageEvent.data.toString(Charsets.UTF_8)
-                scope.launch {
-                    AlarmSyncCodec.decode(encoded).onSuccess { coordinator.applyRemote(it) }
-                }
+                scope.launch { AlarmSyncCodec.decode(encoded).onSuccess { coordinator.applyRemote(it) } }
             }
-            "/wakesync/alarm/create_request" -> {
-                val raw = messageEvent.data.toString(Charsets.UTF_8)
-                scope.launch { createFromWear(raw) }
+            PATH_CREATE_REQUEST -> {
+                scope.launch { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
+            }
+            PATH_UPDATE_REQUEST -> {
+                scope.launch { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
             }
         }
     }
@@ -42,13 +42,12 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         runCatching {
             val json = JSONObject(raw)
             require(json.optString("operation") == "CREATE_REQUEST")
-            val repeatDays = parseRepeatDays(json.optJSONArray("repeatDays"))
             val alarm = Alarm(
                 hour = json.optInt("hour", 7).coerceIn(0, 23),
                 minute = json.optInt("minute", 0).coerceIn(0, 59),
                 label = json.optString("label").take(120),
                 isEnabled = true,
-                repeatDays = repeatDays,
+                repeatDays = parseRepeatDays(json.optJSONArray("repeatDays")),
                 vibrationEnabled = json.optBoolean("vibrationEnabled", true),
                 volume = json.optInt("volume", 100).coerceIn(0, 100),
                 snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60)
@@ -58,25 +57,38 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         }
     }
 
+    private suspend fun updateFromWear(raw: String) {
+        runCatching {
+            val json = JSONObject(raw)
+            require(json.optString("operation") == "UPDATE_REQUEST")
+            coordinator.updateFromWear(
+                syncId = json.getString("syncId"),
+                hour = json.optInt("hour", 7),
+                minute = json.optInt("minute", 0),
+                label = json.optString("label"),
+                snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10),
+                vibrationEnabled = json.optBoolean("vibrationEnabled", true),
+                volume = json.optInt("volume", 100)
+            ).getOrThrow()
+        }
+    }
+
     private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> {
         if (array == null) return emptySet()
         return buildSet {
             for (i in 0 until array.length()) {
                 when (array.optInt(i, 0)) {
-                    1 -> add(DayOfWeek.MONDAY)
-                    2 -> add(DayOfWeek.TUESDAY)
-                    3 -> add(DayOfWeek.WEDNESDAY)
-                    4 -> add(DayOfWeek.THURSDAY)
-                    5 -> add(DayOfWeek.FRIDAY)
-                    6 -> add(DayOfWeek.SATURDAY)
-                    7 -> add(DayOfWeek.SUNDAY)
+                    1 -> add(DayOfWeek.MONDAY); 2 -> add(DayOfWeek.TUESDAY); 3 -> add(DayOfWeek.WEDNESDAY)
+                    4 -> add(DayOfWeek.THURSDAY); 5 -> add(DayOfWeek.FRIDAY); 6 -> add(DayOfWeek.SATURDAY); 7 -> add(DayOfWeek.SUNDAY)
                 }
             }
         }
     }
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
+    override fun onDestroy() { scope.cancel(); super.onDestroy() }
+
+    companion object {
+        const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
+        const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
     }
 }
