@@ -1,9 +1,12 @@
 package com.sysadmindoc.alarmclock.sync
 
+import android.content.Intent
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
+import com.sysadmindoc.alarmclock.domain.AlarmScheduler
+import com.sysadmindoc.alarmclock.service.AlarmService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,12 +30,30 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         when (messageEvent.path) {
             AlarmSyncTransportPaths.ALARM_MUTATION -> {
                 val encoded = messageEvent.data.toString(Charsets.UTF_8)
-                scope.launch { AlarmSyncCodec.decode(encoded).onSuccess { coordinator.applyRemote(it) } }
+                scope.launch {
+                    val decoded = AlarmSyncCodec.decode(encoded).getOrNull() ?: return@launch
+                    when (decoded.operation) {
+                        AlarmSyncOperation.SNOOZE -> handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE)
+                        AlarmSyncOperation.DISMISS -> handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_DISMISS)
+                        else -> coordinator.applyRemote(decoded)
+                    }
+                }
             }
             PATH_CREATE_REQUEST -> scope.launch { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
             PATH_UPDATE_REQUEST -> scope.launch { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
             PATH_REQUEST_SNAPSHOT -> scope.launch { coordinator.syncNow() }
         }
+    }
+
+    /** Control commands bypass snapshot revision ordering and act on the current phone alarm. */
+    private fun handleWearAlarmCommand(syncId: String, action: String) {
+        val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
+        if (alarmId == 0L) return
+        startService(Intent(this, AlarmService::class.java).apply {
+            this.action = action
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, System.currentTimeMillis())
+        })
     }
 
     private suspend fun createFromWear(raw: String) {
@@ -93,6 +114,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     override fun onDestroy() { scope.cancel(); super.onDestroy() }
 
     companion object {
+        private const val PREFS_NAME = "wakesync_state"
         const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
         const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
