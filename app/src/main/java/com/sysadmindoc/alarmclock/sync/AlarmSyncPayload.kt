@@ -17,5 +17,9 @@ data class AlarmSyncPayload(
     val hour: Int? = null,
     val minute: Int? = null,
     val label: String? = null,
-    val enabled: Boolean? = null
+    val enabled: Boolean? = null,
+    val repeatDays: List<Int> = emptyList(),
+    val snoozeDurationMinutes: Int = 10,
+    val vibrationEnabled: Boolean = true,
+    val volume: Int = 100
 )
