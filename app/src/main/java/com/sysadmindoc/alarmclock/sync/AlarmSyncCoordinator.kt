@@ -156,7 +156,11 @@ class AlarmSyncCoordinator @Inject constructor(
     private suspend fun synchronizeSnapshot(alarms: List<Alarm>, force: Boolean) {
         val currentIds = alarms.map { it.id }.filter { it != 0L }.toSet()
         val previousIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet())?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet()
-        transportProvider.transport().publishSnapshot(alarms)
+        val snapshotEntries = alarms.filter { it.id != 0L }.map { alarm ->
+            val syncId = ensureSyncId(alarm.id)
+            AlarmSyncSnapshotEntry(alarm, syncId, preferences.getLong(revisionKey(syncId), 0L))
+        }
+        transportProvider.transport().publishFullSnapshot(snapshotEntries)
         for (alarm in alarms) {
             if (alarm.id == 0L) continue
             val syncId = ensureSyncId(alarm.id)
