@@ -33,6 +33,16 @@ class AlarmReceiver : BroadcastReceiver() {
             )
         )
 
+        // The phone alarm is authoritative only for its own local playback.
+        // This broadcast is a best-effort sync trigger; the Wear alarm remains
+        // fully local and continues to fire when the peer is disconnected.
+        context.sendBroadcast(Intent("com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_FIRED").apply {
+            setPackage(context.packageName)
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, scheduledAt)
+            putExtra(AlarmScheduler.EXTRA_ALARM_FIRE_ID, fireId)
+        })
+
         val serviceIntent = AlarmFireDismissContract.startServiceIntent(context, alarmId, scheduledAt, fireId)
         val deliveryWakeLock = AlarmDeliveryWakeLock.acquire(context)
         var serviceStartSucceeded = false
@@ -49,10 +59,6 @@ class AlarmReceiver : BroadcastReceiver() {
                 source = "AlarmReceiver"
             )
         } catch (e: Exception) {
-            // ForegroundServiceStartNotAllowedException (API 31+) when the app is
-            // background-restricted at the exact moment AlarmManager wakes it.
-            // The AlarmManager exact-alarm guarantee means this is extremely rare;
-            // log for diagnostics and let the system handle retries.
             Log.e("AlarmReceiver", "startForegroundService failed for alarm $alarmId", e)
             incidents += ReceiverAlarmIncident(
                 alarmId = alarmId,
