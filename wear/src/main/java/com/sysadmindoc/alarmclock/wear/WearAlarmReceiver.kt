@@ -22,7 +22,11 @@ class WearAlarmReceiver : BroadcastReceiver() {
         val entry = WearAlarmListStore.load(context).firstOrNull { it.syncId == syncId } ?: return
         if (!entry.enabled) return
 
+        // Local first: the watch starts its own feedback immediately and does
+        // not wait for Bluetooth/Wear Data Layer. If a peer is connected,
+        // this event is mirrored to the phone in parallel.
         WearAlarmFeedbackService.start(context, syncId, entry.label)
+        WakeSyncPeerController.sendMutation(context, "RINGING", syncId, entry.alarmToken)
 
         val firing = Intent(context, WearAlarmFiringActivity::class.java).apply {
             putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
