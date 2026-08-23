@@ -4,12 +4,7 @@ import com.squareup.moshi.Moshi
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.share.AlarmShareCodec
 
-/**
- * Encodes and decodes the transport-neutral WakeSync payload.
- *
- * AlarmShareCodec remains the single source of truth for Alarm serialization;
- * this codec only wraps it with synchronization metadata.
- */
+/** Encodes and decodes the transport-neutral WakeSync payload. */
 object AlarmSyncCodec {
     private const val MAX_PAYLOAD_LENGTH = 32 * 1024
 
@@ -25,9 +20,7 @@ object AlarmSyncCodec {
 
     fun decode(encoded: String): Result<AlarmSyncPayload> = runCatching {
         require(encoded.isNotBlank()) { "Empty sync payload" }
-        require(encoded.length <= MAX_PAYLOAD_LENGTH) {
-            "Sync payload exceeds maximum size"
-        }
+        require(encoded.length <= MAX_PAYLOAD_LENGTH) { "Sync payload exceeds maximum size" }
         val payload = adapter.fromJson(encoded)
             ?: throw IllegalArgumentException("Invalid sync payload")
         require(payload.protocolVersion == AlarmSyncEnvelope.CURRENT_PROTOCOL_VERSION) {
@@ -54,6 +47,14 @@ object AlarmSyncCodec {
         alarmToken = when (operation) {
             AlarmSyncOperation.DELETE -> null
             else -> AlarmShareCodec.encodeToken(alarm)
+        },
+        hour = alarm.hour,
+        minute = alarm.minute,
+        label = alarm.label,
+        enabled = when (operation) {
+            AlarmSyncOperation.ENABLE -> true
+            AlarmSyncOperation.DISABLE -> false
+            else -> alarm.isEnabled
         }
     )
 
