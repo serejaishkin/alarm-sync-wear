@@ -2,6 +2,7 @@ package com.sysadmindoc.alarmclock.wear
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import androidx.wear.tiles.TileService
@@ -17,9 +18,10 @@ class WakeSyncMessageService : WearableListenerService() {
         val syncId = payload.optString("syncId")
         if (syncId.isBlank()) return
 
+        val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
+
         when (operation) {
             "CREATE", "UPDATE", "ENABLE", "DISABLE" -> {
-                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 val enabled = when (operation) {
                     "ENABLE" -> true
                     "DISABLE" -> false
@@ -50,7 +52,19 @@ class WakeSyncMessageService : WearableListenerService() {
                 )
             }
             "DELETE" -> WearAlarmListStore.remove(applicationContext, syncId)
-            "RINGING", "DISMISS", "SNOOZE" -> Unit
+            "SNOOZE" -> {
+                if (current != null) {
+                    WearAlarmScheduler.scheduleSnooze(applicationContext, current, current.snoozeDurationMinutes)
+                    notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_SNOOZE)
+                }
+            }
+            "DISMISS" -> {
+                if (current != null) {
+                    WearAlarmScheduler.rescheduleAfterDismiss(applicationContext, current)
+                    notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
+                }
+            }
+            "RINGING" -> Unit
             else -> return
         }
 
@@ -59,6 +73,16 @@ class WakeSyncMessageService : WearableListenerService() {
             .putLong(KEY_RECEIVED_AT, System.currentTimeMillis())
             .apply()
         requestUiRefresh()
+    }
+
+    private fun notifyActiveFiringActivity(syncId: String, action: String) {
+        if (WearAlarmFiringActivity.activeSyncId != syncId) return
+        val intent = Intent(applicationContext, WearAlarmFiringActivity::class.java).apply {
+            this.action = action
+            putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        runCatching { applicationContext.startActivity(intent) }
     }
 
     private fun requestUiRefresh() {
