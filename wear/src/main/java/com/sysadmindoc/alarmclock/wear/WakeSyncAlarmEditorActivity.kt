@@ -14,6 +14,7 @@ import android.widget.TextView
 import com.google.android.gms.wearable.Wearable
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 
 class WakeSyncAlarmEditorActivity : Activity() {
     private lateinit var hour: NumberPicker
@@ -89,8 +90,9 @@ class WakeSyncAlarmEditorActivity : Activity() {
         repeatChecks.forEachIndexed { index, check -> if (check.isChecked) array.put(index + 1) }
     }
 
-    private fun commonJson(operation: String): JSONObject = JSONObject()
+    private fun commonJson(operation: String, id: String): JSONObject = JSONObject()
         .put("operation", operation)
+        .put("syncId", id)
         .put("hour", hour.value)
         .put("minute", minute.value)
         .put("label", label.text.toString().trim())
@@ -98,13 +100,49 @@ class WakeSyncAlarmEditorActivity : Activity() {
         .put("snoozeDurationMinutes", snooze.value)
         .put("vibrationEnabled", vibration.isChecked)
         .put("volume", volume.progress)
+        .put("enabled", true)
 
     private fun sendCreate() {
-        send(PATH_CREATE_REQUEST, commonJson("CREATE_REQUEST").toString().toByteArray(Charsets.UTF_8))
+        val id = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+        val entry = WearAlarmListStore.Entry(
+            syncId = id,
+            label = label.text.toString().trim(),
+            hour = hour.value,
+            minute = minute.value,
+            enabled = true,
+            repeatDays = repeatChecks.mapIndexedNotNull { index, check -> if (check.isChecked) index + 1 else null }.toSet(),
+            snoozeDurationMinutes = snooze.value,
+            vibrationEnabled = vibration.isChecked,
+            volume = volume.progress,
+            revision = 1L,
+            updatedAt = now,
+            alarmToken = UUID.randomUUID().toString()
+        )
+        WearAlarmListStore.upsert(this, entry)
+        send(PATH_CREATE_REQUEST, commonJson("CREATE_REQUEST", id).put("alarmToken", entry.alarmToken).put("revision", 1L).toString().toByteArray(Charsets.UTF_8))
     }
 
     private fun sendUpdate() {
-        send(PATH_UPDATE_REQUEST, commonJson("UPDATE_REQUEST").put("syncId", syncId).toString().toByteArray(Charsets.UTF_8))
+        val id = syncId ?: return
+        val current = WearAlarmListStore.load(this).firstOrNull { it.syncId == id }
+        val revision = (current?.revision ?: 0L) + 1L
+        val updated = current?.copy(
+            hour = hour.value,
+            minute = minute.value,
+            label = label.text.toString().trim(),
+            repeatDays = repeatChecks.mapIndexedNotNull { index, check -> if (check.isChecked) index + 1 else null }.toSet(),
+            snoozeDurationMinutes = snooze.value,
+            vibrationEnabled = vibration.isChecked,
+            volume = volume.progress,
+            revision = revision,
+            updatedAt = System.currentTimeMillis()
+        )
+        if (updated != null) WearAlarmListStore.upsert(this, updated)
+        send(PATH_UPDATE_REQUEST, commonJson("UPDATE_REQUEST", id)
+            .put("alarmToken", updated?.alarmToken.orEmpty())
+            .put("revision", revision)
+            .toString().toByteArray(Charsets.UTF_8))
     }
 
     private fun send(path: String, payload: ByteArray) {
