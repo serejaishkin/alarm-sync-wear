@@ -60,7 +60,24 @@ class WearAlarmFiringActivity : ComponentActivity() {
         root.addView(dismiss)
         setContentView(root)
 
-        startAlarmFeedback(entry)
+        activeSyncId = syncId
+        if (intent.action != ACTION_REMOTE_SNOOZE && intent.action != ACTION_REMOTE_DISMISS) {
+            startAlarmFeedback(entry)
+        } else {
+            finish()
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        if (intent == null) return
+        setIntent(intent)
+        when (intent.action) {
+            ACTION_REMOTE_SNOOZE, ACTION_REMOTE_DISMISS -> {
+                stopFeedback()
+                finish()
+            }
+        }
     }
 
     private fun startAlarmFeedback(entry: WearAlarmListStore.Entry) {
@@ -101,10 +118,14 @@ class WearAlarmFiringActivity : ComponentActivity() {
 
     override fun onDestroy() {
         stopFeedback()
+        if (activeSyncId == syncId) activeSyncId = null
         super.onDestroy()
     }
 
     companion object {
         const val EXTRA_SYNC_ID = "syncId"
+        const val ACTION_REMOTE_SNOOZE = "com.sysadmindoc.alarmclock.wear.REMOTE_SNOOZE"
+        const val ACTION_REMOTE_DISMISS = "com.sysadmindoc.alarmclock.wear.REMOTE_DISMISS"
+        @Volatile var activeSyncId: String? = null
     }
 }
