@@ -7,6 +7,7 @@ import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
 import com.sysadmindoc.alarmclock.service.AlarmService
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,7 +21,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AlarmSyncCoordinator @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val alarmRepository: AlarmRepository,
     private val transportProvider: AlarmSyncTransportProvider
 ) {
