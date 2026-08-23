@@ -21,6 +21,10 @@
             </intent-filter>
         </service>
 
+        <receiver
+            android:name=".sync.PhoneLocalAlarmTriggerReceiver"
+            android:exported="false" />
+
         <provider
             android:name=".sync.WakeSyncStartupProvider"
             android:authorities="${applicationId}.wakesync.startup"
