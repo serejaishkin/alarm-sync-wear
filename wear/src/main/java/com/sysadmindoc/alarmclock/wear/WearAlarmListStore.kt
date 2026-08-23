@@ -2,8 +2,8 @@ package com.sysadmindoc.alarmclock.wear
 
 import android.content.Context
 import androidx.core.content.edit
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import org.json.JSONArray
+import org.json.JSONObject
 
 /** Local peer-side collection. The watch keeps the same logical sync IDs as the phone. */
 object WearAlarmListStore {
@@ -21,25 +21,51 @@ object WearAlarmListStore {
         val alarmToken: String
     )
 
-    private val moshi = Moshi.Builder().build()
-    private val type = Types.newParameterizedType(List::class.java, Entry::class.java)
-    private val adapter = moshi.adapter<List<Entry>>(type)
-
     fun load(context: Context): List<Entry> {
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY_ALARMS, null) ?: return emptyList()
-        return runCatching { adapter.fromJson(raw).orEmpty() }.getOrDefault(emptyList())
+        return runCatching {
+            val array = JSONArray(raw)
+            buildList(array.length()) {
+                for (i in 0 until array.length()) {
+                    val o = array.getJSONObject(i)
+                    add(
+                        Entry(
+                            syncId = o.optString("syncId"),
+                            label = o.optString("label"),
+                            hour = o.optInt("hour"),
+                            minute = o.optInt("minute"),
+                            enabled = o.optBoolean("enabled", true),
+                            revision = o.optLong("revision"),
+                            updatedAt = o.optLong("updatedAt"),
+                            alarmToken = o.optString("alarmToken")
+                        )
+                    )
+                }
+            }
+        }.getOrDefault(emptyList())
     }
 
     fun save(context: Context, entries: List<Entry>) {
+        val array = JSONArray()
+        entries.sortedBy { it.hour * 60 + it.minute }.forEach { e ->
+            array.put(JSONObject()
+                .put("syncId", e.syncId)
+                .put("label", e.label)
+                .put("hour", e.hour)
+                .put("minute", e.minute)
+                .put("enabled", e.enabled)
+                .put("revision", e.revision)
+                .put("updatedAt", e.updatedAt)
+                .put("alarmToken", e.alarmToken))
+        }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
-            putString(KEY_ALARMS, adapter.toJson(entries.sortedBy { it.hour * 60 + it.minute }))
+            putString(KEY_ALARMS, array.toString())
         }
     }
 
     fun upsert(context: Context, entry: Entry) {
-        val current = load(context).filterNot { it.syncId == entry.syncId }
-        save(context, current + entry)
+        save(context, load(context).filterNot { it.syncId == entry.syncId } + entry)
     }
 
     fun remove(context: Context, syncId: String) {
