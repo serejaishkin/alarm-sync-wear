@@ -8,6 +8,8 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -32,9 +34,27 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
-    /** Keeps Tile/complication compatibility while alarm mutations carry the full list. */
+    /** Publishes both the next-alarm presentation and the complete peer collection. */
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = runCatching {
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
+        val list = JSONArray()
+        alarms.filter { it.id != 0L }.forEach { item ->
+            val syncId = "snapshot-${item.id}"
+            val token = com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)
+            list.put(JSONObject()
+                .put("syncId", syncId)
+                .put("label", item.label)
+                .put("hour", item.hour)
+                .put("minute", item.minute)
+                .put("enabled", item.isEnabled)
+                .put("repeatDays", JSONArray(item.repeatDays.map { it.value }.sorted()))
+                .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
+                .put("vibrationEnabled", item.vibrationEnabled)
+                .put("volume", item.volume)
+                .put("revision", item.nextTriggerTime)
+                .put("updatedAt", System.currentTimeMillis())
+                .put("alarmToken", token))
+        }
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
             dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             dataMap.putBoolean(KEY_HAS_ALARM, alarm != null)
@@ -44,6 +64,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             dataMap.putLong(KEY_TRIGGER_TIME, alarm?.nextTriggerTime ?: 0L)
             dataMap.putString(KEY_TIMEZONE_POLICY, alarm?.timezonePolicy ?: "LOCAL")
             dataMap.putString(KEY_FIXED_TIMEZONE_ID, alarm?.fixedTimezoneId.orEmpty())
+            dataMap.putString(KEY_ALARM_LIST, list.toString())
         }
         awaitPutDataItem(request.asPutDataRequest().setUrgent())
     }
@@ -70,6 +91,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     companion object {
         const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
         const val PATH_ALARM_SNAPSHOT = "/wakesync/alarm/snapshot"
+        const val KEY_ALARM_LIST = "alarm_list"
         private const val KEY_HAS_ALARM = "has_alarm"
         private const val KEY_ALARM_ID = "alarm_id"
         private const val KEY_LABEL = "label"
