@@ -29,6 +29,14 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".sync.PhoneLocalAlarmActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_ACTION" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name=".sync.WakeSyncStartupProvider"
             android:authorities="${applicationId}.wakesync.startup"
