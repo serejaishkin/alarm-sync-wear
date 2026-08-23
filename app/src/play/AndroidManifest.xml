@@ -23,7 +23,11 @@
 
         <receiver
             android:name=".sync.PhoneLocalAlarmTriggerReceiver"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_FIRED" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name=".sync.WakeSyncStartupProvider"
