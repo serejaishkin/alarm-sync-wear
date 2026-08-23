@@ -32,10 +32,18 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
+    /** Keeps Tile/complication compatibility while alarm mutations carry the full list. */
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = runCatching {
+        val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
             dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
-            dataMap.putString(KEY_SNAPSHOT, AlarmSyncCodec.encodeSnapshot(alarms))
+            dataMap.putBoolean(KEY_HAS_ALARM, alarm != null)
+            dataMap.putLong(KEY_ALARM_ID, alarm?.id ?: -1L)
+            dataMap.putString(KEY_LABEL, alarm?.label.orEmpty())
+            dataMap.putString(KEY_TIME_LABEL, alarm?.time?.toString().orEmpty())
+            dataMap.putLong(KEY_TRIGGER_TIME, alarm?.nextTriggerTime ?: 0L)
+            dataMap.putString(KEY_TIMEZONE_POLICY, alarm?.timezonePolicy ?: "LOCAL")
+            dataMap.putString(KEY_FIXED_TIMEZONE_ID, alarm?.fixedTimezoneId.orEmpty())
         }
         awaitPutDataItem(request.asPutDataRequest().setUrgent())
     }
@@ -62,7 +70,13 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     companion object {
         const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
         const val PATH_ALARM_SNAPSHOT = "/wakesync/alarm/snapshot"
+        private const val KEY_HAS_ALARM = "has_alarm"
+        private const val KEY_ALARM_ID = "alarm_id"
+        private const val KEY_LABEL = "label"
+        private const val KEY_TIME_LABEL = "time_label"
+        private const val KEY_TRIGGER_TIME = "trigger_time"
         private const val KEY_UPDATED_AT = "updated_at"
-        private const val KEY_SNAPSHOT = "snapshot"
+        private const val KEY_TIMEZONE_POLICY = "timezone_policy"
+        private const val KEY_FIXED_TIMEZONE_ID = "fixed_timezone_id"
     }
 }
