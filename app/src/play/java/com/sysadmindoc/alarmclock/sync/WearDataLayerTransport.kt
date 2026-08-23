@@ -32,16 +32,13 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         nodes.forEach { node -> awaitSendMessage(node, payload) }
     }
 
-    suspend fun publishAlarms(alarms: List<Alarm>): Result<Unit> = runCatching {
+    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = runCatching {
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
             dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             dataMap.putString(KEY_SNAPSHOT, AlarmSyncCodec.encodeSnapshot(alarms))
         }
         awaitPutDataItem(request.asPutDataRequest().setUrgent())
     }
-
-    override suspend fun publishSnapshot(alarm: Alarm?): Result<Unit> =
-        publishAlarms(alarm?.let(::listOf).orEmpty())
 
     private suspend fun awaitConnectedNodes(): List<Node> = suspendCancellableCoroutine { c ->
         Wearable.getNodeClient(appContext).connectedNodes
@@ -55,8 +52,8 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
 
-    private suspend fun awaitPutDataItem(request: com.google.android.gms.wearable.PutDataRequest): com.google.android.gms.wearable.DataItem =
-        suspendCancellableCoroutine { c ->
+    private suspend fun awaitPutDataItem(request: com.google.android.gms.wearable.PutDataRequest) =
+        suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
             Wearable.getDataClient(appContext).putDataItem(request)
                 .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
                 .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
@@ -65,7 +62,6 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     companion object {
         const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
         const val PATH_ALARM_SNAPSHOT = "/wakesync/alarm/snapshot"
-        const val PATH_NEXT_ALARM = PATH_ALARM_SNAPSHOT
         private const val KEY_UPDATED_AT = "updated_at"
         private const val KEY_SNAPSHOT = "snapshot"
     }
