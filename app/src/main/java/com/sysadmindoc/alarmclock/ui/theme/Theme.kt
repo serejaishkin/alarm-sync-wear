@@ -38,40 +38,40 @@ data class AppShapeTokens(
     val bottomNav: Shape
 )
 
-// Material 3 / Google Clock inspired geometry: large, soft surfaces rather
-// than the old almost-square 8dp cards. Personal accent colours are untouched.
+// WakeSync aesthetic: inspired by the calm, spacious geometry of Google Clock,
+// while keeping our own colours, hierarchy and functionality.
 private val StandardShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(20.dp),
-    tile = RoundedCornerShape(18.dp),
+    card = RoundedCornerShape(24.dp),
+    tile = RoundedCornerShape(20.dp),
     chip = RoundedCornerShape(50),
-    iconContainer = RoundedCornerShape(16.dp),
-    bottomNav = RoundedCornerShape(28.dp)
+    iconContainer = RoundedCornerShape(18.dp),
+    bottomNav = RoundedCornerShape(32.dp)
 )
 
 private val ExpressiveShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(24.dp),
-    tile = RoundedCornerShape(22.dp),
+    card = RoundedCornerShape(28.dp),
+    tile = RoundedCornerShape(24.dp),
     chip = RoundedCornerShape(50),
-    iconContainer = RoundedCornerShape(18.dp),
-    bottomNav = RoundedCornerShape(30.dp)
+    iconContainer = RoundedCornerShape(20.dp),
+    bottomNav = RoundedCornerShape(34.dp)
 )
 
 val LocalAppShapeTokens = compositionLocalOf { StandardShapeTokens }
 
 private val AppShapes = Shapes(
     extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(14.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(28.dp)
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(24.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp)
 )
 
 private val ExpressiveMaterialShapes = Shapes(
     extraSmall = RoundedCornerShape(12.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(22.dp),
-    large = RoundedCornerShape(26.dp),
-    extraLarge = RoundedCornerShape(30.dp)
+    small = RoundedCornerShape(18.dp),
+    medium = RoundedCornerShape(26.dp),
+    large = RoundedCornerShape(30.dp),
+    extraLarge = RoundedCornerShape(34.dp)
 )
 
 private val DarkColorScheme = darkColorScheme(
