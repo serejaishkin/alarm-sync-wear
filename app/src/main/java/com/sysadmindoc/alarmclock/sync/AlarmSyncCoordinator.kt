@@ -41,12 +41,28 @@ class AlarmSyncCoordinator @Inject constructor(
         }
     }
 
-    /** Force a complete phone -> Wear reconciliation, used when a peer connects or requests a snapshot. */
     suspend fun syncNow() {
         synchronizeSnapshot(alarmRepository.getAll(), force = true)
     }
 
     fun stop() { observationJob?.cancel(); observationJob = null }
+
+    /** Registers an alarm created on Wear before the first phone snapshot is published. */
+    suspend fun registerWearCreatedAlarm(
+        syncId: String,
+        alarmId: Long,
+        revision: Long,
+        timestamp: Long,
+        alarmToken: String?
+    ) {
+        require(syncId.isNotBlank())
+        require(alarmId > 0L)
+        rememberIdentity(syncId, alarmId, revision, timestamp, alarmToken)
+        preferences.edit().putString(KEY_KNOWN_ALARM_IDS, buildSet {
+            addAll(preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty())
+            add(alarmId.toString())
+        }).apply()
+    }
 
     suspend fun updateFromWear(
         syncId: String,
@@ -70,7 +86,8 @@ class AlarmSyncCoordinator @Inject constructor(
                 snoozeDurationMinutes = snoozeDurationMinutes.coerceIn(1, 60),
                 vibrationEnabled = vibrationEnabled,
                 volume = volume.coerceIn(0, 100),
-                repeatDays = repeatDays
+                repeatDays = repeatDays,
+                nextTriggerTime = 0L
             ).sanitized()
         )
         start()
