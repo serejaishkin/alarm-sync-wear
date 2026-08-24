@@ -14,7 +14,8 @@ import org.json.JSONObject
 class WearAlarmDataListenerService : WearableListenerService() {
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
-            WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT -> WakeSyncPeerController.sendWatchSnapshot(applicationContext)
+            WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT,
+            WakeSyncPeerController.PATH_REQUEST_SNAPSHOT -> WakeSyncPeerController.sendWatchSnapshot(applicationContext)
         }
     }
 
@@ -39,9 +40,7 @@ class WearAlarmDataListenerService : WearableListenerService() {
                         val incomingIds = entries.map { it.syncId }.toSet()
                         val originDevice = entries.firstOrNull()?.originDeviceId?.ifBlank { "PHONE" } ?: "PHONE"
                         currentById.values.filter { it.syncId !in incomingIds && it.updatedAt <= snapshotTimestamp }.forEach { current ->
-                            WearAlarmListStore.removeWithTombstone(
-                                applicationContext, current.syncId, current.revision + 1L, snapshotTimestamp, "PHONE", originDevice
-                            )
+                            WearAlarmListStore.removeWithTombstone(applicationContext, current.syncId, current.revision + 1L, snapshotTimestamp, "PHONE", originDevice)
                         }
                     }
                     changed = true
