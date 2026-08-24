@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_alarms">Будильники</string>
-    <string name="nav_timer">Таймер</string>
-    <string name="nav_settings">Настройки</string>
     <string name="wakesync_alarms_title">Будильники</string>
     <string name="wakesync_your_alarms">Ваши будильники</string>
     <string name="wakesync_next_alarm">Следующий будильник</string>
