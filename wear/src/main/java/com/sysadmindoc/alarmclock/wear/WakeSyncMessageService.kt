@@ -3,29 +3,52 @@ package com.sysadmindoc.alarmclock.wear
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import org.json.JSONObject
 
-/** Applies canonical phone-side WakeSync mutations to the local Wear alarm collection. */
+/** Receives persistent phone-side alarm state through DataClient. */
 class WakeSyncMessageService : WearableListenerService() {
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+        for (event in dataEvents) {
+            if (event.type != DataEvent.TYPE_CHANGED) continue
+            val path = event.dataItem.uri.path.orEmpty()
+            if (!path.startsWith(PATH_ALARM_STATE_PREFIX)) continue
+
+            val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
+            val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
+            if (encoded.isBlank()) continue
+            applyPersistentMutation(encoded)
+        }
+    }
+
+    /** MessageClient remains for low-latency ringing controls. */
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path != PATH_MUTATION) return
-        val payload = runCatching { JSONObject(String(messageEvent.data, Charsets.UTF_8)) }.getOrElse { return }
+        applyPersistentMutation(String(messageEvent.data, Charsets.UTF_8))
+    }
+
+    private fun applyPersistentMutation(raw: String) {
+        val payload = runCatching { JSONObject(raw) }.getOrElse { return }
         val operation = payload.optString("operation")
         val syncId = payload.optString("syncId")
         if (syncId.isBlank()) return
 
-        val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
         val incomingRevision = payload.optLong("revision", 0L)
         val incomingTimestamp = payload.optLong("timestamp", 0L)
-        if (current != null && incomingRevision < current.revision) return
-        if (current != null && incomingRevision == current.revision && incomingTimestamp <= current.updatedAt) return
+        val currentRevision = WearAlarmListStore.revisionFor(applicationContext, syncId)
+        val currentTimestamp = WearAlarmListStore.timestampFor(applicationContext, syncId)
+        if (incomingRevision < currentRevision ||
+            incomingRevision == currentRevision && incomingTimestamp <= currentTimestamp) return
 
         when (operation) {
             "CREATE", "UPDATE", "ENABLE", "DISABLE" -> {
+                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 val enabled = when (operation) {
                     "ENABLE" -> true
                     "DISABLE" -> false
@@ -55,14 +78,21 @@ class WakeSyncMessageService : WearableListenerService() {
                     )
                 )
             }
-            "DELETE" -> WearAlarmListStore.remove(applicationContext, syncId)
+            "DELETE" -> WearAlarmListStore.removeWithTombstone(
+                applicationContext,
+                syncId,
+                incomingRevision,
+                incomingTimestamp
+            )
             "SNOOZE" -> {
+                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 if (current != null) {
                     WearAlarmScheduler.scheduleSnooze(applicationContext, current, current.snoozeDurationMinutes)
                     notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_SNOOZE)
                 }
             }
             "DISMISS" -> {
+                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 if (current != null) {
                     WearAlarmScheduler.rescheduleAfterDismiss(applicationContext, current)
                     notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
@@ -101,6 +131,8 @@ class WakeSyncMessageService : WearableListenerService() {
 
     companion object {
         const val PATH_MUTATION = "/wakesync/alarm/mutation"
+        private const val PATH_ALARM_STATE_PREFIX = "/wakesync/alarm/state/"
+        private const val KEY_MUTATION = "mutation"
         private const val PREFS = "wakesync_transport"
         private const val KEY_LAST_PAYLOAD = "last_payload"
         private const val KEY_RECEIVED_AT = "received_at"
