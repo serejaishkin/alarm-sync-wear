@@ -6,11 +6,20 @@ import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUp
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import org.json.JSONArray
 import org.json.JSONObject
 
 class WearAlarmDataListenerService : WearableListenerService() {
+
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        when (messageEvent.path) {
+            WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT -> {
+                WakeSyncPeerController.sendWatchSnapshot(applicationContext)
+            }
+        }
+    }
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         var changed = false
@@ -48,16 +57,7 @@ class WearAlarmDataListenerService : WearableListenerService() {
             }
         }
 
-        if (changed) {
-            TileService.getUpdater(applicationContext).requestUpdate(NextAlarmTileService::class.java)
-            ComplicationDataSourceUpdateRequester.create(
-                context = applicationContext,
-                complicationDataSourceComponent = ComponentName(
-                    applicationContext,
-                    NextAlarmComplicationDataSourceService::class.java
-                )
-            ).requestUpdateAll()
-        }
+        if (changed) notifyAlarmUi()
     }
 
     private fun applyPersistentMutation(raw: String): Boolean = runCatching {
@@ -70,7 +70,7 @@ class WearAlarmDataListenerService : WearableListenerService() {
 
         if (operation == "DELETE") {
             if (current != null && compareVersion(revision, timestamp, o.optString("source"), o.optString("originDeviceId"), current) <= 0) return false
-            WearAlarmListStore.removeWithTombstone(applicationContext, syncId, revision, timestamp)
+            WearAlarmListStore.removeWithTombstone(applicationContext, syncId, revision, timestamp, o.optString("source", "PHONE"), o.optString("originDeviceId"))
             return true
         }
 
@@ -83,7 +83,7 @@ class WearAlarmDataListenerService : WearableListenerService() {
             repeatDays = parseDays(o.optJSONArray("repeatDays")),
             snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60),
             vibrationEnabled = o.optBoolean("vibrationEnabled", true),
-            volume = o.optInt("volume", 100).coerceIn(0, 100),
+            volume = o.optInt("volume", 100),
             revision = revision,
             updatedAt = timestamp,
             alarmToken = o.optString("alarmToken"),
@@ -93,6 +93,16 @@ class WearAlarmDataListenerService : WearableListenerService() {
         if (current != null && compareVersion(incoming, current) <= 0) return false
         WearAlarmListStore.upsert(applicationContext, incoming)
         true
+    }.getOrDefault(false)
+
+    private fun applyWatchSnapshot(raw: String): Boolean = runCatching {
+        val array = JSONArray(raw)
+        var changed = false
+        for (i in 0 until array.length()) {
+            val encoded = array.getJSONObject(i).toString()
+            if (applyPersistentMutation(encoded)) changed = true
+        }
+        changed
     }.getOrDefault(false)
 
     private fun parseDays(array: JSONArray?): Set<Int> = buildSet {
@@ -137,6 +147,17 @@ class WearAlarmDataListenerService : WearableListenerService() {
             }
         }
     }.getOrDefault(emptyList())
+
+    private fun notifyAlarmUi() {
+        TileService.getUpdater(applicationContext).requestUpdate(NextAlarmTileService::class.java)
+        ComplicationDataSourceUpdateRequester.create(
+            context = applicationContext,
+            complicationDataSourceComponent = ComponentName(
+                applicationContext,
+                NextAlarmComplicationDataSourceService::class.java
+            )
+        ).requestUpdateAll()
+    }
 
     companion object {
         const val KEY_ALARM_LIST = "alarm_list"
