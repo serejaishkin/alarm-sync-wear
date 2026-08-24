@@ -37,7 +37,7 @@ import androidx.navigation.navArgument
 import com.sysadmindoc.alarmclock.R
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.ui.alarmedit.AlarmEditScreen
-import com.sysadmindoc.alarmclock.ui.alarmlist.AlarmListScreen
+import com.sysadmindoc.alarmclock.ui.alarmlist.GoogleStyleAlarmScreen
 import com.sysadmindoc.alarmclock.ui.bedtime.BedtimeScreen
 import com.sysadmindoc.alarmclock.ui.components.BottomNavContainer
 import com.sysadmindoc.alarmclock.ui.dashboard.DashboardScreen
@@ -77,14 +77,6 @@ data class BottomNavItem(
     val icon: ImageVector
 )
 
-/**
- * Phone-first WakeSync navigation.
- *
- * The primary surface is deliberately small: Alarms, Sleep, Timer and
- * Settings. The alarm editor remains the full editor on the phone; the Wear
- * side consumes the same alarm snapshot, so creating/editing from either
- * device remains a first-class operation.
- */
 private val primaryNavItems = listOf(
     BottomNavItem(Screen.AlarmList, R.string.nav_alarms, Icons.Default.Alarm),
     BottomNavItem(Screen.Bedtime, R.string.nav_bedtime, Icons.Default.Bedtime),
@@ -144,9 +136,7 @@ fun AppNavigation(
                             } == true
                             val label = stringResource(item.labelRes)
                             NavigationBarItem(
-                                icon = {
-                                    Icon(item.icon, contentDescription = label, modifier = Modifier.size(22.dp))
-                                },
+                                icon = { Icon(item.icon, contentDescription = label, modifier = Modifier.size(22.dp)) },
                                 label = { Text(label, maxLines = 1) },
                                 selected = selected,
                                 alwaysShowLabel = true,
@@ -169,9 +159,7 @@ fun AppNavigation(
             Row(Modifier.padding(padding).fillMaxSize()) {
                 NavigationRail(containerColor = SurfaceDark, contentColor = TextPrimary) {
                     primaryNavItems.forEach { item ->
-                        val selected = currentDestination?.hierarchy?.any {
-                            it.route == item.screen.route
-                        } == true
+                        val selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
                         val label = stringResource(item.labelRes)
                         NavigationRailItem(
                             icon = { Icon(item.icon, contentDescription = label, modifier = Modifier.size(22.dp)) },
@@ -246,9 +234,10 @@ private fun WakeSyncNavHost(
             )
         }
         composable(Screen.AlarmList.route) {
-            AlarmListScreen(
+            GoogleStyleAlarmScreen(
                 onAddAlarm = { navController.navigate(Screen.AlarmEdit.createRoute(-1)) },
                 onEditAlarm = { id -> navController.navigate(Screen.AlarmEdit.createRoute(id)) },
+                onOpenBedtime = { navController.navigate(Screen.Bedtime.route) },
                 onOpenSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -291,9 +280,6 @@ private fun WakeSyncNavHost(
             )
         }
         composable(Screen.Stats.route) { StatsScreen(onNavigateBack = { navController.popBackStack() }) }
-
-        // Kept as deep-link/backward-compatible destinations, but removed from
-        // primary phone navigation so the alarm workflow stays uncluttered.
         composable(Screen.Dashboard.route) {
             DashboardScreen(onOpenAlarms = {
                 navController.navigate(Screen.AlarmList.route) { launchSingleTop = true }
