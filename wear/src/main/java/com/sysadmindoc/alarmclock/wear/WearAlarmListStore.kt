@@ -23,7 +23,9 @@ object WearAlarmListStore {
         val volume: Int = 100,
         val revision: Long,
         val updatedAt: Long,
-        val alarmToken: String
+        val alarmToken: String,
+        val source: String = SOURCE_WATCH,
+        val originDeviceId: String = ""
     )
 
     fun load(context: Context): List<Entry> {
@@ -50,7 +52,9 @@ object WearAlarmListStore {
                             volume = o.optInt("volume", 100),
                             revision = o.optLong("revision"),
                             updatedAt = o.optLong("updatedAt"),
-                            alarmToken = o.optString("alarmToken")
+                            alarmToken = o.optString("alarmToken"),
+                            source = o.optString("source", SOURCE_WATCH),
+                            originDeviceId = o.optString("originDeviceId")
                         )
                     )
                 }
@@ -75,7 +79,9 @@ object WearAlarmListStore {
                 .put("volume", e.volume)
                 .put("revision", e.revision)
                 .put("updatedAt", e.updatedAt)
-                .put("alarmToken", e.alarmToken))
+                .put("alarmToken", e.alarmToken)
+                .put("source", e.source)
+                .put("originDeviceId", e.originDeviceId))
         }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
             putString(KEY_ALARMS, array.toString())
@@ -83,8 +89,10 @@ object WearAlarmListStore {
     }
 
     fun upsert(context: Context, entry: Entry) {
-        if (revisionFor(context, entry.syncId) > entry.revision ||
-            revisionFor(context, entry.syncId) == entry.revision && timestampFor(context, entry.syncId) >= entry.updatedAt) return
+        val current = load(context).firstOrNull { it.syncId == entry.syncId }
+        if (current != null && compareVersions(entry, current) <= 0) return
+        val tombstone = readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))[entry.syncId]
+        if (tombstone != null && compareVersion(entry, tombstone) <= 0) return
         save(context, load(context).filterNot { it.syncId == entry.syncId } + entry)
         clearTombstone(context, entry.syncId)
         WearAlarmScheduler.schedule(context, entry)
@@ -100,8 +108,9 @@ object WearAlarmListStore {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val tombstones = readTombstones(prefs)
         val current = tombstones[syncId]
-        if (current == null || revision > current.first || revision == current.first && timestamp > current.second) {
-            tombstones[syncId] = revision to timestamp
+        val candidate = Version(revision, timestamp, SOURCE_WATCH, "")
+        if (current == null || compareVersion(candidate, current) > 0) {
+            tombstones[syncId] = candidate
             writeTombstones(prefs, tombstones)
         }
     }
@@ -109,13 +118,13 @@ object WearAlarmListStore {
     fun revisionFor(context: Context, syncId: String): Long {
         val entry = load(context).firstOrNull { it.syncId == syncId }
         val tombstone = readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))[syncId]
-        return maxOf(entry?.revision ?: 0L, tombstone?.first ?: 0L)
+        return maxOf(entry?.revision ?: 0L, tombstone?.revision ?: 0L)
     }
 
     fun timestampFor(context: Context, syncId: String): Long {
         val entry = load(context).firstOrNull { it.syncId == syncId }
         val tombstone = readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))[syncId]
-        return maxOf(entry?.updatedAt ?: 0L, tombstone?.second ?: 0L)
+        return maxOf(entry?.updatedAt ?: 0L, tombstone?.timestamp ?: 0L)
     }
 
     private fun clearTombstone(context: Context, syncId: String) {
@@ -124,24 +133,57 @@ object WearAlarmListStore {
         if (tombstones.remove(syncId) != null) writeTombstones(prefs, tombstones)
     }
 
-    private fun readTombstones(prefs: android.content.SharedPreferences): MutableMap<String, Pair<Long, Long>> {
+    private data class Version(
+        val revision: Long,
+        val timestamp: Long,
+        val source: String,
+        val deviceId: String
+    )
+
+    private fun compareVersions(left: Entry, right: Entry): Int =
+        compareVersion(
+            Version(left.revision, left.updatedAt, left.source, left.originDeviceId),
+            Version(right.revision, right.updatedAt, right.source, right.originDeviceId)
+        )
+
+    private fun compareVersion(left: Version, right: Version): Int = when {
+        left.revision != right.revision -> left.revision.compareTo(right.revision)
+        left.timestamp != right.timestamp -> left.timestamp.compareTo(right.timestamp)
+        left.source != right.source -> sourcePriority(left.source).compareTo(sourcePriority(right.source))
+        else -> left.deviceId.compareTo(right.deviceId)
+    }
+
+    private fun sourcePriority(source: String): Int = if (source == SOURCE_WATCH) 2 else 1
+
+    private fun readTombstones(prefs: android.content.SharedPreferences): MutableMap<String, Version> {
         val raw = prefs.getString(KEY_TOMBSTONES, null) ?: return mutableMapOf()
         return runCatching {
             val json = JSONObject(raw)
             buildMap {
                 json.keys().forEach { key ->
                     val item = json.optJSONObject(key) ?: return@forEach
-                    put(key, item.optLong("revision") to item.optLong("timestamp"))
+                    put(key, Version(
+                        item.optLong("revision"),
+                        item.optLong("timestamp"),
+                        item.optString("source", SOURCE_WATCH),
+                        item.optString("deviceId")
+                    ))
                 }
             }.toMutableMap()
         }.getOrDefault(mutableMapOf())
     }
 
-    private fun writeTombstones(prefs: android.content.SharedPreferences, tombstones: Map<String, Pair<Long, Long>>) {
+    private fun writeTombstones(prefs: android.content.SharedPreferences, tombstones: Map<String, Version>) {
         val json = JSONObject()
         tombstones.forEach { (syncId, value) ->
-            json.put(syncId, JSONObject().put("revision", value.first).put("timestamp", value.second))
+            json.put(syncId, JSONObject()
+                .put("revision", value.revision)
+                .put("timestamp", value.timestamp)
+                .put("source", value.source)
+                .put("deviceId", value.deviceId))
         }
         prefs.edit { putString(KEY_TOMBSTONES, json.toString()) }
     }
+
+    private const val SOURCE_WATCH = "WATCH"
 }
