@@ -23,7 +23,23 @@ class WearAlarmDataListenerService : WearableListenerService() {
             val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
             if (rawList.isNotBlank()) {
                 val entries = parseAlarmList(rawList)
-                WearAlarmListStore.save(applicationContext, entries)
+                val currentById = WearAlarmListStore.load(applicationContext).associateBy { it.syncId }
+                val accepted = entries.filter { incoming ->
+                    val current = currentById[incoming.syncId]
+                    current == null || incoming.revision > current.revision ||
+                        incoming.revision == current.revision && incoming.updatedAt > current.updatedAt
+                }
+                if (accepted.isNotEmpty()) {
+                    accepted.forEach { WearAlarmListStore.upsert(applicationContext, it) }
+                    // A complete phone snapshot is authoritative for deletions
+                    // only when the list actually contains entries. Keep local
+                    // watch-created alarms that have a newer revision.
+                    val incomingIds = entries.map { it.syncId }.toSet()
+                    currentById.values
+                        .filter { it.syncId !in incomingIds && it.revision <= 0L }
+                        .forEach { WearAlarmListStore.remove(applicationContext, it.syncId) }
+                    changed = true
+                }
             }
             changed = true
         }
