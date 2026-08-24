@@ -11,12 +11,38 @@ object WakeSyncPeerController {
     const val PATH_MUTATION = "/wakesync/alarm/mutation"
     const val PATH_ALARM_STATE = "/wakesync/alarm/state"
     const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
+    const val PATH_REQUEST_WATCH_SNAPSHOT = "/wakesync/alarm/request_watch_snapshot"
+    const val PATH_WATCH_SNAPSHOT = "/wakesync/alarm/watch_snapshot"
     const val KEY_MUTATION = "mutation"
     const val KEY_TIMESTAMP = "timestamp"
     private const val PROTOCOL_VERSION = 1
 
     fun requestSnapshot(context: Context) {
         sendRawMessage(context, PATH_REQUEST_SNAPSHOT, ByteArray(0))
+    }
+
+    fun requestPhoneSnapshot(context: Context) {
+        sendRawMessage(context, PATH_REQUEST_SNAPSHOT, ByteArray(0))
+    }
+
+    fun sendWatchSnapshot(context: Context) {
+        val array = JSONArray()
+        WearAlarmListStore.load(context).forEach { entry ->
+            array.put(buildPayload(entry, "UPDATE"))
+        }
+        WearAlarmListStore.tombstones(context).forEach { tombstone ->
+            array.put(
+                JSONObject()
+                    .put("protocolVersion", PROTOCOL_VERSION)
+                    .put("syncId", tombstone.syncId)
+                    .put("operation", "DELETE")
+                    .put("source", tombstone.source)
+                    .put("originDeviceId", tombstone.deviceId)
+                    .put("revision", tombstone.revision)
+                    .put("timestamp", tombstone.timestamp)
+            )
+        }
+        sendRawMessage(context, PATH_WATCH_SNAPSHOT, array.toString().toByteArray(Charsets.UTF_8))
     }
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
@@ -40,8 +66,6 @@ object WakeSyncPeerController {
             .put("revision", revision)
             .put("timestamp", timestamp)
             .toString()
-        // DELETE must also use the low-latency path; otherwise a DataItem can
-        // arrive only during a later reconciliation pass.
         sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
         sendDataItem(context, syncId, payload)
     }
@@ -64,7 +88,7 @@ object WakeSyncPeerController {
         val current = WearAlarmListStore.load(context).firstOrNull { it.syncId == syncId } ?: return
         val revision = current.revision + 1L
         val timestamp = System.currentTimeMillis()
-        WearAlarmListStore.removeWithTombstone(context, syncId, revision, timestamp)
+        WearAlarmListStore.removeWithTombstone(context, syncId, revision, timestamp, "WATCH", deviceId(context))
         sendDelete(context, syncId, revision, timestamp)
     }
 
