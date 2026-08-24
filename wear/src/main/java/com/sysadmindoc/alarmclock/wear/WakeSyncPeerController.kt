@@ -16,6 +16,9 @@ object WakeSyncPeerController {
     const val KEY_MUTATION = "mutation"
     const val KEY_TIMESTAMP = "timestamp"
     private const val PROTOCOL_VERSION = 1
+    private const val KEY_ALARM_LIST = "alarm_list"
+    private const val KEY_UPDATED_AT = "updated_at"
+    private const val KEY_HAS_ALARM = "has_alarm"
 
     fun requestSnapshot(context: Context) {
         sendRawMessage(context, PATH_REQUEST_SNAPSHOT, ByteArray(0))
@@ -25,31 +28,38 @@ object WakeSyncPeerController {
         sendRawMessage(context, PATH_REQUEST_SNAPSHOT, ByteArray(0))
     }
 
-    /** Publish the complete Wear state through durable Data Layer items. */
+    /**
+     * Publish one complete Wear snapshot on a stable Data Layer path, following
+     * the same communication pattern as the reference project. Deleted alarms
+     * remain in the snapshot as tombstones so the phone can converge to zero.
+     */
     fun sendWatchSnapshot(context: Context) {
         val appContext = context.applicationContext
+        val list = JSONArray()
         WearAlarmListStore.load(appContext).forEach { entry ->
-            sendDataItem(appContext, entry.syncId, buildPayload(entry, "UPDATE"))
+            list.put(buildPayload(entry, "UPDATE"))
         }
         WearAlarmListStore.tombstones(appContext).forEach { tombstone ->
-            val payload = JSONObject()
+            list.put(JSONObject()
                 .put("protocolVersion", PROTOCOL_VERSION)
                 .put("syncId", tombstone.syncId)
                 .put("operation", "DELETE")
                 .put("source", tombstone.source)
                 .put("originDeviceId", tombstone.deviceId)
                 .put("revision", tombstone.revision)
-                .put("timestamp", tombstone.timestamp)
-                .toString()
-            sendDataItem(appContext, tombstone.syncId, payload)
+                .put("timestamp", tombstone.timestamp))
         }
+
+        val request = PutDataMapRequest.create(WearAlarmData.PATH_NEXT_ALARM).apply {
+            dataMap.putString(KEY_ALARM_LIST, list.toString())
+            dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
+            dataMap.putBoolean(KEY_HAS_ALARM, WearAlarmListStore.load(appContext).isNotEmpty())
+        }.asPutDataRequest().setUrgent()
+        Wearable.getDataClient(appContext).putDataItem(request)
     }
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
         val payload = buildPayload(entry, operation)
-        // MessageClient gives CREATE/UPDATE/DELETE immediate delivery. DataClient
-        // remains the durable state/reconciliation channel. Applying both is safe
-        // because the receiver compares revision/timestamp/source/deviceId.
         sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
         if (operation != "SNOOZE" && operation != "DISMISS" && operation != "RINGING") {
             sendDataItem(context, entry.syncId, payload)
@@ -95,7 +105,7 @@ object WakeSyncPeerController {
     fun sendEnable(context: Context, syncId: String, alarmToken: String) = sendMutation(context, "ENABLE", syncId, alarmToken)
     fun sendDisable(context: Context, syncId: String, alarmToken: String) = sendMutation(context, "DISABLE", syncId, alarmToken)
 
-    private fun buildPayload(entry: WearAlarmListStore.Entry, operation: String): String = JSONObject()
+    private fun buildPayload(entry: WearAlarmListStore.Entry, operation: String): JSONObject = JSONObject()
         .put("protocolVersion", PROTOCOL_VERSION)
         .put("syncId", entry.syncId)
         .put("operation", operation)
@@ -112,7 +122,6 @@ object WakeSyncPeerController {
         .put("vibrationEnabled", entry.vibrationEnabled)
         .put("volume", entry.volume)
         .putOpt("alarmToken", entry.alarmToken.takeIf { it.isNotBlank() })
-        .toString()
 
     private fun sendDataItem(context: Context, syncId: String, payload: String) {
         val request = PutDataMapRequest.create("$PATH_ALARM_STATE/$syncId").apply {
@@ -124,9 +133,7 @@ object WakeSyncPeerController {
 
     private fun sendRawMessage(context: Context, path: String, payload: ByteArray) {
         Wearable.getNodeClient(context.applicationContext).connectedNodes.addOnSuccessListener { nodes ->
-            nodes.forEach { node ->
-                Wearable.getMessageClient(context.applicationContext).sendMessage(node.id, path, payload)
-            }
+            nodes.forEach { node -> Wearable.getMessageClient(context.applicationContext).sendMessage(node.id, path, payload) }
         }
     }
 
