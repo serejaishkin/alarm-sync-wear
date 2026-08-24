@@ -34,7 +34,8 @@ object AlarmSyncCodec {
         operation: AlarmSyncOperation,
         source: AlarmSyncSource,
         revision: Long,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
+        originDeviceId: String = ""
     ): AlarmSyncPayload = AlarmSyncPayload(
         syncId = syncId,
         operation = operation,
@@ -45,6 +46,7 @@ object AlarmSyncCodec {
             AlarmSyncOperation.DELETE -> null
             else -> AlarmShareCodec.encodeToken(alarm)
         },
+        originDeviceId = originDeviceId,
         hour = alarm.hour,
         minute = alarm.minute,
         label = alarm.label,
