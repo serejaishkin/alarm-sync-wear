@@ -1,7 +1,7 @@
 # WakeSync — Phone ↔ Wear OS Alarm Sync
 
-Дата: 2026-08-21
-Статус: планирование / подготовка базы
+Дата: 2026-08-24
+Статус: активная разработка / интеграционное тестирование
 
 ## TL;DR
 
@@ -25,11 +25,9 @@ https://github.com/SysAdminDoc/AlarmClockXtreme — Apache 2.0, Kotlin/Compose,
 
 ACX НЕ является полноценной двусторонней синхронизацией будильников как объектов.
 
-- Phone → Watch: публикуется только один `next alarm` снапшот через
-  `/alarmclockxtreme/next_alarm`.
+- Phone → Watch: публикуется только один `next alarm` снапшот через `/alarmclockxtreme/next_alarm`.
 - Watch → Phone: skip / snooze / dismiss для уже звонящего будильника.
-- Нет создания/редактирования/удаления/toggle будильника с часов.
-- Нет полного локального объекта Alarm на часах.
+- Нет полного двустороннего CRUD как готового решения.
 - Data Layer находится в Play flavor; F-Droid вариант использует no-op bridge.
 
 ### Что берём
@@ -63,25 +61,11 @@ https://github.com/CCExtractor/uac_companion
 ### Что НЕ копируем без изменений
 
 UAC не реализует полноценное version/timestamp conflict resolution.
-WakeSync добавит это самостоятельно.
+WakeSync добавляет это самостоятельно.
 
 ---
 
-## 3. Direct BLE
-
-Готовый проверенный open-source проект, который можно безопасно взять как основу
-для прямого BLE GATT транспорта, пока не найден.
-
-Поэтому Phase 1: Wearable Data Layer.
-
-Phase 2: собственный Direct BLE GATT transport.
-
-При этом транспорт должен быть отделён от AlarmSync Core, чтобы переход не требовал
-переписывать доменную логику.
-
----
-
-## 4. WakeSync architecture
+## 3. WakeSync architecture
 
 ```text
                  WakeSync Core
@@ -97,125 +81,213 @@ Phase 2: собственный Direct BLE GATT transport.
               +-------+---------+
                       |
                 SyncTransport
-                 /          \
-        Wear Data Layer      BLE (Phase 2)
+                       |
+                Wear Data Layer
 ```
 
-### Alarm identity
+### Alarm identity / versioning
 
-Используем UUID, а не локальный auto-increment ID.
+Используем стабильный UUID/`syncId`, а не локальный auto-increment ID.
+
+Логический объект должен содержать как минимум:
 
 ```text
 Alarm
-├── id: UUID
+├── syncId: String
 ├── time
 ├── days
 ├── label
 ├── enabled
-├── version: Long
+├── revision: Long
 ├── updatedAt: Long
-└── updatedBy: phone | watch
+├── source: phone | watch
+└── originDeviceId: String
 ```
 
-Один `id` должен обозначать один логический будильник на обоих устройствах.
+При конфликте более новая версия должна побеждать. Для одинаковой версии используется
+время изменения и затем стабильный идентификатор устройства как tie-breaker.
 
 ---
 
-## 5. Sync protocol v1
+## 4. Sync protocol
 
-Предварительные Data Layer paths:
+Используем Google Wearable Data Layer как основной транспорт Phase 1.
 
-```text
-/alarmsync/alarm/put
-/alarmsync/alarm/delete
-/alarmsync/action
-```
-
-`alarm/put` передаёт полный Alarm JSON.
-
-`alarm/delete` передаёт минимум `{ id, version }`.
-
-`action` используется для runtime actions:
+Ключевые операции:
 
 ```text
-DISMISS
-SNOOZE
+CREATE
+UPDATE
+ENABLE
+DISABLE
+DELETE
 RINGING
+SNOOZE
+DISMISS
 ```
 
-### Conflict resolution
+Нужны два механизма:
 
-При получении Alarm:
+1. **MessageClient** — быстрые runtime-команды, например RINGING/SNOOZE/DISMISS.
+2. **DataClient** — полный persistent snapshot будильника, который должен переживать
+   временное отсутствие соединения и доставляться после восстановления связи.
 
-```text
-if incoming.version > local.version:
-    apply(incoming)
-elif incoming.version == local.version and incoming.updatedAt > local.updatedAt:
-    apply(incoming)
-else:
-    ignore
-```
+### Reconciliation
 
-При локальном изменении:
+Обе стороны должны уметь запросить полный snapshot второй стороны.
 
-```text
-version += 1
-updatedAt = now()
-updatedBy = localDevice
-send()
-```
+Дополнительно используется периодическая сверка примерно раз в 15 минут как страховка
+после перезапуска, временной потери Data Layer или пропущенного события.
 
-Позже добавим offline queue/reconciliation.
+Периодическая сверка не заменяет немедленную передачу изменений.
 
 ---
 
-## 6. Важное отличие от ACX
+## 5. Текущий рабочий статус
 
-В ACX snooze/dismiss с часов завязаны на `AlarmService.activeAlarmId` телефона.
-Это нормально для remote control звонящего будильника, но недостаточно для WakeSync.
+### Синхронизация
 
-WakeSync должен отдельно синхронизировать состояние объекта и runtime state.
+- [x] Phone → Watch: создание будильника в базовом сценарии работает.
+- [x] Watch → Phone: создана инфраструктура полной мутации будильника.
+- [x] CREATE / UPDATE / ENABLE / DISABLE / DELETE paths.
+- [x] Runtime SNOOZE / DISMISS / RINGING paths.
+- [x] Stable `syncId` / revision / timestamp / device identity.
+- [x] Persistent Data Layer snapshot listener на телефоне.
+- [x] Snapshot request с часов.
+- [x] Периодическая reconciliation-задача.
+- [ ] Проверить, что полный список из нескольких будильников всегда восстанавливается
+      на обеих сторонах после cold start/reconnect.
+- [ ] Проверить гонки: одновременное изменение одного будильника на телефоне и часах.
+- [ ] Проверить удаление и повторное создание с тем же логическим объектом.
+- [ ] Проверить offline → online reconciliation.
 
-Например:
+### Будильник на Wear OS
+
+- [x] Локальный список будильников на часах.
+- [x] Редактор будильника.
+- [x] Включение/выключение.
+- [x] Удаление.
+- [ ] Полностью проверить реальное срабатывание всех повторов.
+- [ ] Проверить snooze с часов → телефон → продолжающийся/перезапущенный звонок.
+- [ ] Проверить dismiss с часов → телефон.
+- [ ] Проверить срабатывание, когда телефон заблокирован.
+- [ ] Проверить срабатывание, когда часы заблокированы.
+- [ ] Проверить, что экран блокировки не блокирует WakeSync alarm UI.
+
+---
+
+## 6. КРИТИЧЕСКАЯ ПРОБЛЕМА: Media Controller
+
+### Симптом
+
+При срабатывании WakeSync-будильника на часах одновременно или сразу после него
+открывается системная панель Media Controller так, будто была запущена музыка.
+
+Из-за этого:
+
+- WakeSync alarm UI может быть перекрыт;
+- управление SNOOZE/DISMISS становится недоступным;
+- создаётся впечатление, что будильник не сработал;
+- проблема особенно заметна на заблокированном экране.
+
+### Требуется отдельное расследование
+
+НЕ считать это частью обычной синхронизации. Нужно проверить отдельно:
+
+1. `WakeSyncAlarmFiringActivity` / alarm intent.
+2. Все `PendingIntent`, `Intent` actions и extras, которые запускаются при RINGING.
+3. `WakeSyncAlarmScheduler` и `AlarmService`.
+4. MediaSession / MediaController / PlaybackState, которые могут случайно активироваться.
+5. Foreground service и notification категории.
+6. `Notification.Action` / media-style notification.
+7. Activity launch mode и flags при запуске с locked screen.
+8. Android/Wear OS роли alarm/full-screen intent.
+9. Почему системный Media Controller получает событие именно в момент RINGING.
+
+### Важно
+
+Нельзя просто скрыть Media Controller визуально. Нужно найти источник события,
+из-за которого Wear OS считает, что изменилось состояние медиаплеера.
+
+---
+
+## 7. Проблема с экраном блокировки
+
+Текущий сценарий требует отдельной реализации и тестирования:
 
 ```text
-Phone: disable alarm #42
-        ↓
-Sync
-        ↓
-Watch: disable alarm #42
+AlarmManager
+    ↓
+WakeSync alarm trigger
+    ↓
+Full-screen / lock-screen alarm UI
+    ↓
+SNOOZE / DISMISS
+    ↓
+Sync runtime state to peer
 ```
 
-И наоборот.
+Требование:
+
+> При срабатывании будильника WakeSync должен иметь приоритет как alarm UI и корректно
+> работать поверх/на экране блокировки, не превращаясь в media-control экран.
+
+Нужно проверить Android 13+ notification/full-screen restrictions и Wear OS ограничения.
 
 ---
 
-## 7. План разработки
+## 8. План разработки
 
-1. [ ] Форкнуть AlarmClockXtreme.
-2. [ ] Перенести его Android/Wear базу в WakeSync.
-3. [ ] Переименовать приложение и branding в WakeSync.
-4. [ ] Изучить текущую схему `Alarm` и подготовить Room migration.
-5. [ ] Добавить UUID + version + updatedAt + updatedBy.
-6. [ ] Создать `AlarmSyncBridge` / `SyncTransport` интерфейсы.
-7. [ ] Реализовать Phone → Watch full Alarm sync.
-8. [ ] Реализовать Watch → Phone full Alarm sync.
-9. [ ] Create / Update / Enable / Disable / Delete.
-10. [ ] Dismiss / Snooze / Ringing state.
-11. [ ] Offline queue + reconnect reconciliation.
-12. [ ] Tile/complication отражают синхронизированный Alarm state.
-13. [ ] Реальное тестирование на Galaxy Watch.
-14. [ ] Phase 2: Direct BLE GATT transport.
+1. [x] Форкнуть AlarmClockXtreme.
+2. [x] Перенести Android/Wear базу в WakeSync.
+3. [x] Переименовать приложение и branding в WakeSync.
+4. [x] Изучить текущую схему Alarm и подготовить sync metadata.
+5. [x] Добавить стабильный syncId + revision + updatedAt + source + device identity.
+6. [x] Создать SyncTransport boundary.
+7. [x] Реализовать Phone → Watch full Alarm sync.
+8. [x] Реализовать Watch → Phone full Alarm sync.
+9. [x] Create / Update / Enable / Disable / Delete.
+10. [x] Dismiss / Snooze / Ringing state.
+11. [x] Persistent Data Layer state listener.
+12. [x] Snapshot request/reconciliation.
+13. [x] Periodic reconciliation.
+14. [ ] Починить Media Controller, который появляется при RINGING.
+15. [ ] Починить full-screen/lock-screen alarm UI на Wear OS.
+16. [ ] Полностью проверить SNOOZE/DISMISS при заблокированном телефоне.
+17. [ ] Полностью проверить SNOOZE/DISMISS при заблокированных часах.
+18. [ ] Проверить несколько будильников после cold start/reconnect.
+19. [ ] Добавить offline queue + полноценную reconnect reconciliation.
+20. [ ] Реальное длительное тестирование на Galaxy Watch.
+21. [ ] Phase 2: Direct BLE GATT transport.
 
 ---
 
-## 8. Правила проекта
+## 9. Правила проекта
 
 - Не писать существующую alarm-инфраструктуру заново без причины.
 - Не привязывать sync core к Google Play Services.
 - Транспорт должен быть заменяемым.
 - Все изменения схемы БД — через миграции.
-- Для синхронизации использовать UUID.
+- Для синхронизации использовать стабильный syncId.
 - Комментарии внутри кода — на английском.
 - Важные архитектурные решения фиксировать в `docs/`.
 - Частые изменения фиксировать небольшими понятными коммитами.
+- Сначала исправлять причину сбоя, а не маскировать системный UI.
+
+---
+
+## 10. Последний тестовый отчёт
+
+Дата: 2026-08-24
+
+Наблюдения:
+
+- Будильник, созданный с телефона, приходит на часы.
+- При наличии нескольких будильников часть списка на другой стороне может не
+  восстанавливаться автоматически — требуется проверка reconciliation.
+- При RINGING на часах снова появляется системный Media Controller.
+- WakeSync alarm UI на экране блокировки работает некорректно/перекрывается.
+- SNOOZE/DISMISS необходимо проверить после устранения Media Controller и lock-screen проблемы.
+
+Следующая задача: **не менять sync-протокол вслепую, а отдельно локализовать Media Controller
+и lock-screen alarm launch. После этого повторить двусторонний тест синхронизации.**
