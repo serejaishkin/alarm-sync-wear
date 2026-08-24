@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_alarms">Будильники</string>
+    <string name="nav_bedtime">Сон</string>
+    <string name="nav_timer">Таймер</string>
+    <string name="nav_settings">Настройки</string>
+</resources>
