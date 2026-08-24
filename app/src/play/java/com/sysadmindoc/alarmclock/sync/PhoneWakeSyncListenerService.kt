@@ -33,20 +33,35 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         for (event in dataEvents) {
             if (event.type != DataEvent.TYPE_CHANGED) continue
             val path = event.dataItem.uri.path.orEmpty()
-            if (!path.startsWith(PATH_ALARM_STATE_PREFIX)) continue
-
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
-            val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
-            if (encoded.isBlank()) continue
 
-            scope.launch {
-                val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
-                if (decoded == null) {
-                    Log.w(TAG, "Ignoring invalid persistent alarm mutation")
-                    return@launch
+            when {
+                path.startsWith(PATH_ALARM_STATE_PREFIX) -> {
+                    val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
+                    if (encoded.isBlank()) continue
+                    scope.launch {
+                        val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
+                        if (decoded == null) {
+                            Log.w(TAG, "Ignoring invalid persistent alarm mutation")
+                            return@launch
+                        }
+                        coordinator.applyRemote(decoded)
+                            .onFailure { Log.e(TAG, "Failed to apply Data Layer ${decoded.operation} for ${decoded.syncId}", it) }
+                    }
                 }
-                coordinator.applyRemote(decoded)
-                    .onFailure { Log.e(TAG, "Failed to apply Data Layer ${decoded.operation} for ${decoded.syncId}", it) }
+                path == PATH_ALARM_SNAPSHOT -> {
+                    val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
+                    if (rawList.isBlank()) continue
+                    val snapshotTimestamp = dataMap.getLong(KEY_UPDATED_AT, System.currentTimeMillis())
+                    scope.launch {
+                        runCatching { parseSnapshot(rawList) }
+                            .onSuccess { entries ->
+                                coordinator.applyWatchSnapshot(entries, snapshotTimestamp)
+                                    .onFailure { Log.e(TAG, "Failed to reconcile Watch snapshot", it) }
+                            }
+                            .onFailure { Log.e(TAG, "Failed to parse Watch snapshot", it) }
+                    }
+                }
             }
         }
     }
@@ -78,24 +93,46 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                     .onFailure { Log.e(TAG, "Failed to publish snapshot to Wear", it) }
             }
             PATH_WATCH_SNAPSHOT -> scope.launch {
-                runCatching { applyWatchSnapshot(messageEvent.data.toString(Charsets.UTF_8)) }
+                runCatching { applyWatchSnapshotMessage(messageEvent.data.toString(Charsets.UTF_8)) }
                     .onFailure { Log.e(TAG, "Failed to apply Watch snapshot", it) }
             }
         }
     }
 
-    private suspend fun applyWatchSnapshot(raw: String) {
+    private suspend fun applyWatchSnapshotMessage(raw: String) {
+        val entries = parseSnapshot(raw)
+        coordinator.applyWatchSnapshot(entries, System.currentTimeMillis()).getOrThrow()
+    }
+
+    private fun parseSnapshot(raw: String): List<AlarmSyncPayload> {
         val array = JSONArray(raw)
-        for (i in 0 until array.length()) {
-            val decoded = AlarmSyncCodec.decode(array.getJSONObject(i).toString()).getOrNull() ?: continue
-            coordinator.applyRemote(decoded)
-                .onFailure { Log.e(TAG, "Failed to apply Watch snapshot ${decoded.operation} for ${decoded.syncId}", it) }
+        return buildList(array.length()) {
+            for (i in 0 until array.length()) {
+                val o = array.getJSONObject(i)
+                add(AlarmSyncPayload(
+                    protocolVersion = o.optInt("protocolVersion", AlarmSyncEnvelope.CURRENT_PROTOCOL_VERSION),
+                    syncId = o.getString("syncId"),
+                    operation = runCatching { AlarmSyncOperation.valueOf(o.optString("operation", "UPDATE")) }.getOrDefault(AlarmSyncOperation.UPDATE),
+                    source = runCatching { AlarmSyncSource.valueOf(o.optString("source", "WATCH")) }.getOrDefault(AlarmSyncSource.WATCH),
+                    revision = o.optLong("revision", 0L),
+                    timestamp = o.optLong("timestamp", System.currentTimeMillis()),
+                    alarmToken = o.optString("alarmToken").ifBlank { null },
+                    originDeviceId = o.optString("originDeviceId", "WATCH"),
+                    hour = if (o.has("hour")) o.optInt("hour") else null,
+                    minute = if (o.has("minute")) o.optInt("minute") else null,
+                    label = if (o.has("label")) o.optString("label") else null,
+                    enabled = if (o.has("enabled")) o.optBoolean("enabled") else null,
+                    repeatDays = o.optJSONArray("repeatDays")?.let { days -> buildList(days.length()) { for (j in 0 until days.length()) add(days.optInt(j)) } } ?: emptyList(),
+                    snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10),
+                    vibrationEnabled = o.optBoolean("vibrationEnabled", true),
+                    volume = o.optInt("volume", 100)
+                ))
+            }
         }
     }
 
     private fun handleWearAlarmCommand(syncId: String, action: String) {
-        val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .getLong("alarm_id_$syncId", 0L)
+        val alarmId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
             .takeIf { it > 0L } ?: error("Unknown synchronized alarm: $syncId")
         startService(Intent(this, AlarmService::class.java).apply {
             this.action = action
@@ -110,8 +147,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         val syncId = json.optString("syncId").takeIf { it.isNotBlank() } ?: throw IllegalArgumentException("Wear create request has no syncId")
         val existingId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
         if (existingId > 0L && alarmRepository.getById(existingId) != null) {
-            updateFromWear(json.put("operation", "UPDATE_REQUEST").toString())
-            return
+            updateFromWear(json.put("operation", "UPDATE_REQUEST").toString()); return
         }
         val alarm = Alarm(
             hour = json.optInt("hour", 7).coerceIn(0, 23), minute = json.optInt("minute", 0).coerceIn(0, 59),
@@ -121,12 +157,8 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
             snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60)
         )
         val alarmId = alarmRepository.save(alarm)
-        coordinator.registerWearCreatedAlarm(
-            syncId = syncId, alarmId = alarmId, revision = json.optLong("revision", 1L),
-            timestamp = json.optLong("timestamp", System.currentTimeMillis()), alarmToken = json.optString("alarmToken").ifBlank { null }
-        )
-        coordinator.start()
-        coordinator.syncNow()
+        coordinator.registerWearCreatedAlarm(syncId, alarmId, json.optLong("revision", 1L), json.optLong("timestamp", System.currentTimeMillis()), json.optString("alarmToken").ifBlank { null })
+        coordinator.start(); coordinator.syncNow()
     }
 
     private suspend fun updateFromWear(raw: String) {
@@ -141,26 +173,24 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         coordinator.syncNow()
     }
 
-    private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> {
-        if (array == null) return emptySet()
-        return buildSet {
-            for (i in 0 until array.length()) when (array.optInt(i, 0)) {
-                1 -> add(DayOfWeek.MONDAY); 2 -> add(DayOfWeek.TUESDAY); 3 -> add(DayOfWeek.WEDNESDAY)
-                4 -> add(DayOfWeek.THURSDAY); 5 -> add(DayOfWeek.FRIDAY); 6 -> add(DayOfWeek.SATURDAY); 7 -> add(DayOfWeek.SUNDAY)
-            }
+    private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> = buildSet {
+        if (array == null) return@buildSet
+        for (i in 0 until array.length()) when (array.optInt(i, 0)) {
+            1 -> add(DayOfWeek.MONDAY); 2 -> add(DayOfWeek.TUESDAY); 3 -> add(DayOfWeek.WEDNESDAY)
+            4 -> add(DayOfWeek.THURSDAY); 5 -> add(DayOfWeek.FRIDAY); 6 -> add(DayOfWeek.SATURDAY); 7 -> add(DayOfWeek.SUNDAY)
         }
     }
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
-    }
+    override fun onDestroy() { scope.cancel(); super.onDestroy() }
 
     companion object {
         private const val TAG = "WakeSyncPhone"
         private const val PREFS_NAME = "wakesync_state"
         private const val PATH_ALARM_STATE_PREFIX = "/wakesync/alarm/state/"
+        private const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
         private const val KEY_MUTATION = "mutation"
+        private const val KEY_ALARM_LIST = "alarm_list"
+        private const val KEY_UPDATED_AT = "updated_at"
         const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
         const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
