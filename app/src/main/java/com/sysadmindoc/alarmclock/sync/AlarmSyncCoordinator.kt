@@ -104,8 +104,6 @@ class AlarmSyncCoordinator @Inject constructor(
                     known.remove(id.toString())
                     preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, known).remove(tokenKey(id)).apply()
                 }
-                // Keep the identity and version as a tombstone. Older CREATE/UPDATE
-                // messages and snapshots must never recreate this alarm.
                 rememberVersion(payload.syncId, payload.revision, payload.timestamp, payload.source, payload.originDeviceId)
             }
             AlarmSyncOperation.CREATE, AlarmSyncOperation.UPDATE,
@@ -132,9 +130,7 @@ class AlarmSyncCoordinator @Inject constructor(
                 }
                 rememberIdentity(payload.syncId, savedId, payload.revision, payload.timestamp, payload.alarmToken, payload.source, payload.originDeviceId)
                 remoteSuppressions[savedId] = payload.alarmToken?.let(::hash) ?: ""
-                if (payload.operation == AlarmSyncOperation.DISABLE) {
-                    alarmCommand(payload, AlarmService.ACTION_DISMISS)
-                }
+                if (payload.operation == AlarmSyncOperation.DISABLE) alarmCommand(payload, AlarmService.ACTION_DISMISS)
             }
             AlarmSyncOperation.RINGING -> startAlarm(payload)
             AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
@@ -150,13 +146,8 @@ class AlarmSyncCoordinator @Inject constructor(
         val alarm = alarmRepository.getById(alarmId) ?: error("Alarm not found")
         val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.WATCH, revision, originDeviceId = deviceId)
         val envelope = AlarmSyncEnvelope(
-            deviceId = deviceId,
-            syncId = syncId,
-            alarmId = alarmId,
-            operation = operation,
-            source = AlarmSyncSource.WATCH,
-            revision = revision,
-            timestamp = payload.timestamp,
+            deviceId = deviceId, syncId = syncId, alarmId = alarmId, operation = operation,
+            source = AlarmSyncSource.WATCH, revision = revision, timestamp = payload.timestamp,
             payload = AlarmSyncCodec.encode(payload)
         )
         transportProvider.transport().send(envelope).getOrThrow()
@@ -252,6 +243,8 @@ class AlarmSyncCoordinator @Inject constructor(
         preferences.edit().putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), timestamp)
             .putString(sourceKey(syncId), source.name).putString(originDeviceKey(syncId), originDeviceId).apply()
     }
+
+    private fun nextRevision(syncId: String): Long = preferences.getLong(revisionKey(syncId), 0L) + 1L
 
     private fun localVersion(syncId: String): AlarmSyncEnvelope? {
         val revision = preferences.getLong(revisionKey(syncId), 0L)
