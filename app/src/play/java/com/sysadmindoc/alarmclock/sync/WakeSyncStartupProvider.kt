@@ -21,6 +21,7 @@ class WakeSyncStartupProvider : ContentProvider() {
     override fun onCreate(): Boolean {
         val app = context?.applicationContext ?: return false
         EntryPoints.get(app, StartupEntryPoint::class.java).coordinator().start()
+        WakeSyncPeriodicReceiver.schedule(app)
         return true
     }
 
