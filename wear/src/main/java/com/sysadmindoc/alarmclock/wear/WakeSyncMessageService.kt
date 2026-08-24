@@ -3,13 +3,13 @@ package com.sysadmindoc.alarmclock.wear
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import androidx.wear.tiles.TileService
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
-import androidx.wear.tiles.TileService
-import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import org.json.JSONObject
 
 /** Receives persistent phone-side alarm state through DataClient. */
@@ -19,7 +19,6 @@ class WakeSyncMessageService : WearableListenerService() {
             if (event.type != DataEvent.TYPE_CHANGED) continue
             val path = event.dataItem.uri.path.orEmpty()
             if (!path.startsWith(PATH_ALARM_STATE_PREFIX)) continue
-
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
             val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
             if (encoded.isBlank()) continue
@@ -27,7 +26,7 @@ class WakeSyncMessageService : WearableListenerService() {
         }
     }
 
-    /** MessageClient remains for low-latency ringing controls. */
+    /** MessageClient remains the low-latency path for alarm mutations. */
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path != PATH_MUTATION) return
         applyPersistentMutation(String(messageEvent.data, Charsets.UTF_8))
@@ -60,30 +59,37 @@ class WakeSyncMessageService : WearableListenerService() {
                         if (array != null) for (i in 0 until array.length()) add(array.optInt(i))
                     }
                 } else current?.repeatDays.orEmpty()
-                WearAlarmListStore.upsert(
+                val entry = WearAlarmListStore.Entry(
+                    syncId = syncId,
+                    label = payload.optString("label", current?.label ?: ""),
+                    hour = payload.optInt("hour", current?.hour ?: 0),
+                    minute = payload.optInt("minute", current?.minute ?: 0),
+                    enabled = enabled,
+                    repeatDays = repeatDays,
+                    snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
+                    vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
+                    volume = payload.optInt("volume", current?.volume ?: 100),
+                    revision = incomingRevision,
+                    updatedAt = incomingTimestamp.takeIf { it > 0L } ?: System.currentTimeMillis(),
+                    alarmToken = payload.optString("alarmToken").ifBlank { current?.alarmToken.orEmpty() },
+                    source = payload.optString("source", "PHONE"),
+                    originDeviceId = payload.optString("originDeviceId")
+                )
+                WearAlarmListStore.upsert(applicationContext, entry)
+                if (operation == "DISABLE") {
+                    notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
+                }
+            }
+            "DELETE" -> {
+                WearAlarmListStore.removeWithTombstone(
                     applicationContext,
-                    WearAlarmListStore.Entry(
-                        syncId = syncId,
-                        label = payload.optString("label", current?.label ?: ""),
-                        hour = payload.optInt("hour", current?.hour ?: 0),
-                        minute = payload.optInt("minute", current?.minute ?: 0),
-                        enabled = enabled,
-                        repeatDays = repeatDays,
-                        snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
-                        vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
-                        volume = payload.optInt("volume", current?.volume ?: 100),
-                        revision = incomingRevision,
-                        updatedAt = incomingTimestamp.coerceAtLeast(System.currentTimeMillis()),
-                        alarmToken = payload.optString("alarmToken").ifBlank { current?.alarmToken.orEmpty() }
-                    )
+                    syncId,
+                    incomingRevision,
+                    incomingTimestamp.takeIf { it > 0L } ?: System.currentTimeMillis(),
+                    payload.optString("source", "PHONE"),
+                    payload.optString("originDeviceId")
                 )
             }
-            "DELETE" -> WearAlarmListStore.removeWithTombstone(
-                applicationContext,
-                syncId,
-                incomingRevision,
-                incomingTimestamp
-            )
             "SNOOZE" -> {
                 val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
                 if (current != null) {
