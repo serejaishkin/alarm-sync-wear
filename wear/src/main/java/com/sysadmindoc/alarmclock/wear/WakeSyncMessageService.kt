@@ -9,7 +9,7 @@ import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import org.json.JSONObject
 
-/** Applies phone-side WakeSync mutations to the local Wear alarm collection. */
+/** Applies canonical phone-side WakeSync mutations to the local Wear alarm collection. */
 class WakeSyncMessageService : WearableListenerService() {
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path != PATH_MUTATION) return
@@ -19,6 +19,10 @@ class WakeSyncMessageService : WearableListenerService() {
         if (syncId.isBlank()) return
 
         val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
+        val incomingRevision = payload.optLong("revision", 0L)
+        val incomingTimestamp = payload.optLong("timestamp", 0L)
+        if (current != null && incomingRevision < current.revision) return
+        if (current != null && incomingRevision == current.revision && incomingTimestamp <= current.updatedAt) return
 
         when (operation) {
             "CREATE", "UPDATE", "ENABLE", "DISABLE" -> {
@@ -45,8 +49,8 @@ class WakeSyncMessageService : WearableListenerService() {
                         snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
                         vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
                         volume = payload.optInt("volume", current?.volume ?: 100),
-                        revision = payload.optLong("revision", current?.revision ?: 0L),
-                        updatedAt = payload.optLong("timestamp", System.currentTimeMillis()),
+                        revision = incomingRevision,
+                        updatedAt = incomingTimestamp.coerceAtLeast(System.currentTimeMillis()),
                         alarmToken = payload.optString("alarmToken").ifBlank { current?.alarmToken.orEmpty() }
                     )
                 )
