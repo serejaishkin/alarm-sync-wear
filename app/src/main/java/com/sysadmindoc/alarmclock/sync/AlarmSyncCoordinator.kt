@@ -138,6 +138,30 @@ class AlarmSyncCoordinator @Inject constructor(
         }
     }
 
+    /** Apply a complete Wear snapshot. Missing remote IDs are treated as deletes only
+     * when the local version is not newer than the snapshot itself. */
+    suspend fun applyWatchSnapshot(entries: List<AlarmSyncPayload>, snapshotTimestamp: Long): Result<Unit> = runCatching {
+        val remoteIds = entries.map { it.syncId }.toSet()
+        entries.forEach { payload -> applyRemote(payload).getOrThrow() }
+        alarmRepository.getAll().forEach { alarm ->
+            val syncId = preferences.getString(syncIdKey(alarm.id), null) ?: return@forEach
+            if (syncId in remoteIds) return@forEach
+            val localTimestamp = preferences.getLong(timestampKey(syncId), 0L)
+            if (localTimestamp <= snapshotTimestamp) {
+                val revision = nextRevision(syncId)
+                applyRemote(
+                    AlarmSyncPayload.delete(
+                        syncId = syncId,
+                        revision = revision,
+                        timestamp = snapshotTimestamp,
+                        source = AlarmSyncSource.WATCH,
+                        originDeviceId = entries.firstOrNull()?.originDeviceId ?: "WATCH"
+                    )
+                ).getOrThrow()
+            }
+        }
+    }
+
     suspend fun sendWearAction(alarmId: Long, operation: AlarmSyncOperation): Result<Unit> = runCatching {
         require(operation == AlarmSyncOperation.SNOOZE || operation == AlarmSyncOperation.DISMISS ||
             operation == AlarmSyncOperation.ENABLE || operation == AlarmSyncOperation.DISABLE)
@@ -171,7 +195,7 @@ class AlarmSyncCoordinator @Inject constructor(
             val syncId = ensureSyncId(alarm.id)
             val revision = preferences.getLong(revisionKey(syncId), 0L)
             val updatedAt = preferences.getLong(timestampKey(syncId), 0L).let { if (it > 0L) it else System.currentTimeMillis() }
-            AlarmSyncSnapshotEntry(alarm, syncId, revision, updatedAt)
+            AlarmSyncSnapshotEntry(alarm, syncId, revision, updatedAt, AlarmSyncSource.PHONE, deviceId)
         }
         transportProvider.transport().publishFullSnapshot(entries)
 
