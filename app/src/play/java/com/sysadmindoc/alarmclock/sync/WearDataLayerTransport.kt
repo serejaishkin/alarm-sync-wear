@@ -18,17 +18,12 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private val appContext = context.applicationContext
 
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
-        val payload = AlarmSyncCodec.encode(
-            AlarmSyncPayload(
-                protocolVersion = envelope.protocolVersion,
-                syncId = envelope.syncId,
-                operation = envelope.operation,
-                source = envelope.source,
-                revision = envelope.revision,
-                timestamp = envelope.timestamp,
-                alarmToken = envelope.payload
-            )
-        ).toByteArray(Charsets.UTF_8)
+        // AlarmSyncEnvelope.payload already contains the complete canonical
+        // AlarmSyncPayload JSON. Do not wrap it again as alarmToken: doing so
+        // makes the Wear side receive a JSON document where a share-token is
+        // expected and breaks CREATE/UPDATE/ENABLE/DISABLE synchronization.
+        val payload = requireNotNull(envelope.payload) { "Mutation envelope has no payload" }
+            .toByteArray(Charsets.UTF_8)
         val nodes = awaitConnectedNodes()
         require(nodes.isNotEmpty()) { "No connected Wear OS node" }
         nodes.forEach { node -> awaitSendMessage(node, payload) }
@@ -37,9 +32,13 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(alarms, emptyMap())
 
     override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
-        publishDataItem(entries.map { it.alarm }, entries.associate { it.alarm.id to it.syncId })
+        publishDataItem(entries.map { it.alarm }, entries.associate { it.alarm.id to it.syncId }, entries.associate { it.alarm.id to it.revision })
 
-    private suspend fun publishDataItem(alarms: List<Alarm>, syncIds: Map<Long, String>): Result<Unit> = runCatching {
+    private suspend fun publishDataItem(
+        alarms: List<Alarm>,
+        syncIds: Map<Long, String>,
+        revisions: Map<Long, Long> = emptyMap()
+    ): Result<Unit> = runCatching {
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
         alarms.filter { it.id != 0L }.forEach { item ->
@@ -56,7 +55,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
                 .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
                 .put("vibrationEnabled", item.vibrationEnabled)
                 .put("volume", item.volume)
-                .put("revision", item.nextTriggerTime)
+                .put("revision", revisions[item.id] ?: 0L)
                 .put("updatedAt", System.currentTimeMillis())
                 .put("alarmToken", token))
         }
