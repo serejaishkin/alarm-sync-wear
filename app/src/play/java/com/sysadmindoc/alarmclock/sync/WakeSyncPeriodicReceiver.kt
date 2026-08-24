@@ -6,26 +6,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.google.android.gms.wearable.Wearable
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-/** Periodically reconciles both peers: publish phone state and request the full Wear state. */
-@AndroidEntryPoint
+/** Periodically requests the Wear snapshot. Phone state is published only after that snapshot is merged. */
 class WakeSyncPeriodicReceiver : BroadcastReceiver() {
-    @Inject lateinit var coordinator: AlarmSyncCoordinator
-
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action !in setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED, ACTION_SYNC)) return
         schedule(context)
         requestWatchSnapshot(context)
-        val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            try { coordinator.syncNow() } finally { pendingResult.finish() }
-        }
     }
 
     private fun requestWatchSnapshot(context: Context) {
