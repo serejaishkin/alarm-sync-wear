@@ -51,10 +51,6 @@ class AlarmSyncCoordinator @Inject constructor(
         require(syncId.isNotBlank())
         require(alarmId > 0L)
         rememberIdentity(syncId, alarmId, revision, timestamp, alarmToken)
-        // The token identifies the alarm that came from Wear; it must NOT be
-        // treated as already delivered by the phone. Otherwise the snapshot
-        // publisher skips it and the alarm never makes the round trip back to
-        // Wear, which makes Wear-created alarms appear only on the phone.
         preferences.edit().remove(tokenKey(alarmId)).apply()
         val ids = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
         ids.add(alarmId.toString())
@@ -175,17 +171,25 @@ class AlarmSyncCoordinator @Inject constructor(
             AlarmSyncSnapshotEntry(alarm, syncId, preferences.getLong(revisionKey(syncId), 0L))
         }
         transportProvider.transport().publishFullSnapshot(entries)
+
         for (alarm in alarms) {
             if (alarm.id == 0L) continue
             val syncId = ensureSyncId(alarm.id)
-            val token = AlarmSyncCodec.create(alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, nextRevision(syncId)).alarmToken ?: continue
-            val tokenHash = hash(token)
+            val currentToken = AlarmSyncCodec.create(
+                alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, 0L
+            ).alarmToken ?: continue
+            val tokenHash = hash(currentToken)
             if (!force && remoteSuppressions.remove(alarm.id) == tokenHash) {
-                preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply(); continue
+                preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply()
+                continue
             }
             if (!force && preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
-            val operation = if (!force && preferences.getString(tokenKey(alarm.id), null) == null)
-                AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
+
+            val operation = if (!force && preferences.getString(tokenKey(alarm.id), null) == null) {
+                AlarmSyncOperation.CREATE
+            } else {
+                AlarmSyncOperation.UPDATE
+            }
             val revision = nextRevision(syncId)
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision)
             val envelope = AlarmSyncEnvelope(
@@ -199,10 +203,12 @@ class AlarmSyncCoordinator @Inject constructor(
                 payload = AlarmSyncCodec.encode(payload)
             )
             if (transportProvider.transport().send(envelope).isSuccess) {
-                preferences.edit().putString(tokenKey(alarm.id), tokenHash)
+                val sentTokenHash = payload.alarmToken?.let(::hash) ?: tokenHash
+                preferences.edit().putString(tokenKey(alarm.id), sentTokenHash)
                     .putLong(revisionKey(syncId), revision).putLong(timestampKey(syncId), payload.timestamp).apply()
             }
         }
+
         for (alarmId in previousIds - currentIds) {
             val syncId = preferences.getString(syncIdKey(alarmId), null) ?: continue
             val revision = nextRevision(syncId)
