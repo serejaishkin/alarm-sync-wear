@@ -5,6 +5,7 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -17,22 +18,32 @@ import kotlin.coroutines.resumeWithException
 class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private val appContext = context.applicationContext
 
+    /**
+     * Persistent alarm mutations use DataClient. Unlike MessageClient, the
+     * Data Layer keeps the latest value until the peer receives it, so a
+     * temporary BT/disconnect does not lose CREATE/UPDATE/DELETE state.
+     */
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
-        // AlarmSyncEnvelope.payload already contains the complete canonical
-        // AlarmSyncPayload JSON. Do not wrap it again as alarmToken: doing so
-        // makes the Wear side receive a JSON document where a share-token is
-        // expected and breaks CREATE/UPDATE/ENABLE/DISABLE synchronization.
         val payload = requireNotNull(envelope.payload) { "Mutation envelope has no payload" }
-            .toByteArray(Charsets.UTF_8)
-        val nodes = awaitConnectedNodes()
-        require(nodes.isNotEmpty()) { "No connected Wear OS node" }
-        nodes.forEach { node -> awaitSendMessage(node, payload) }
+        val path = "$PATH_ALARM_STATE/${envelope.syncId}"
+        val request = PutDataMapRequest.create(path).apply {
+            dataMap.putString(KEY_MUTATION, payload)
+            dataMap.putLong(KEY_REVISION, envelope.revision)
+            dataMap.putLong(KEY_TIMESTAMP, envelope.timestamp)
+            dataMap.putString(KEY_OPERATION, envelope.operation.name)
+            dataMap.putString(KEY_SOURCE, envelope.source.name)
+        }.asPutDataRequest().setUrgent()
+        awaitPutDataItem(request)
     }
 
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(alarms, emptyMap())
 
     override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
-        publishDataItem(entries.map { it.alarm }, entries.associate { it.alarm.id to it.syncId }, entries.associate { it.alarm.id to it.revision })
+        publishDataItem(
+            entries.map { it.alarm },
+            entries.associate { it.alarm.id to it.syncId },
+            entries.associate { it.alarm.id to it.revision }
+        )
 
     private suspend fun publishDataItem(
         alarms: List<Alarm>,
@@ -79,13 +90,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
 
-    private suspend fun awaitSendMessage(node: Node, payload: ByteArray): Int = suspendCancellableCoroutine { c ->
-        Wearable.getMessageClient(appContext).sendMessage(node.id, ALARM_MUTATION_PATH, payload)
-            .addOnSuccessListener(OnSuccessListener { result -> if (c.isActive) c.resume(result) })
-            .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
-    }
-
-    private suspend fun awaitPutDataItem(request: com.google.android.gms.wearable.PutDataRequest) =
+    private suspend fun awaitPutDataItem(request: PutDataRequest) =
         suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
             Wearable.getDataClient(appContext).putDataItem(request)
                 .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
@@ -93,8 +98,13 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         }
 
     companion object {
-        const val ALARM_MUTATION_PATH = "/wakesync/alarm/mutation"
+        const val PATH_ALARM_STATE = "/wakesync/alarm/state"
         const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
+        const val KEY_MUTATION = "mutation"
+        const val KEY_REVISION = "revision"
+        const val KEY_TIMESTAMP = "timestamp"
+        const val KEY_OPERATION = "operation"
+        const val KEY_SOURCE = "source"
         const val KEY_ALARM_LIST = "alarm_list"
         private const val KEY_HAS_ALARM = "has_alarm"
         private const val KEY_ALARM_ID = "alarm_id"
