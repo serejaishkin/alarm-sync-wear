@@ -38,40 +38,40 @@ data class AppShapeTokens(
     val bottomNav: Shape
 )
 
-// WakeSync aesthetic: inspired by the calm, spacious geometry of Google Clock,
-// while keeping our own colours, hierarchy and functionality.
+// WakeSync: Google Clock-inspired geometry without copying Google's palette,
+// navigation structure, or WakeSync's sleep-mode functionality.
 private val StandardShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(24.dp),
-    tile = RoundedCornerShape(20.dp),
+    card = RoundedCornerShape(28.dp),
+    tile = RoundedCornerShape(22.dp),
     chip = RoundedCornerShape(50),
-    iconContainer = RoundedCornerShape(18.dp),
-    bottomNav = RoundedCornerShape(32.dp)
+    iconContainer = RoundedCornerShape(20.dp),
+    bottomNav = RoundedCornerShape(28.dp)
 )
 
 private val ExpressiveShapeTokens = AppShapeTokens(
-    card = RoundedCornerShape(28.dp),
-    tile = RoundedCornerShape(24.dp),
+    card = RoundedCornerShape(32.dp),
+    tile = RoundedCornerShape(26.dp),
     chip = RoundedCornerShape(50),
-    iconContainer = RoundedCornerShape(20.dp),
-    bottomNav = RoundedCornerShape(34.dp)
+    iconContainer = RoundedCornerShape(22.dp),
+    bottomNav = RoundedCornerShape(30.dp)
 )
 
 val LocalAppShapeTokens = compositionLocalOf { StandardShapeTokens }
 
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(24.dp),
-    large = RoundedCornerShape(28.dp),
-    extraLarge = RoundedCornerShape(32.dp)
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(18.dp),
+    medium = RoundedCornerShape(28.dp),
+    large = RoundedCornerShape(32.dp),
+    extraLarge = RoundedCornerShape(36.dp)
 )
 
 private val ExpressiveMaterialShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),
-    small = RoundedCornerShape(18.dp),
-    medium = RoundedCornerShape(26.dp),
-    large = RoundedCornerShape(30.dp),
-    extraLarge = RoundedCornerShape(34.dp)
+    extraSmall = RoundedCornerShape(14.dp),
+    small = RoundedCornerShape(20.dp),
+    medium = RoundedCornerShape(30.dp),
+    large = RoundedCornerShape(34.dp),
+    extraLarge = RoundedCornerShape(38.dp)
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -117,9 +117,7 @@ fun AlarmClockXtremeTheme(
             }
         }
         context.contentResolver.registerContentObserver(
-            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
-            false,
-            observer
+            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false, observer
         )
         onDispose { context.contentResolver.unregisterContentObserver(observer) }
     }
@@ -127,7 +125,6 @@ fun AlarmClockXtremeTheme(
     val parsedAccent = if (accentColorHex != null && accentColorHex.startsWith("#")) {
         try { Color(android.graphics.Color.parseColor(accentColorHex)) } catch (_: Exception) { AccentBlue }
     } else AccentBlue
-
     val supportsDynamic = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val baseColorScheme = if (supportsDynamic) {
         dynamicDarkColorScheme(context).copy(
@@ -149,21 +146,16 @@ fun AlarmClockXtremeTheme(
             tertiary = DismissGreen,
             surfaceTint = accent
         )
-    } else {
-        baseColorScheme
-    }
+    } else baseColorScheme
     val materialShapes = if (expressiveMode) ExpressiveMaterialShapes else AppShapes
     val appShapeTokens = if (expressiveMode) ExpressiveShapeTokens else StandardShapeTokens
-
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                @Suppress("DEPRECATION")
-                window.statusBarColor = android.graphics.Color.TRANSPARENT
-                @Suppress("DEPRECATION")
-                window.navigationBarColor = SurfaceDark.toArgb()
+                @Suppress("DEPRECATION") window.statusBarColor = android.graphics.Color.TRANSPARENT
+                @Suppress("DEPRECATION") window.navigationBarColor = SurfaceDark.toArgb()
             }
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = false
@@ -171,7 +163,6 @@ fun AlarmClockXtremeTheme(
             }
         }
     }
-
     CompositionLocalProvider(
         LocalAccentColor provides accent,
         LocalExpressiveMode provides expressiveMode,
