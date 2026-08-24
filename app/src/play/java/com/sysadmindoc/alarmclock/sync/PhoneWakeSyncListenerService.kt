@@ -57,6 +57,10 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                         runCatching { parseSnapshot(rawList) }
                             .onSuccess { entries ->
                                 coordinator.applyWatchSnapshot(entries, snapshotTimestamp)
+                                    .onSuccess {
+                                        // Important: do not publish the old phone state before the Watch snapshot is merged.
+                                        coordinator.syncNow()
+                                    }
                                     .onFailure { Log.e(TAG, "Failed to reconcile Watch snapshot", it) }
                             }
                             .onFailure { Log.e(TAG, "Failed to parse Watch snapshot", it) }
@@ -102,6 +106,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     private suspend fun applyWatchSnapshotMessage(raw: String) {
         val entries = parseSnapshot(raw)
         coordinator.applyWatchSnapshot(entries, System.currentTimeMillis()).getOrThrow()
+        coordinator.syncNow()
     }
 
     private fun parseSnapshot(raw: String): List<AlarmSyncPayload> {
@@ -187,7 +192,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         private const val TAG = "WakeSyncPhone"
         private const val PREFS_NAME = "wakesync_state"
         private const val PATH_ALARM_STATE_PREFIX = "/wakesync/alarm/state/"
-        private const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
+        private const val PATH_ALARM_SNAPSHOT = "/alarms/next"
         private const val KEY_MUTATION = "mutation"
         private const val KEY_ALARM_LIST = "alarm_list"
         private const val KEY_UPDATED_AT = "updated_at"
