@@ -51,7 +51,6 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         }
     }
 
-    /** MessageClient remains for low-latency actions and legacy requests. */
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
             AlarmSyncTransportPaths.ALARM_MUTATION -> {
@@ -59,12 +58,8 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                 scope.launch {
                     val decoded = AlarmSyncCodec.decode(encoded).getOrNull() ?: return@launch
                     val result = when (decoded.operation) {
-                        AlarmSyncOperation.SNOOZE -> runCatching {
-                            handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE)
-                        }
-                        AlarmSyncOperation.DISMISS -> runCatching {
-                            handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_DISMISS)
-                        }
+                        AlarmSyncOperation.SNOOZE -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE) }
+                        AlarmSyncOperation.DISMISS -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_DISMISS) }
                         else -> coordinator.applyRemote(decoded)
                     }
                     result.onFailure { Log.e(TAG, "Failed to apply ${decoded.operation} for ${decoded.syncId}", it) }
@@ -82,6 +77,19 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                 runCatching { coordinator.syncNow() }
                     .onFailure { Log.e(TAG, "Failed to publish snapshot to Wear", it) }
             }
+            PATH_WATCH_SNAPSHOT -> scope.launch {
+                runCatching { applyWatchSnapshot(messageEvent.data.toString(Charsets.UTF_8)) }
+                    .onFailure { Log.e(TAG, "Failed to apply Watch snapshot", it) }
+            }
+        }
+    }
+
+    private suspend fun applyWatchSnapshot(raw: String) {
+        val array = JSONArray(raw)
+        for (i in 0 until array.length()) {
+            val decoded = AlarmSyncCodec.decode(array.getJSONObject(i).toString()).getOrNull() ?: continue
+            coordinator.applyRemote(decoded)
+                .onFailure { Log.e(TAG, "Failed to apply Watch snapshot ${decoded.operation} for ${decoded.syncId}", it) }
         }
     }
 
@@ -99,30 +107,23 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     private suspend fun createFromWear(raw: String) {
         val json = JSONObject(raw)
         require(json.optString("operation") == "CREATE_REQUEST")
-        val syncId = json.optString("syncId").takeIf { it.isNotBlank() }
-            ?: throw IllegalArgumentException("Wear create request has no syncId")
+        val syncId = json.optString("syncId").takeIf { it.isNotBlank() } ?: throw IllegalArgumentException("Wear create request has no syncId")
         val existingId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
         if (existingId > 0L && alarmRepository.getById(existingId) != null) {
             updateFromWear(json.put("operation", "UPDATE_REQUEST").toString())
             return
         }
         val alarm = Alarm(
-            hour = json.optInt("hour", 7).coerceIn(0, 23),
-            minute = json.optInt("minute", 0).coerceIn(0, 59),
-            label = json.optString("label").take(120),
-            isEnabled = json.optBoolean("enabled", true),
+            hour = json.optInt("hour", 7).coerceIn(0, 23), minute = json.optInt("minute", 0).coerceIn(0, 59),
+            label = json.optString("label").take(120), isEnabled = json.optBoolean("enabled", true),
             repeatDays = parseRepeatDays(json.optJSONArray("repeatDays")),
-            vibrationEnabled = json.optBoolean("vibrationEnabled", true),
-            volume = json.optInt("volume", 100).coerceIn(0, 100),
+            vibrationEnabled = json.optBoolean("vibrationEnabled", true), volume = json.optInt("volume", 100).coerceIn(0, 100),
             snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60)
         )
         val alarmId = alarmRepository.save(alarm)
         coordinator.registerWearCreatedAlarm(
-            syncId = syncId,
-            alarmId = alarmId,
-            revision = json.optLong("revision", 1L),
-            timestamp = System.currentTimeMillis(),
-            alarmToken = json.optString("alarmToken").ifBlank { null }
+            syncId = syncId, alarmId = alarmId, revision = json.optLong("revision", 1L),
+            timestamp = json.optLong("timestamp", System.currentTimeMillis()), alarmToken = json.optString("alarmToken").ifBlank { null }
         )
         coordinator.start()
         coordinator.syncNow()
@@ -132,13 +133,9 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         val json = JSONObject(raw)
         require(json.optString("operation") == "UPDATE_REQUEST")
         coordinator.updateFromWear(
-            syncId = json.getString("syncId"),
-            hour = json.optInt("hour", 7),
-            minute = json.optInt("minute", 0),
-            label = json.optString("label"),
-            snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10),
-            vibrationEnabled = json.optBoolean("vibrationEnabled", true),
-            volume = json.optInt("volume", 100),
+            syncId = json.getString("syncId"), hour = json.optInt("hour", 7), minute = json.optInt("minute", 0),
+            label = json.optString("label"), snoozeDurationMinutes = json.optInt("snoozeDurationMinutes", 10),
+            vibrationEnabled = json.optBoolean("vibrationEnabled", true), volume = json.optInt("volume", 100),
             repeatDays = parseRepeatDays(json.optJSONArray("repeatDays"))
         ).getOrThrow()
         coordinator.syncNow()
@@ -147,16 +144,9 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> {
         if (array == null) return emptySet()
         return buildSet {
-            for (i in 0 until array.length()) {
-                when (array.optInt(i, 0)) {
-                    1 -> add(DayOfWeek.MONDAY)
-                    2 -> add(DayOfWeek.TUESDAY)
-                    3 -> add(DayOfWeek.WEDNESDAY)
-                    4 -> add(DayOfWeek.THURSDAY)
-                    5 -> add(DayOfWeek.FRIDAY)
-                    6 -> add(DayOfWeek.SATURDAY)
-                    7 -> add(DayOfWeek.SUNDAY)
-                }
+            for (i in 0 until array.length()) when (array.optInt(i, 0)) {
+                1 -> add(DayOfWeek.MONDAY); 2 -> add(DayOfWeek.TUESDAY); 3 -> add(DayOfWeek.WEDNESDAY)
+                4 -> add(DayOfWeek.THURSDAY); 5 -> add(DayOfWeek.FRIDAY); 6 -> add(DayOfWeek.SATURDAY); 7 -> add(DayOfWeek.SUNDAY)
             }
         }
     }
@@ -174,5 +164,6 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
         const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
+        const val PATH_WATCH_SNAPSHOT = "/wakesync/alarm/watch_snapshot"
     }
 }
