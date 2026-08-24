@@ -17,7 +17,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <data android:scheme="wear" android:host="*" android:path="/alarms/next" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/alarms" />
             </intent-filter>
         </service>
         <service
