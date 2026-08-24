@@ -167,7 +167,13 @@ class AlarmSyncCoordinator @Inject constructor(
         val previousIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
         val entries = alarms.filter { it.id != 0L }.map { alarm ->
             val syncId = ensureSyncId(alarm.id)
-            AlarmSyncSnapshotEntry(alarm, syncId, preferences.getLong(revisionKey(syncId), 0L))
+            val revision = preferences.getLong(revisionKey(syncId), 0L)
+            // Real last-change instant, not "now" — see AlarmSyncSnapshotEntry.
+            // Falls back to now() only the very first time this alarm is ever
+            // published (no prior revision recorded yet).
+            val updatedAt = preferences.getLong(timestampKey(syncId), 0L)
+                .let { if (it > 0L) it else System.currentTimeMillis() }
+            AlarmSyncSnapshotEntry(alarm, syncId, revision, updatedAt)
         }
         transportProvider.transport().publishFullSnapshot(entries)
 

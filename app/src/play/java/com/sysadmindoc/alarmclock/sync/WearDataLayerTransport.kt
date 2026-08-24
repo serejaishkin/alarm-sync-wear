@@ -42,13 +42,15 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         publishDataItem(
             entries.map { it.alarm },
             entries.associate { it.alarm.id to it.syncId },
-            entries.associate { it.alarm.id to it.revision }
+            entries.associate { it.alarm.id to it.revision },
+            entries.associate { it.alarm.id to it.updatedAt }
         )
 
     private suspend fun publishDataItem(
         alarms: List<Alarm>,
         syncIds: Map<Long, String>,
-        revisions: Map<Long, Long> = emptyMap()
+        revisions: Map<Long, Long> = emptyMap(),
+        updatedAts: Map<Long, Long> = emptyMap()
     ): Result<Unit> = runCatching {
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
@@ -67,7 +69,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
                 .put("vibrationEnabled", item.vibrationEnabled)
                 .put("volume", item.volume)
                 .put("revision", revisions[item.id] ?: 0L)
-                .put("updatedAt", System.currentTimeMillis())
+                .put("updatedAt", updatedAts[item.id] ?: System.currentTimeMillis())
                 .put("alarmToken", token))
         }
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
