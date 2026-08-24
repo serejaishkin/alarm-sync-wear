@@ -25,24 +25,24 @@ object WakeSyncPeerController {
         sendRawMessage(context, PATH_REQUEST_SNAPSHOT, ByteArray(0))
     }
 
+    /** Publish the complete Wear state through durable Data Layer items. */
     fun sendWatchSnapshot(context: Context) {
-        val array = JSONArray()
-        WearAlarmListStore.load(context).forEach { entry ->
-            array.put(buildPayload(entry, "UPDATE"))
+        val appContext = context.applicationContext
+        WearAlarmListStore.load(appContext).forEach { entry ->
+            sendDataItem(appContext, entry.syncId, buildPayload(entry, "UPDATE"))
         }
-        WearAlarmListStore.tombstones(context).forEach { tombstone ->
-            array.put(
-                JSONObject()
-                    .put("protocolVersion", PROTOCOL_VERSION)
-                    .put("syncId", tombstone.syncId)
-                    .put("operation", "DELETE")
-                    .put("source", tombstone.source)
-                    .put("originDeviceId", tombstone.deviceId)
-                    .put("revision", tombstone.revision)
-                    .put("timestamp", tombstone.timestamp)
-            )
+        WearAlarmListStore.tombstones(appContext).forEach { tombstone ->
+            val payload = JSONObject()
+                .put("protocolVersion", PROTOCOL_VERSION)
+                .put("syncId", tombstone.syncId)
+                .put("operation", "DELETE")
+                .put("source", tombstone.source)
+                .put("originDeviceId", tombstone.deviceId)
+                .put("revision", tombstone.revision)
+                .put("timestamp", tombstone.timestamp)
+                .toString()
+            sendDataItem(appContext, tombstone.syncId, payload)
         }
-        sendRawMessage(context, PATH_WATCH_SNAPSHOT, array.toString().toByteArray(Charsets.UTF_8))
     }
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
