@@ -19,12 +19,14 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private val appContext = context.applicationContext
 
     /**
-     * Persistent alarm mutations use DataClient. Unlike MessageClient, the
-     * Data Layer keeps the latest value until the peer receives it, so a
-     * temporary BT/disconnect does not lose CREATE/UPDATE/DELETE state.
+     * Persistent alarm mutations use DataClient. The Data Layer keeps the
+     * latest value until the peer receives it, so a temporary disconnect does
+     * not lose CREATE/UPDATE/DELETE state.
      */
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
-        val payload = requireNotNull(envelope.payload) { "Mutation envelope has no payload" }
+        // DELETE intentionally has no alarm payload, but it still needs a
+        // persistent DataItem so the peer can observe the deletion.
+        val payload = envelope.payload ?: ""
         val path = "$PATH_ALARM_STATE/${envelope.syncId}"
         val request = PutDataMapRequest.create(path).apply {
             dataMap.putString(KEY_MUTATION, payload)
@@ -32,6 +34,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             dataMap.putLong(KEY_TIMESTAMP, envelope.timestamp)
             dataMap.putString(KEY_OPERATION, envelope.operation.name)
             dataMap.putString(KEY_SOURCE, envelope.source.name)
+            dataMap.putString(KEY_DEVICE_ID, envelope.deviceId)
         }.asPutDataRequest().setUrgent()
         awaitPutDataItem(request)
     }
@@ -107,6 +110,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         const val KEY_TIMESTAMP = "timestamp"
         const val KEY_OPERATION = "operation"
         const val KEY_SOURCE = "source"
+        const val KEY_DEVICE_ID = "device_id"
         const val KEY_ALARM_LIST = "alarm_list"
         private const val KEY_HAS_ALARM = "has_alarm"
         private const val KEY_ALARM_ID = "alarm_id"
