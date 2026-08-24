@@ -11,6 +11,8 @@ import android.widget.NumberPicker
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
+import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.Wearable
 import org.json.JSONArray
 import org.json.JSONObject
@@ -45,7 +47,9 @@ class WakeSyncAlarmEditorActivity : Activity() {
         val time = LinearLayout(this).apply { gravity = Gravity.CENTER }
         hour = picker(0, 23, 7)
         minute = picker(0, 59, 0)
-        time.addView(hour); time.addView(TextView(this).apply { text = ":" }); time.addView(minute)
+        time.addView(hour)
+        time.addView(TextView(this).apply { text = ":" })
+        time.addView(minute)
         content.addView(time)
 
         label = EditText(this).apply { hint = "Название"; setSingleLine(true) }
@@ -56,22 +60,27 @@ class WakeSyncAlarmEditorActivity : Activity() {
         }
         repeatChecks.forEach(content::addView)
 
-        content.addView(TextView(this).apply { text = "Snooze (мин)" })
-        snooze = picker(1, 60, 10); content.addView(snooze)
-        vibration = CheckBox(this).apply { text = "Вибрация"; isChecked = true }; content.addView(vibration)
+        content.addView(TextView(this).apply { text = "Отсрочка (мин)" })
+        snooze = picker(1, 60, 10)
+        content.addView(snooze)
+        vibration = CheckBox(this).apply { text = "Вибрация"; isChecked = true }
+        content.addView(vibration)
         content.addView(TextView(this).apply { text = "Громкость" })
-        volume = SeekBar(this).apply { max = 100; progress = 100 }; content.addView(volume)
+        volume = SeekBar(this).apply { max = 100; progress = 100 }
+        content.addView(volume)
         content.addView(Button(this).apply {
             text = "Сохранить"
             setOnClickListener { if (syncId == null) sendCreate() else sendUpdate() }
         })
 
-        val scroll = ScrollView(this).apply { addView(content) }
-        setContentView(scroll)
+        setContentView(ScrollView(this).apply { addView(content) })
     }
 
     private fun picker(min: Int, max: Int, value: Int) = NumberPicker(this).apply {
-        minValue = min; maxValue = max; this.value = value; wrapSelectorWheel = true
+        minValue = min
+        maxValue = max
+        this.value = value
+        wrapSelectorWheel = true
     }
 
     private fun loadExisting() {
@@ -120,7 +129,14 @@ class WakeSyncAlarmEditorActivity : Activity() {
             alarmToken = UUID.randomUUID().toString()
         )
         WearAlarmListStore.upsert(this, entry)
-        send(PATH_CREATE_REQUEST, commonJson("CREATE_REQUEST", id).put("alarmToken", entry.alarmToken).put("revision", 1L).toString().toByteArray(Charsets.UTF_8))
+        send(
+            PATH_CREATE_REQUEST,
+            commonJson("CREATE_REQUEST", id)
+                .put("alarmToken", entry.alarmToken)
+                .put("revision", 1L)
+                .toString()
+                .toByteArray(Charsets.UTF_8)
+        )
     }
 
     private fun sendUpdate() {
@@ -139,16 +155,32 @@ class WakeSyncAlarmEditorActivity : Activity() {
             updatedAt = System.currentTimeMillis()
         )
         if (updated != null) WearAlarmListStore.upsert(this, updated)
-        send(PATH_UPDATE_REQUEST, commonJson("UPDATE_REQUEST", id)
-            .put("alarmToken", updated?.alarmToken.orEmpty())
-            .put("revision", revision)
-            .toString().toByteArray(Charsets.UTF_8))
+        send(
+            PATH_UPDATE_REQUEST,
+            commonJson("UPDATE_REQUEST", id)
+                .put("alarmToken", updated?.alarmToken.orEmpty())
+                .put("revision", revision)
+                .toString()
+                .toByteArray(Charsets.UTF_8)
+        )
     }
 
     private fun send(path: String, payload: ByteArray) {
         Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
-            nodes.forEach { node -> Wearable.getMessageClient(this).sendMessage(node.id, path, payload) }
-            finish()
+            if (nodes.isEmpty()) {
+                Toast.makeText(this, "Телефон не подключён", Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
+            }
+            val tasks = nodes.map { node ->
+                Wearable.getMessageClient(this).sendMessage(node.id, path, payload)
+            }
+            Tasks.whenAll(tasks)
+                .addOnSuccessListener { finish() }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Не удалось отправить на телефон", Toast.LENGTH_SHORT).show()
+                }
+        }.addOnFailureListener {
+            Toast.makeText(this, "Не удалось найти телефон", Toast.LENGTH_SHORT).show()
         }
     }
 
