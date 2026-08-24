@@ -51,6 +51,11 @@ class AlarmSyncCoordinator @Inject constructor(
         require(syncId.isNotBlank())
         require(alarmId > 0L)
         rememberIdentity(syncId, alarmId, revision, timestamp, alarmToken)
+        // The token identifies the alarm that came from Wear; it must NOT be
+        // treated as already delivered by the phone. Otherwise the snapshot
+        // publisher skips it and the alarm never makes the round trip back to
+        // Wear, which makes Wear-created alarms appear only on the phone.
+        preferences.edit().remove(tokenKey(alarmId)).apply()
         val ids = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
         ids.add(alarmId.toString())
         preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, ids).apply()
@@ -80,12 +85,7 @@ class AlarmSyncCoordinator @Inject constructor(
             nextTriggerTime = 0L
         ).sanitized()
         alarmRepository.update(updated)
-
-        // A Wear edit is a real alarm edit, not merely a database mutation.
-        // Re-arm/cancel AlarmManager immediately so the phone uses the new
-        // time/repeat settings even when the normal UI is not open.
         alarmScheduler.schedule(updated, requestWidgetUpdate = true)
-
         start()
     }
 
