@@ -46,21 +46,12 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         entries.forEach { entry ->
             val item = entry.alarm
             list.put(JSONObject()
-                .put("syncId", entry.syncId)
-                .put("operation", "UPDATE")
-                .put("source", entry.source.name)
-                .put("originDeviceId", entry.originDeviceId)
-                .put("revision", entry.revision)
-                .put("timestamp", entry.updatedAt)
-                .put("label", item.label)
-                .put("hour", item.hour)
-                .put("minute", item.minute)
-                .put("enabled", item.isEnabled)
+                .put("syncId", entry.syncId).put("operation", "UPDATE").put("source", entry.source.name)
+                .put("originDeviceId", entry.originDeviceId).put("revision", entry.revision).put("timestamp", entry.updatedAt)
+                .put("label", item.label).put("hour", item.hour).put("minute", item.minute).put("enabled", item.isEnabled)
                 .put("repeatDays", JSONArray().also { days -> item.repeatDays.map { it.value }.sorted().forEach(days::put) })
-                .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
-                .put("vibrationEnabled", item.vibrationEnabled)
-                .put("volume", item.volume)
-                .put("alarmToken", com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)))
+                .put("snoozeDurationMinutes", item.snoozeDurationMinutes).put("vibrationEnabled", item.vibrationEnabled)
+                .put("volume", item.volume).put("alarmToken", com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)))
         }
         val snapshotTimestamp = System.currentTimeMillis()
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
@@ -82,14 +73,17 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             .addOnSuccessListener(OnSuccessListener { nodes -> if (c.isActive) c.resume(nodes) })
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
+
     private suspend fun awaitPutDataItem(request: PutDataRequest) = suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
         Wearable.getDataClient(appContext).putDataItem(request)
             .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
+
     companion object {
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
-        const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
+        // Stable Data Layer path, matching the reference project's communication model.
+        const val PATH_ALARM_SNAPSHOT = "/alarms/next"
         const val KEY_MUTATION = "mutation"
         const val KEY_REVISION = "revision"
         const val KEY_TIMESTAMP = "timestamp"
