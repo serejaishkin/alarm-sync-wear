@@ -12,10 +12,6 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
-import com.google.android.gms.tasks.Tasks
-import com.google.android.gms.wearable.Wearable
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.UUID
 
 class WakeSyncAlarmEditorActivity : Activity() {
@@ -70,7 +66,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
         content.addView(volume)
         content.addView(Button(this).apply {
             text = "Сохранить"
-            setOnClickListener { if (syncId == null) sendCreate() else sendUpdate() }
+            setOnClickListener { saveAlarm() }
         })
 
         setContentView(ScrollView(this).apply { addView(content) })
@@ -95,98 +91,47 @@ class WakeSyncAlarmEditorActivity : Activity() {
         volume.progress = alarm.volume.coerceIn(0, 100)
     }
 
-    private fun repeatJson(): JSONArray = JSONArray().also { array ->
-        repeatChecks.forEachIndexed { index, check -> if (check.isChecked) array.put(index + 1) }
-    }
-
-    private fun commonJson(operation: String, id: String): JSONObject = JSONObject()
-        .put("operation", operation)
-        .put("syncId", id)
-        .put("hour", hour.value)
-        .put("minute", minute.value)
-        .put("label", label.text.toString().trim())
-        .put("repeatDays", repeatJson())
-        .put("snoozeDurationMinutes", snooze.value)
-        .put("vibrationEnabled", vibration.isChecked)
-        .put("volume", volume.progress)
-        .put("enabled", true)
-
-    private fun sendCreate() {
-        val id = UUID.randomUUID().toString()
+    private fun collectEntry(): WearAlarmListStore.Entry {
+        val existing = syncId?.let { id -> WearAlarmListStore.load(this).firstOrNull { it.syncId == id } }
         val now = System.currentTimeMillis()
-        val entry = WearAlarmListStore.Entry(
-            syncId = id,
+        return WearAlarmListStore.Entry(
+            syncId = existing?.syncId ?: UUID.randomUUID().toString(),
             label = label.text.toString().trim(),
             hour = hour.value,
             minute = minute.value,
-            enabled = true,
-            repeatDays = repeatChecks.mapIndexedNotNull { index, check -> if (check.isChecked) index + 1 else null }.toSet(),
+            enabled = existing?.enabled ?: true,
+            repeatDays = repeatChecks.mapIndexedNotNull { index, check ->
+                if (check.isChecked) index + 1 else null
+            }.toSet(),
             snoozeDurationMinutes = snooze.value,
             vibrationEnabled = vibration.isChecked,
             volume = volume.progress,
-            revision = 1L,
+            revision = (existing?.revision ?: 0L) + 1L,
             updatedAt = now,
-            alarmToken = UUID.randomUUID().toString()
+            alarmToken = existing?.alarmToken ?: UUID.randomUUID().toString()
         )
+    }
+
+    private fun saveAlarm() {
+        val existing = syncId?.let { id -> WearAlarmListStore.load(this).firstOrNull { it.syncId == id } }
+        val entry = collectEntry()
+
+        // Local persistence is authoritative for the watch. The alarm is
+        // scheduled even when the phone is unavailable.
         WearAlarmListStore.upsert(this, entry)
-        send(
-            PATH_CREATE_REQUEST,
-            commonJson("CREATE_REQUEST", id)
-                .put("alarmToken", entry.alarmToken)
-                .put("revision", 1L)
-                .toString()
-                .toByteArray(Charsets.UTF_8)
-        )
-    }
 
-    private fun sendUpdate() {
-        val id = syncId ?: return
-        val current = WearAlarmListStore.load(this).firstOrNull { it.syncId == id }
-        val revision = (current?.revision ?: 0L) + 1L
-        val updated = current?.copy(
-            hour = hour.value,
-            minute = minute.value,
-            label = label.text.toString().trim(),
-            repeatDays = repeatChecks.mapIndexedNotNull { index, check -> if (check.isChecked) index + 1 else null }.toSet(),
-            snoozeDurationMinutes = snooze.value,
-            vibrationEnabled = vibration.isChecked,
-            volume = volume.progress,
-            revision = revision,
-            updatedAt = System.currentTimeMillis()
-        )
-        if (updated != null) WearAlarmListStore.upsert(this, updated)
-        send(
-            PATH_UPDATE_REQUEST,
-            commonJson("UPDATE_REQUEST", id)
-                .put("alarmToken", updated?.alarmToken.orEmpty())
-                .put("revision", revision)
-                .toString()
-                .toByteArray(Charsets.UTF_8)
-        )
-    }
+        val operation = if (existing == null) "CREATE" else "UPDATE"
+        WakeSyncPeerController.sendAlarmMutation(this, entry, operation)
 
-    private fun send(path: String, payload: ByteArray) {
-        Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
-            if (nodes.isEmpty()) {
-                Toast.makeText(this, "Телефон не подключён", Toast.LENGTH_SHORT).show()
-                return@addOnSuccessListener
-            }
-            val tasks = nodes.map { node ->
-                Wearable.getMessageClient(this).sendMessage(node.id, path, payload)
-            }
-            Tasks.whenAll(tasks)
-                .addOnSuccessListener { finish() }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Не удалось отправить на телефон", Toast.LENGTH_SHORT).show()
-                }
-        }.addOnFailureListener {
-            Toast.makeText(this, "Не удалось найти телефон", Toast.LENGTH_SHORT).show()
-        }
+        Toast.makeText(
+            this,
+            if (existing == null) "Будильник сохранён" else "Изменения сохранены",
+            Toast.LENGTH_SHORT
+        ).show()
+        finish()
     }
 
     companion object {
-        const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
-        const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
         const val EXTRA_SYNC_ID = "syncId"
     }
 }
