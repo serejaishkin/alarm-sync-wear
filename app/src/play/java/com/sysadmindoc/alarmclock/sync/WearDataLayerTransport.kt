@@ -18,14 +18,7 @@ import kotlin.coroutines.resumeWithException
 class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private val appContext = context.applicationContext
 
-    /**
-     * Persistent alarm mutations use DataClient. The Data Layer keeps the
-     * latest value until the peer receives it, so a temporary disconnect does
-     * not lose CREATE/UPDATE/DELETE state.
-     */
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
-        // DELETE intentionally has no alarm payload, but it still needs a
-        // persistent DataItem so the peer can observe the deletion.
         val payload = envelope.payload ?: ""
         val path = "$PATH_ALARM_STATE/${envelope.syncId}"
         val request = PutDataMapRequest.create(path).apply {
@@ -42,27 +35,22 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(alarms, emptyMap())
 
     override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
-        publishDataItem(
-            entries.map { it.alarm },
-            entries.associate { it.alarm.id to it.syncId },
-            entries.associate { it.alarm.id to it.revision },
-            entries.associate { it.alarm.id to it.updatedAt }
-        )
+        publishDataItem(entries)
 
-    private suspend fun publishDataItem(
-        alarms: List<Alarm>,
-        syncIds: Map<Long, String>,
-        revisions: Map<Long, Long> = emptyMap(),
-        updatedAts: Map<Long, Long> = emptyMap()
-    ): Result<Unit> = runCatching {
+    private suspend fun publishDataItem(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> = runCatching {
+        val alarms = entries.map { it.alarm }
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
-        alarms.filter { it.id != 0L }.forEach { item ->
-            val syncId = syncIds[item.id] ?: "snapshot-${item.id}"
-            val token = com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)
+        entries.filter { it.alarm.id != 0L }.forEach { entry ->
+            val item = entry.alarm
             val repeatDays = JSONArray().also { array -> item.repeatDays.map { it.value }.sorted().forEach(array::put) }
             list.put(JSONObject()
-                .put("syncId", syncId)
+                .put("syncId", entry.syncId)
+                .put("operation", "UPDATE")
+                .put("source", entry.source.name)
+                .put("originDeviceId", entry.originDeviceId)
+                .put("revision", entry.revision)
+                .put("timestamp", entry.updatedAt)
                 .put("label", item.label)
                 .put("hour", item.hour)
                 .put("minute", item.minute)
@@ -71,12 +59,11 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
                 .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
                 .put("vibrationEnabled", item.vibrationEnabled)
                 .put("volume", item.volume)
-                .put("revision", revisions[item.id] ?: 0L)
-                .put("updatedAt", updatedAts[item.id] ?: System.currentTimeMillis())
-                .put("alarmToken", token))
+                .put("alarmToken", com.sysadmindoc.alarmclock.data.share.AlarmShareCodec.encodeToken(item)))
         }
+        val snapshotTimestamp = System.currentTimeMillis()
         val request = PutDataMapRequest.create(PATH_ALARM_SNAPSHOT).apply {
-            dataMap.putLong(KEY_UPDATED_AT, System.currentTimeMillis())
+            dataMap.putLong(KEY_UPDATED_AT, snapshotTimestamp)
             dataMap.putBoolean(KEY_HAS_ALARM, alarm != null)
             dataMap.putLong(KEY_ALARM_ID, alarm?.id ?: -1L)
             dataMap.putString(KEY_LABEL, alarm?.label.orEmpty())
@@ -95,12 +82,11 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
 
-    private suspend fun awaitPutDataItem(request: PutDataRequest) =
-        suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
-            Wearable.getDataClient(appContext).putDataItem(request)
-                .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
-                .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
-        }
+    private suspend fun awaitPutDataItem(request: PutDataRequest) = suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
+        Wearable.getDataClient(appContext).putDataItem(request)
+            .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
+            .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
+    }
 
     companion object {
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
