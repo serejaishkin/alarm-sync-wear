@@ -19,6 +19,14 @@ object WearAlarmListStore {
         val originDeviceId: String = ""
     )
 
+    data class Tombstone(
+        val syncId: String,
+        val revision: Long,
+        val timestamp: Long,
+        val source: String,
+        val deviceId: String
+    )
+
     private data class Version(val revision: Long, val timestamp: Long, val source: String, val deviceId: String)
 
     fun load(context: Context): List<Entry> {
@@ -38,6 +46,11 @@ object WearAlarmListStore {
             }
         }.getOrDefault(emptyList())
     }
+
+    fun tombstones(context: Context): List<Tombstone> =
+        readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)).map { (syncId, v) ->
+            Tombstone(syncId, v.revision, v.timestamp, v.source, v.deviceId)
+        }
 
     fun save(context: Context, entries: List<Entry>) {
         val array = JSONArray()
@@ -67,11 +80,11 @@ object WearAlarmListStore {
         save(context, load(context).filterNot { it.syncId == syncId })
     }
 
-    fun removeWithTombstone(context: Context, syncId: String, revision: Long, timestamp: Long) {
+    fun removeWithTombstone(context: Context, syncId: String, revision: Long, timestamp: Long, source: String = SOURCE_WATCH, deviceId: String = "") {
         remove(context, syncId)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val tombstones = readTombstones(prefs)
-        val candidate = Version(revision, timestamp, SOURCE_WATCH, "")
+        val candidate = Version(revision, timestamp, source, deviceId)
         if (tombstones[syncId] == null || compareVersion(candidate, tombstones.getValue(syncId)) > 0) {
             tombstones[syncId] = candidate
             writeTombstones(prefs, tombstones)
