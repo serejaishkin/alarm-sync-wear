@@ -20,8 +20,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
 
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
         val payload = envelope.payload ?: ""
-        val path = "$PATH_ALARM_STATE/${envelope.syncId}"
-        val request = PutDataMapRequest.create(path).apply {
+        val request = PutDataMapRequest.create("$PATH_ALARM_STATE/${envelope.syncId}").apply {
             dataMap.putString(KEY_MUTATION, payload)
             dataMap.putLong(KEY_REVISION, envelope.revision)
             dataMap.putLong(KEY_TIMESTAMP, envelope.timestamp)
@@ -32,18 +31,20 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         awaitPutDataItem(request)
     }
 
-    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(alarms, emptyMap())
+    override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(
+        alarms.filter { it.id != 0L }.map {
+            AlarmSyncSnapshotEntry(it, "snapshot-${it.id}", 0L, System.currentTimeMillis(), AlarmSyncSource.PHONE, "")
+        }
+    )
 
-    override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> =
-        publishDataItem(entries)
+    override suspend fun publishFullSnapshot(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> = publishDataItem(entries)
 
     private suspend fun publishDataItem(entries: List<AlarmSyncSnapshotEntry>): Result<Unit> = runCatching {
         val alarms = entries.map { it.alarm }
         val alarm = alarms.filter { it.isEnabled && it.nextTriggerTime > 0L }.minByOrNull { it.nextTriggerTime }
         val list = JSONArray()
-        entries.filter { it.alarm.id != 0L }.forEach { entry ->
+        entries.forEach { entry ->
             val item = entry.alarm
-            val repeatDays = JSONArray().also { array -> item.repeatDays.map { it.value }.sorted().forEach(array::put) }
             list.put(JSONObject()
                 .put("syncId", entry.syncId)
                 .put("operation", "UPDATE")
@@ -55,7 +56,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
                 .put("hour", item.hour)
                 .put("minute", item.minute)
                 .put("enabled", item.isEnabled)
-                .put("repeatDays", repeatDays)
+                .put("repeatDays", JSONArray().also { days -> item.repeatDays.map { it.value }.sorted().forEach(days::put) })
                 .put("snoozeDurationMinutes", item.snoozeDurationMinutes)
                 .put("vibrationEnabled", item.vibrationEnabled)
                 .put("volume", item.volume)
@@ -81,13 +82,11 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             .addOnSuccessListener(OnSuccessListener { nodes -> if (c.isActive) c.resume(nodes) })
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
-
     private suspend fun awaitPutDataItem(request: PutDataRequest) = suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
         Wearable.getDataClient(appContext).putDataItem(request)
             .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
             .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
     }
-
     companion object {
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
         const val PATH_ALARM_SNAPSHOT = "/alarmclockxtreme/next_alarm"
