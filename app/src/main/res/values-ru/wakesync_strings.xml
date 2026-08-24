@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_alarms">Будильники</string>
+    <string name="nav_timer">Таймер</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="wakesync_alarms_title">Будильники</string>
+    <string name="wakesync_your_alarms">Ваши будильники</string>
+    <string name="wakesync_next_alarm">Следующий будильник</string>
+    <string name="wakesync_today">Сегодня</string>
+    <string name="wakesync_tomorrow">Завтра</string>
+    <string name="wakesync_no_next_alarm">Нет запланированных будильников</string>
+    <string name="wakesync_tap_to_create">Нажмите, чтобы создать будильник</string>
+    <string name="wakesync_no_alarms">Пока нет будильников</string>
+    <string name="wakesync_create_alarm">Создать будильник</string>
+    <string name="wakesync_add_alarm">Добавить будильник</string>
+    <string name="wakesync_personalization">Персонализация</string>
+    <string name="wakesync_sleep_mode">Режим сна</string>
+    <string name="wakesync_sleep_mode_subtitle">Время сна, расписание и ночные настройки</string>
+    <string name="wakesync_more">Ещё</string>
+    <string name="wakesync_edit">Изменить</string>
+    <string name="wakesync_duplicate">Дублировать</string>
+    <string name="wakesync_delete">Удалить</string>
+</resources>
