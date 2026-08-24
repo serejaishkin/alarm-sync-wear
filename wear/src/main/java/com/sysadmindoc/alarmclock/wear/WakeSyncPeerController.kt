@@ -21,14 +21,15 @@ object WakeSyncPeerController {
         }
     }
 
-    fun sendDelete(context: Context, syncId: String, revision: Long) {
+    fun sendDelete(context: Context, syncId: String, revision: Long, timestamp: Long = System.currentTimeMillis()) {
         val payload = JSONObject()
             .put("protocolVersion", PROTOCOL_VERSION)
             .put("syncId", syncId)
             .put("operation", "DELETE")
             .put("source", "WATCH")
+            .put("originDeviceId", deviceId(context))
             .put("revision", revision)
-            .put("timestamp", System.currentTimeMillis())
+            .put("timestamp", timestamp)
             .toString()
         sendDataItem(context, syncId, payload)
     }
@@ -44,7 +45,9 @@ object WakeSyncPeerController {
             },
             revision = revision,
             updatedAt = System.currentTimeMillis(),
-            alarmToken = alarmToken ?: current.alarmToken
+            alarmToken = alarmToken ?: current.alarmToken,
+            source = "WATCH",
+            originDeviceId = deviceId(context)
         )
         WearAlarmListStore.upsert(context, updated)
         sendAlarmMutation(context, updated, operation)
@@ -53,8 +56,9 @@ object WakeSyncPeerController {
     fun sendDelete(context: Context, syncId: String) {
         val current = WearAlarmListStore.load(context).firstOrNull { it.syncId == syncId } ?: return
         val revision = current.revision + 1L
-        WearAlarmListStore.removeWithTombstone(context, syncId, revision, System.currentTimeMillis())
-        sendDelete(context, syncId, revision)
+        val timestamp = System.currentTimeMillis()
+        WearAlarmListStore.removeWithTombstone(context, syncId, revision, timestamp)
+        sendDelete(context, syncId, revision, timestamp)
     }
 
     fun sendEnable(context: Context, syncId: String, alarmToken: String) =
@@ -68,7 +72,8 @@ object WakeSyncPeerController {
             .put("protocolVersion", PROTOCOL_VERSION)
             .put("syncId", entry.syncId)
             .put("operation", operation)
-            .put("source", "WATCH")
+            .put("source", entry.source)
+            .put("originDeviceId", entry.originDeviceId)
             .put("revision", entry.revision)
             .put("timestamp", entry.updatedAt)
             .put("hour", entry.hour)
@@ -97,6 +102,11 @@ object WakeSyncPeerController {
             }
         }
     }
+
+    private fun deviceId(context: Context): String =
+        context.getSharedPreferences("wakesync_identity", Context.MODE_PRIVATE)
+            .getString("device_id", null)
+            ?: "WATCH"
 
     private const val KEY_MUTATION = "mutation"
     private const val KEY_TIMESTAMP = "timestamp"
