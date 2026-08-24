@@ -12,6 +12,7 @@ data class AlarmSyncPayload(
     val revision: Long,
     val timestamp: Long,
     val alarmToken: String? = null,
+    val originDeviceId: String = "",
     // Lightweight fields let Wear render/edit the shared alarm list without
     // understanding the phone-only AlarmShareCodec token.
     val hour: Int? = null,
