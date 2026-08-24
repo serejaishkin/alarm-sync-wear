@@ -6,7 +6,7 @@ import com.google.android.gms.wearable.Wearable
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Wear-side mutation gateway. Persistent state uses DataClient; live actions use MessageClient. */
+/** Wear-side mutation gateway. Persistent state uses DataClient; MessageClient is the low-latency path. */
 object WakeSyncPeerController {
     const val PATH_MUTATION = "/wakesync/alarm/mutation"
     const val PATH_ALARM_STATE = "/wakesync/alarm/state"
@@ -21,12 +21,28 @@ object WakeSyncPeerController {
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
         val payload = buildPayload(entry, operation)
-        if (operation == "SNOOZE" || operation == "DISMISS" || operation == "RINGING") sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
-        else sendDataItem(context, entry.syncId, payload)
+        // MessageClient gives CREATE/UPDATE/DELETE immediate delivery. DataClient
+        // remains the durable state/reconciliation channel. Applying both is safe
+        // because the receiver compares revision/timestamp/source/deviceId.
+        sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
+        if (operation != "SNOOZE" && operation != "DISMISS" && operation != "RINGING") {
+            sendDataItem(context, entry.syncId, payload)
+        }
     }
 
     fun sendDelete(context: Context, syncId: String, revision: Long, timestamp: Long = System.currentTimeMillis()) {
-        val payload = JSONObject().put("protocolVersion", PROTOCOL_VERSION).put("syncId", syncId).put("operation", "DELETE").put("source", "WATCH").put("originDeviceId", deviceId(context)).put("revision", revision).put("timestamp", timestamp).toString()
+        val payload = JSONObject()
+            .put("protocolVersion", PROTOCOL_VERSION)
+            .put("syncId", syncId)
+            .put("operation", "DELETE")
+            .put("source", "WATCH")
+            .put("originDeviceId", deviceId(context))
+            .put("revision", revision)
+            .put("timestamp", timestamp)
+            .toString()
+        // DELETE must also use the low-latency path; otherwise a DataItem can
+        // arrive only during a later reconciliation pass.
+        sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
         sendDataItem(context, syncId, payload)
     }
 
@@ -35,8 +51,10 @@ object WakeSyncPeerController {
         val updated = current.copy(
             enabled = when (operation) { "ENABLE" -> true; "DISABLE" -> false; else -> current.enabled },
             revision = current.revision + 1L,
-            updatedAt = System.currentTimeMillis(), alarmToken = alarmToken ?: current.alarmToken,
-            source = "WATCH", originDeviceId = deviceId(context)
+            updatedAt = System.currentTimeMillis(),
+            alarmToken = alarmToken ?: current.alarmToken,
+            source = "WATCH",
+            originDeviceId = deviceId(context)
         )
         WearAlarmListStore.upsert(context, updated)
         sendAlarmMutation(context, updated, operation)
@@ -54,12 +72,23 @@ object WakeSyncPeerController {
     fun sendDisable(context: Context, syncId: String, alarmToken: String) = sendMutation(context, "DISABLE", syncId, alarmToken)
 
     private fun buildPayload(entry: WearAlarmListStore.Entry, operation: String): String = JSONObject()
-        .put("protocolVersion", PROTOCOL_VERSION).put("syncId", entry.syncId).put("operation", operation)
-        .put("source", entry.source).put("originDeviceId", entry.originDeviceId).put("revision", entry.revision)
-        .put("timestamp", entry.updatedAt).put("hour", entry.hour).put("minute", entry.minute).put("label", entry.label)
-        .put("enabled", entry.enabled).put("repeatDays", JSONArray().also { days -> entry.repeatDays.sorted().forEach(days::put) })
-        .put("snoozeDurationMinutes", entry.snoozeDurationMinutes).put("vibrationEnabled", entry.vibrationEnabled)
-        .put("volume", entry.volume).putOpt("alarmToken", entry.alarmToken.takeIf { it.isNotBlank() }).toString()
+        .put("protocolVersion", PROTOCOL_VERSION)
+        .put("syncId", entry.syncId)
+        .put("operation", operation)
+        .put("source", entry.source)
+        .put("originDeviceId", entry.originDeviceId)
+        .put("revision", entry.revision)
+        .put("timestamp", entry.updatedAt)
+        .put("hour", entry.hour)
+        .put("minute", entry.minute)
+        .put("label", entry.label)
+        .put("enabled", entry.enabled)
+        .put("repeatDays", JSONArray().also { days -> entry.repeatDays.sorted().forEach(days::put) })
+        .put("snoozeDurationMinutes", entry.snoozeDurationMinutes)
+        .put("vibrationEnabled", entry.vibrationEnabled)
+        .put("volume", entry.volume)
+        .putOpt("alarmToken", entry.alarmToken.takeIf { it.isNotBlank() })
+        .toString()
 
     private fun sendDataItem(context: Context, syncId: String, payload: String) {
         val request = PutDataMapRequest.create("$PATH_ALARM_STATE/$syncId").apply {
@@ -71,9 +100,13 @@ object WakeSyncPeerController {
 
     private fun sendRawMessage(context: Context, path: String, payload: ByteArray) {
         Wearable.getNodeClient(context.applicationContext).connectedNodes.addOnSuccessListener { nodes ->
-            nodes.forEach { node -> Wearable.getMessageClient(context.applicationContext).sendMessage(node.id, path, payload) }
+            nodes.forEach { node ->
+                Wearable.getMessageClient(context.applicationContext).sendMessage(node.id, path, payload)
+            }
         }
     }
 
-    private fun deviceId(context: Context): String = context.getSharedPreferences("wakesync_identity", Context.MODE_PRIVATE).getString("device_id", null) ?: "WATCH"
+    private fun deviceId(context: Context): String = context
+        .getSharedPreferences("wakesync_identity", Context.MODE_PRIVATE)
+        .getString("device_id", null) ?: "WATCH"
 }
