@@ -2,6 +2,9 @@ package com.sysadmindoc.alarmclock.sync
 
 import android.content.Intent
 import android.util.Log
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.sysadmindoc.alarmclock.data.model.Alarm
@@ -26,16 +29,35 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+        for (event in dataEvents) {
+            if (event.type != DataEvent.TYPE_CHANGED) continue
+            val path = event.dataItem.uri.path.orEmpty()
+            if (!path.startsWith(PATH_ALARM_STATE_PREFIX)) continue
+
+            val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
+            val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
+            if (encoded.isBlank()) continue
+
+            scope.launch {
+                val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
+                if (decoded == null) {
+                    Log.w(TAG, "Ignoring invalid persistent alarm mutation")
+                    return@launch
+                }
+                coordinator.applyRemote(decoded)
+                    .onFailure { Log.e(TAG, "Failed to apply Data Layer ${decoded.operation} for ${decoded.syncId}", it) }
+            }
+        }
+    }
+
+    /** MessageClient remains for low-latency actions and legacy requests. */
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
             AlarmSyncTransportPaths.ALARM_MUTATION -> {
                 val encoded = messageEvent.data.toString(Charsets.UTF_8)
                 scope.launch {
-                    val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
-                    if (decoded == null) {
-                        Log.w(TAG, "Ignoring invalid alarm mutation")
-                        return@launch
-                    }
+                    val decoded = AlarmSyncCodec.decode(encoded).getOrNull() ?: return@launch
                     val result = when (decoded.operation) {
                         AlarmSyncOperation.SNOOZE -> runCatching {
                             handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE)
@@ -79,16 +101,11 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         require(json.optString("operation") == "CREATE_REQUEST")
         val syncId = json.optString("syncId").takeIf { it.isNotBlank() }
             ?: throw IllegalArgumentException("Wear create request has no syncId")
-
-        // Message delivery may be retried. Never create a second phone alarm
-        // for the same logical syncId.
-        val existingId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .getLong("alarm_id_$syncId", 0L)
+        val existingId = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getLong("alarm_id_$syncId", 0L)
         if (existingId > 0L && alarmRepository.getById(existingId) != null) {
             updateFromWear(json.put("operation", "UPDATE_REQUEST").toString())
             return
         }
-
         val alarm = Alarm(
             hour = json.optInt("hour", 7).coerceIn(0, 23),
             minute = json.optInt("minute", 0).coerceIn(0, 59),
@@ -114,9 +131,8 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     private suspend fun updateFromWear(raw: String) {
         val json = JSONObject(raw)
         require(json.optString("operation") == "UPDATE_REQUEST")
-        val syncId = json.getString("syncId")
         coordinator.updateFromWear(
-            syncId = syncId,
+            syncId = json.getString("syncId"),
             hour = json.optInt("hour", 7),
             minute = json.optInt("minute", 0),
             label = json.optString("label"),
@@ -145,11 +161,16 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         }
     }
 
-    override fun onDestroy() { scope.cancel(); super.onDestroy() }
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
+    }
 
     companion object {
         private const val TAG = "WakeSyncPhone"
         private const val PREFS_NAME = "wakesync_state"
+        private const val PATH_ALARM_STATE_PREFIX = "/wakesync/alarm/state/"
+        private const val KEY_MUTATION = "mutation"
         const val PATH_CREATE_REQUEST = "/wakesync/alarm/create_request"
         const val PATH_UPDATE_REQUEST = "/wakesync/alarm/update_request"
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
