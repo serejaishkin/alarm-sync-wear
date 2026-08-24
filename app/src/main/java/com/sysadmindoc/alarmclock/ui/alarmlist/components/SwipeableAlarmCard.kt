@@ -18,10 +18,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.alarmclock.ui.theme.AccentRed
+import com.sysadmindoc.alarmclock.ui.theme.LocalAppShapeTokens
 
 /**
- * Wraps content with a SwipeToDismiss gesture.
- * Swiping right-to-left reveals a red delete background.
+ * Wraps content with a swipe-to-dismiss gesture.
+ * Visual geometry follows the same spacious WakeSync/Clock-style cards used
+ * throughout the phone UI.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +32,7 @@ fun SwipeableAlarmCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val shape = LocalAppShapeTokens.current.card
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value == SwipeToDismissBoxValue.EndToStart) {
@@ -40,11 +43,6 @@ fun SwipeableAlarmCard(
         positionalThreshold = { it * 0.55f }
     )
 
-    // v1.7.5: rememberSwipeToDismissBoxState persists offset via Saver, so a
-    // gesture interrupted mid-swipe (back press, tab navigation, etc.) can
-    // leave the card stuck visually offset on next composition. Snap back
-    // to Settled once on first composition so a partial drag never persists
-    // across navigation.
     LaunchedEffect(Unit) {
         if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
             dismissState.snapTo(SwipeToDismissBoxValue.Settled)
@@ -69,16 +67,11 @@ fun SwipeableAlarmCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(shape)
                     .background(color)
                     .padding(end = 24.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                // v1.7.5: Only render the delete affordance when the user is
-                // actively swiping. Otherwise the "Swipe to delete" text and
-                // trash icon bleed through any semi-transparent foreground —
-                // which is exactly how disabled alarm cards (alpha 0.55)
-                // render — and look like a stuck swipe state.
                 if (isSwiping) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -101,7 +94,7 @@ fun SwipeableAlarmCard(
                         }
                         Surface(
                             color = Color.White.copy(alpha = 0.14f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Icon(
                                 Icons.Default.Delete,
@@ -123,7 +116,7 @@ fun SwipeableAlarmCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 1.dp)
+                .padding(vertical = 4.dp)
         ) {
             content()
         }
