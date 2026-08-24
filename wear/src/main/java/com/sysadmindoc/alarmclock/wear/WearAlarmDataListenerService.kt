@@ -12,12 +12,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class WearAlarmDataListenerService : WearableListenerService() {
-
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
-            WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT -> {
-                WakeSyncPeerController.sendWatchSnapshot(applicationContext)
-            }
+            WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT -> WakeSyncPeerController.sendWatchSnapshot(applicationContext)
         }
     }
 
@@ -27,28 +24,28 @@ class WearAlarmDataListenerService : WearableListenerService() {
             if (event.type != DataEvent.TYPE_CHANGED) return@forEach
             val path = event.dataItem.uri.path.orEmpty()
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: return@forEach
-
             when {
                 path == WearAlarmData.PATH_NEXT_ALARM -> {
                     WearAlarmStore.save(applicationContext, WearAlarmStore.fromDataMap(dataMap))
                     val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
                     if (rawList.isNotBlank()) {
                         val entries = parseAlarmList(rawList)
+                        val snapshotTimestamp = dataMap.getLong(KEY_UPDATED_AT, System.currentTimeMillis())
                         val currentById = WearAlarmListStore.load(applicationContext).associateBy { it.syncId }
                         entries.forEach { incoming ->
                             val current = currentById[incoming.syncId]
-                            if (current == null || compareVersion(incoming, current) > 0) {
-                                WearAlarmListStore.upsert(applicationContext, incoming)
-                            }
+                            if (current == null || compareVersion(incoming, current) > 0) WearAlarmListStore.upsert(applicationContext, incoming)
                         }
                         val incomingIds = entries.map { it.syncId }.toSet()
-                        currentById.values
-                            .filter { it.syncId !in incomingIds && it.revision <= 0L }
-                            .forEach { WearAlarmListStore.remove(applicationContext, it.syncId) }
+                        val originDevice = entries.firstOrNull()?.originDeviceId?.ifBlank { "PHONE" } ?: "PHONE"
+                        currentById.values.filter { it.syncId !in incomingIds && it.updatedAt <= snapshotTimestamp }.forEach { current ->
+                            WearAlarmListStore.removeWithTombstone(
+                                applicationContext, current.syncId, current.revision + 1L, snapshotTimestamp, "PHONE", originDevice
+                            )
+                        }
                     }
                     changed = true
                 }
-
                 path.startsWith(WakeSyncPeerController.PATH_ALARM_STATE + "/") -> {
                     val raw = dataMap.getString(WakeSyncPeerController.KEY_MUTATION).orEmpty()
                     if (raw.isBlank()) return@forEach
@@ -56,7 +53,6 @@ class WearAlarmDataListenerService : WearableListenerService() {
                 }
             }
         }
-
         if (changed) notifyAlarmUi()
     }
 
@@ -67,58 +63,32 @@ class WearAlarmDataListenerService : WearableListenerService() {
         val revision = o.optLong("revision", 0L)
         val timestamp = o.optLong("timestamp", System.currentTimeMillis())
         val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
-
         if (operation == "DELETE") {
             if (current != null && compareVersion(revision, timestamp, o.optString("source"), o.optString("originDeviceId"), current) <= 0) return false
             WearAlarmListStore.removeWithTombstone(applicationContext, syncId, revision, timestamp, o.optString("source", "PHONE"), o.optString("originDeviceId"))
             return true
         }
-
         val incoming = WearAlarmListStore.Entry(
-            syncId = syncId,
-            label = o.optString("label"),
-            hour = o.optInt("hour", 7).coerceIn(0, 23),
-            minute = o.optInt("minute", 0).coerceIn(0, 59),
-            enabled = o.optBoolean("enabled", true),
-            repeatDays = parseDays(o.optJSONArray("repeatDays")),
-            snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60),
-            vibrationEnabled = o.optBoolean("vibrationEnabled", true),
-            volume = o.optInt("volume", 100),
-            revision = revision,
-            updatedAt = timestamp,
-            alarmToken = o.optString("alarmToken"),
-            source = o.optString("source", "PHONE"),
-            originDeviceId = o.optString("originDeviceId")
+            syncId = syncId, label = o.optString("label"), hour = o.optInt("hour", 7).coerceIn(0, 23), minute = o.optInt("minute", 0).coerceIn(0, 59),
+            enabled = o.optBoolean("enabled", true), repeatDays = parseDays(o.optJSONArray("repeatDays")),
+            snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10).coerceIn(1, 60), vibrationEnabled = o.optBoolean("vibrationEnabled", true),
+            volume = o.optInt("volume", 100), revision = revision, updatedAt = timestamp, alarmToken = o.optString("alarmToken"),
+            source = o.optString("source", "PHONE"), originDeviceId = o.optString("originDeviceId")
         )
         if (current != null && compareVersion(incoming, current) <= 0) return false
-        WearAlarmListStore.upsert(applicationContext, incoming)
-        true
-    }.getOrDefault(false)
-
-    private fun applyWatchSnapshot(raw: String): Boolean = runCatching {
-        val array = JSONArray(raw)
-        var changed = false
-        for (i in 0 until array.length()) {
-            val encoded = array.getJSONObject(i).toString()
-            if (applyPersistentMutation(encoded)) changed = true
-        }
-        changed
+        WearAlarmListStore.upsert(applicationContext, incoming); true
     }.getOrDefault(false)
 
     private fun parseDays(array: JSONArray?): Set<Int> = buildSet {
         if (array != null) for (i in 0 until array.length()) add(array.optInt(i))
     }
-
-    private fun compareVersion(a: WearAlarmListStore.Entry, b: WearAlarmListStore.Entry): Int =
-        compareVersion(a.revision, a.updatedAt, a.source, a.originDeviceId, b)
-
+    private fun compareVersion(a: WearAlarmListStore.Entry, b: WearAlarmListStore.Entry): Int = compareVersion(a.revision, a.updatedAt, a.source, a.originDeviceId, b)
     private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Entry): Int = when {
         revision != b.revision -> revision.compareTo(b.revision)
         timestamp != b.updatedAt -> timestamp.compareTo(b.updatedAt)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.originDeviceId)
     }
-
     private fun sourcePriority(source: String): Int = if (source == "WATCH") 2 else 1
 
     private fun parseAlarmList(raw: String): List<WearAlarmListStore.Entry> = runCatching {
@@ -126,40 +96,20 @@ class WearAlarmDataListenerService : WearableListenerService() {
         buildList(array.length()) {
             for (i in 0 until array.length()) {
                 val o = array.getJSONObject(i)
-                add(
-                    WearAlarmListStore.Entry(
-                        syncId = o.optString("syncId"),
-                        label = o.optString("label"),
-                        hour = o.optInt("hour"),
-                        minute = o.optInt("minute"),
-                        enabled = o.optBoolean("enabled", true),
-                        repeatDays = parseDays(o.optJSONArray("repeatDays")),
-                        snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10),
-                        vibrationEnabled = o.optBoolean("vibrationEnabled", true),
-                        volume = o.optInt("volume", 100),
-                        revision = o.optLong("revision", 0L),
-                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
-                        alarmToken = o.optString("alarmToken"),
-                        source = o.optString("source", "PHONE"),
-                        originDeviceId = o.optString("originDeviceId")
-                    )
-                )
+                add(WearAlarmListStore.Entry(
+                    syncId = o.optString("syncId"), label = o.optString("label"), hour = o.optInt("hour"), minute = o.optInt("minute"),
+                    enabled = o.optBoolean("enabled", true), repeatDays = parseDays(o.optJSONArray("repeatDays")),
+                    snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10), vibrationEnabled = o.optBoolean("vibrationEnabled", true),
+                    volume = o.optInt("volume", 100), revision = o.optLong("revision", 0L), updatedAt = o.optLong("timestamp", o.optLong("updatedAt", System.currentTimeMillis())),
+                    alarmToken = o.optString("alarmToken"), source = o.optString("source", "PHONE"), originDeviceId = o.optString("originDeviceId")
+                ))
             }
         }
     }.getOrDefault(emptyList())
 
     private fun notifyAlarmUi() {
         TileService.getUpdater(applicationContext).requestUpdate(NextAlarmTileService::class.java)
-        ComplicationDataSourceUpdateRequester.create(
-            context = applicationContext,
-            complicationDataSourceComponent = ComponentName(
-                applicationContext,
-                NextAlarmComplicationDataSourceService::class.java
-            )
-        ).requestUpdateAll()
+        ComplicationDataSourceUpdateRequester.create(applicationContext, ComponentName(applicationContext, NextAlarmComplicationDataSourceService::class.java)).requestUpdateAll()
     }
-
-    companion object {
-        const val KEY_ALARM_LIST = "alarm_list"
-    }
+    companion object { const val KEY_ALARM_LIST = "alarm_list"; const val KEY_UPDATED_AT = "updated_at" }
 }
