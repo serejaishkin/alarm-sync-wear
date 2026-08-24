@@ -10,6 +10,8 @@ import org.json.JSONObject
 object WakeSyncPeerController {
     const val PATH_MUTATION = "/wakesync/alarm/mutation"
     const val PATH_ALARM_STATE = "/wakesync/alarm/state"
+    const val KEY_MUTATION = "mutation"
+    const val KEY_TIMESTAMP = "timestamp"
     private const val PROTOCOL_VERSION = 1
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
@@ -107,7 +109,4 @@ object WakeSyncPeerController {
         context.getSharedPreferences("wakesync_identity", Context.MODE_PRIVATE)
             .getString("device_id", null)
             ?: "WATCH"
-
-    private const val KEY_MUTATION = "mutation"
-    private const val KEY_TIMESTAMP = "timestamp"
 }
