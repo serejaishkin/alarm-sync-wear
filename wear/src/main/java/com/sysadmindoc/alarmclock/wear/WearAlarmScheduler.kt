@@ -40,6 +40,7 @@ object WearAlarmScheduler {
             trigger.toInstant().toEpochMilli(),
             pi
         )
+        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun scheduleSnooze(context: Context, entry: WearAlarmListStore.Entry, minutes: Int) {
@@ -62,6 +63,7 @@ object WearAlarmScheduler {
             triggerAt,
             pi
         )
+        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun cancel(context: Context, syncId: String) {
@@ -76,6 +78,7 @@ object WearAlarmScheduler {
             context.getSystemService(AlarmManager::class.java).cancel(pi)
             pi.cancel()
         }
+        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun nextTrigger(entry: WearAlarmListStore.Entry, now: ZonedDateTime = ZonedDateTime.now()): ZonedDateTime? {
