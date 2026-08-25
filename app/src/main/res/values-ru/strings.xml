@@ -739,7 +739,6 @@
     <string name="alarm_edit_save_error_missing_refs">Сначала завершите настройку задания: не хватает %1$s.</string>
     <string name="alarm_edit_save_error_location">Сохраните текущее место перед включением отключения по местоположению.</string>
     <string name="alarm_edit_save_error_generic">Не удалось сохранить будильник. Проверьте данные и повторите попытку.</string>
-    <string name="settings_12_hour">12-часовой</string>
     <string name="settings_default_snooze_summary">Отсрочка по умолчанию %1$d мин</string>
     <string name="settings_wake_readiness">Готовность пробуждения</string>
     <string name="settings_wake_readiness_description">Системные переключатели, которые наиболее важны для точных будильников и видимых оповещений.</string>
