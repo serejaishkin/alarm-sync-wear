@@ -38,11 +38,11 @@ class AlarmSyncCoordinator @Inject constructor(
     fun start() {
         if (observationJob?.isActive == true) return
         observationJob = scope.launch {
-            alarmRepository.observeAll().collectLatest { synchronizeSnapshot(it, false) }
+            alarmRepository.observeAll().collectLatest { synchronizeSnapshot(it) }
         }
     }
 
-    suspend fun syncNow() = synchronizeSnapshot(alarmRepository.getAll(), true)
+    suspend fun syncNow() = synchronizeSnapshot(alarmRepository.getAll())
     fun stop() { observationJob?.cancel(); observationJob = null }
 
     suspend fun registerWearCreatedAlarm(syncId: String, alarmId: Long, revision: Long, timestamp: Long, alarmToken: String?) {
@@ -109,8 +109,6 @@ class AlarmSyncCoordinator @Inject constructor(
         }
     }
 
-    /** Apply the complete Watch snapshot. A missing ID is a remote deletion only
-     * when the local version is not newer than the snapshot timestamp. */
     suspend fun applyWatchSnapshot(entries: List<AlarmSyncPayload>, snapshotTimestamp: Long): Result<Unit> = runCatching {
         val remoteIds = entries.map { it.syncId }.toSet()
         entries.forEach { applyRemote(it).getOrThrow() }
@@ -155,24 +153,22 @@ class AlarmSyncCoordinator @Inject constructor(
         rememberVersion(syncId, revision, payload.timestamp, AlarmSyncSource.WATCH, deviceId)
     }
 
-    private suspend fun synchronizeSnapshot(alarms: List<Alarm>, force: Boolean) {
+    /** Local changes are the only source of persistent outbound mutations. We deliberately do not
+     * publish a full phone snapshot here: that old behaviour resurrected alarms deleted on Wear. */
+    private suspend fun synchronizeSnapshot(alarms: List<Alarm>) {
         val currentIds = alarms.map { it.id }.filter { it != 0L }.toSet()
         val previousIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
-        val entries = alarms.filter { it.id != 0L }.map { alarm ->
-            val syncId = ensureSyncId(alarm.id)
-            val revision = preferences.getLong(revisionKey(syncId), 0L)
-            val updatedAt = preferences.getLong(timestampKey(syncId), 0L).let { if (it > 0L) it else System.currentTimeMillis() }
-            AlarmSyncSnapshotEntry(alarm, syncId, revision, updatedAt, AlarmSyncSource.PHONE, deviceId)
-        }
-        transportProvider.transport().publishFullSnapshot(entries)
         for (alarm in alarms) {
             if (alarm.id == 0L) continue
             val syncId = ensureSyncId(alarm.id)
             val currentToken = AlarmSyncCodec.create(alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, 0L, originDeviceId = deviceId).alarmToken ?: continue
             val tokenHash = hash(currentToken)
-            if (!force && remoteSuppressions.remove(alarm.id) == tokenHash) { preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply(); continue }
-            if (!force && preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
-            val operation = if (!force && preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
+            if (remoteSuppressions.remove(alarm.id) == tokenHash) {
+                preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply()
+                continue
+            }
+            if (preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
+            val operation = if (preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
             val revision = nextRevision(syncId)
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision, originDeviceId = deviceId)
             val envelope = AlarmSyncEnvelope(deviceId = deviceId, syncId = syncId, alarmId = alarm.id, operation = operation,
