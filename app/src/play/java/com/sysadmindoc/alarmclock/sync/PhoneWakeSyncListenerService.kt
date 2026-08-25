@@ -56,11 +56,9 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                     scope.launch {
                         runCatching { parseSnapshot(rawList) }
                             .onSuccess { entries ->
+                                // Snapshot is a recovery hint only. Never immediately republish
+                                // the local phone list: that was the source of alarm resurrection.
                                 coordinator.applyWatchSnapshot(entries, snapshotTimestamp)
-                                    .onSuccess {
-                                        // Important: do not publish the old phone state before the Watch snapshot is merged.
-                                        coordinator.syncNow()
-                                    }
                                     .onFailure { Log.e(TAG, "Failed to reconcile Watch snapshot", it) }
                             }
                             .onFailure { Log.e(TAG, "Failed to parse Watch snapshot", it) }
@@ -105,8 +103,8 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
 
     private suspend fun applyWatchSnapshotMessage(raw: String) {
         val entries = parseSnapshot(raw)
+        // Snapshot is a recovery hint only; do not publish the local phone list back here.
         coordinator.applyWatchSnapshot(entries, System.currentTimeMillis()).getOrThrow()
-        coordinator.syncNow()
     }
 
     private fun parseSnapshot(raw: String): List<AlarmSyncPayload> {
@@ -163,7 +161,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
         )
         val alarmId = alarmRepository.save(alarm)
         coordinator.registerWearCreatedAlarm(syncId, alarmId, json.optLong("revision", 1L), json.optLong("timestamp", System.currentTimeMillis()), json.optString("alarmToken").ifBlank { null })
-        coordinator.start(); coordinator.syncNow()
+        coordinator.start()
     }
 
     private suspend fun updateFromWear(raw: String) {
@@ -175,7 +173,7 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
             vibrationEnabled = json.optBoolean("vibrationEnabled", true), volume = json.optInt("volume", 100),
             repeatDays = parseRepeatDays(json.optJSONArray("repeatDays"))
         ).getOrThrow()
-        coordinator.syncNow()
+        coordinator.start()
     }
 
     private fun parseRepeatDays(array: JSONArray?): Set<DayOfWeek> = buildSet {
