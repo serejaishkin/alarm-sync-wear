@@ -1,0 +1,50 @@
+name: Fix duplicate Russian strings
+
+on:
+  push:
+    branches:
+      - develop/wakesync
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop/wakesync
+          fetch-depth: 0
+
+      - name: Remove duplicate settings_12_hour
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("app/src/main/res/values-ru/strings.xml")
+          text = path.read_text(encoding="utf-8")
+          needle = '    <string name="settings_12_hour">'
+          lines = text.splitlines(keepends=True)
+          matches = [i for i, line in enumerate(lines) if line.startswith(needle)]
+          if len(matches) != 2:
+              raise SystemExit(f"Expected exactly 2 settings_12_hour entries, found {len(matches)}")
+          # Keep the newer, detailed value and remove the older duplicate.
+          del lines[matches[0]]
+          path.write_text("".join(lines), encoding="utf-8")
+
+      - name: Commit fix and remove temporary workflow
+        shell: bash
+        run: |
+          if git diff --quiet -- app/src/main/res/values-ru/strings.xml; then
+            echo "No duplicate fix needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/res/values-ru/strings.xml
+          git commit -m "fix(build): remove duplicate Russian string"
+          git push origin HEAD:develop/wakesync
+          git rm .github/workflows/fix-duplicate-ru-strings.yml
+          git commit -m "chore: remove temporary resource fix workflow"
+          git push origin HEAD:develop/wakesync
