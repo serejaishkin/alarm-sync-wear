@@ -110,25 +110,10 @@ class AlarmSyncCoordinator @Inject constructor(
     }
 
     suspend fun applyWatchSnapshot(entries: List<AlarmSyncPayload>, snapshotTimestamp: Long): Result<Unit> = runCatching {
-        val remoteIds = entries.map { it.syncId }.toSet()
+        // Snapshots are reconciliation hints only. They intentionally cannot imply DELETE:
+        // a stale snapshot may omit a newer alarm that was created or edited on this device.
+        // Persistent CREATE/UPDATE/DELETE mutations are authoritative.
         entries.forEach { applyRemote(it).getOrThrow() }
-        alarmRepository.getAll().forEach { alarm ->
-            val syncId = preferences.getString(syncIdKey(alarm.id), null) ?: return@forEach
-            if (syncId in remoteIds) return@forEach
-            val localTimestamp = preferences.getLong(timestampKey(syncId), 0L)
-            if (localTimestamp <= snapshotTimestamp) {
-                val revision = nextRevision(syncId)
-                val deletePayload = AlarmSyncPayload(
-                    syncId = syncId,
-                    operation = AlarmSyncOperation.DELETE,
-                    source = AlarmSyncSource.WATCH,
-                    revision = revision,
-                    timestamp = snapshotTimestamp,
-                    originDeviceId = entries.firstOrNull()?.originDeviceId?.ifBlank { "WATCH" } ?: "WATCH"
-                )
-                applyRemote(deletePayload).getOrThrow()
-            }
-        }
     }
 
     suspend fun sendWearAction(alarmId: Long, operation: AlarmSyncOperation): Result<Unit> = runCatching {
