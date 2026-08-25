@@ -76,6 +76,7 @@ class WearAlarmFeedbackService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOngoing(true)
             .setSilent(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
 
     private fun createNotificationChannel() {
@@ -86,6 +87,7 @@ class WearAlarmFeedbackService : Service() {
                     setSound(null, null)
                     enableVibration(false)
                     description = "Служебное уведомление активного будильника"
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 }
             )
         }

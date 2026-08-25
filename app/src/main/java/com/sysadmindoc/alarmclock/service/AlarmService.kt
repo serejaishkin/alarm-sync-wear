@@ -320,7 +320,8 @@ class AlarmService : Service() {
                         reasonCode = "START_COMMAND_RECEIVED",
                         source = "AlarmService"
                     )
-                    activateAlarmMediaSession("START_COMMAND")
+                    // Disabled to prevent media control panel from appearing during alarm
+                    // activateAlarmMediaSession("START_COMMAND")
                     // v1.5.4: Android 14+ requires startForeground() within ~5 s of
                     // startForegroundService() or the app crashes with
                     // ForegroundServiceDidNotStartInTimeException. Previously the
@@ -413,7 +414,8 @@ class AlarmService : Service() {
             )
             clearAlarmRuntimeState(alarmId)
             activeAlarm.set(null)
-            releaseAlarmMediaSession()
+            // Disabled to prevent media control panel during alarm
+            // releaseAlarmMediaSession()
             stopSelf()
             return
         }
@@ -732,6 +734,8 @@ class AlarmService : Service() {
     }
 
     private fun activateAlarmMediaSession(reasonCode: String) {
+        // Disabled to prevent media control panel during alarm
+        /*
         val session = mediaSession ?: run {
             MediaSession(this, "AlarmClockXtremeAlarm").also { created ->
                 mediaSession = created
@@ -754,6 +758,7 @@ class AlarmService : Service() {
                 source = "AlarmService"
             )
         }
+        */
     }
 
     private fun updateAlarmMediaSessionState(state: Int) {
@@ -819,7 +824,8 @@ class AlarmService : Service() {
                 reasonCode = "SILENT_OR_HAPTIC_ONLY",
                 source = "AlarmService"
             )
-            updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+            // Disabled to prevent media control panel during alarm
+            // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
             return
         }
 
@@ -883,7 +889,8 @@ class AlarmService : Service() {
                 // makes noise instead of silently no-oping.
                 if (spotifyIntent.resolveActivity(packageManager) != null) {
                     startActivity(spotifyIntent)
-                    updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                    // Disabled to prevent media control panel during alarm
+                    // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
                     recordIncidentAsync(
                         type = AlarmIncidentEvent.TYPE_AUDIO,
                         status = AlarmIncidentEvent.STATUS_SUCCEEDED,
@@ -946,7 +953,8 @@ class AlarmService : Service() {
                 onReady = {
                     playbackStarted.set(true)
                     cancelPlaybackWatchdog()
-                    updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                    // Disabled to prevent media control panel during alarm
+                    // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
                     recordIncidentAsync(
                         type = AlarmIncidentEvent.TYPE_AUDIO,
                         status = AlarmIncidentEvent.STATUS_SUCCEEDED,
@@ -1023,7 +1031,8 @@ class AlarmService : Service() {
                         setConfiguredAlarmStreamVolume(alarm)
                     }
                     applyPlaybackGain()
-                    updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                    // Disabled to prevent media control panel during alarm
+                    // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
                     recordIncidentAsync(
                         type = AlarmIncidentEvent.TYPE_AUDIO,
                         status = AlarmIncidentEvent.STATUS_SUCCEEDED,
@@ -1260,7 +1269,8 @@ class AlarmService : Service() {
                     isLooping = false  // Streams don't loop
                     setOnPreparedListener { mp ->
                         mp.start()
-                        updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                        // Disabled to prevent media control panel during alarm
+                        // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
                         recordIncidentAsync(
                             type = AlarmIncidentEvent.TYPE_AUDIO,
                             status = AlarmIncidentEvent.STATUS_SUCCEEDED,
@@ -1385,7 +1395,8 @@ class AlarmService : Service() {
                 )
                 setVolume(initialGain, initialGain)
                 start()
-                updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                // Disabled to prevent media control panel during alarm
+                // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
             }
             recordIncidentAsync(
                 type = AlarmIncidentEvent.TYPE_AUDIO,
@@ -1444,7 +1455,8 @@ class AlarmService : Service() {
                         )
                         setVolume(gain, gain)
                         start()
-                        updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
+                        // Disabled to prevent media control panel during alarm
+                        // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
                     }
                     recordIncidentAsync(
                         type = AlarmIncidentEvent.TYPE_AUDIO,
@@ -2112,7 +2124,8 @@ class AlarmService : Service() {
         playbackWatchdogJob = null
         hapticOnlyJob?.cancel()
         hapticOnlyJob = null
-        releaseAlarmMediaSession()
+        // Disabled to prevent media control panel during alarm
+        // releaseAlarmMediaSession()
         restoreBackupSoundVolume()
         flashlightJob?.cancel()
         flashlightJob = null

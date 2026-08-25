@@ -33,8 +33,14 @@ class WearAlarmDataListenerService : WearableListenerService() {
                         // A snapshot is a recovery hint, not an authoritative delete list.
                         // Deletions must arrive as explicit DELETE mutations; otherwise an
                         // older phone snapshot can resurrect alarms removed on the watch.
+                        // Also check tombstones to prevent resurrection of deleted alarms.
                         parseAlarmList(rawList).forEach { incoming ->
                             val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == incoming.syncId }
+                            val tombstone = WearAlarmListStore.tombstones(applicationContext).firstOrNull { it.syncId == incoming.syncId }
+                            // Skip if there's a tombstone with higher or equal version
+                            if (tombstone != null && compareVersion(incoming.revision, incoming.updatedAt, incoming.source, incoming.originDeviceId, tombstone) <= 0) {
+                                return@forEach
+                            }
                             if (current == null || compareVersion(incoming, current) > 0) {
                                 WearAlarmListStore.upsert(applicationContext, incoming)
                             }
@@ -84,6 +90,12 @@ class WearAlarmDataListenerService : WearableListenerService() {
         timestamp != b.updatedAt -> timestamp.compareTo(b.updatedAt)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.originDeviceId)
+    }
+    private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Tombstone): Int = when {
+        revision != b.revision -> revision.compareTo(b.revision)
+        timestamp != b.timestamp -> timestamp.compareTo(b.timestamp)
+        source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
+        else -> deviceId.compareTo(b.deviceId)
     }
     private fun sourcePriority(source: String): Int = if (source == "WATCH") 2 else 1
 
