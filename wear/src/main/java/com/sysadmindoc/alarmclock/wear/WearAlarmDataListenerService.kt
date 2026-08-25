@@ -30,17 +30,14 @@ class WearAlarmDataListenerService : WearableListenerService() {
                     WearAlarmStore.save(applicationContext, WearAlarmStore.fromDataMap(dataMap))
                     val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
                     if (rawList.isNotBlank()) {
-                        val entries = parseAlarmList(rawList)
-                        val snapshotTimestamp = dataMap.getLong(KEY_UPDATED_AT, System.currentTimeMillis())
-                        val currentById = WearAlarmListStore.load(applicationContext).associateBy { it.syncId }
-                        entries.forEach { incoming ->
-                            val current = currentById[incoming.syncId]
-                            if (current == null || compareVersion(incoming, current) > 0) WearAlarmListStore.upsert(applicationContext, incoming)
-                        }
-                        val incomingIds = entries.map { it.syncId }.toSet()
-                        val originDevice = entries.firstOrNull()?.originDeviceId?.ifBlank { "PHONE" } ?: "PHONE"
-                        currentById.values.filter { it.syncId !in incomingIds && it.updatedAt <= snapshotTimestamp }.forEach { current ->
-                            WearAlarmListStore.removeWithTombstone(applicationContext, current.syncId, current.revision + 1L, snapshotTimestamp, "PHONE", originDevice)
+                        // A snapshot is a recovery hint, not an authoritative delete list.
+                        // Deletions must arrive as explicit DELETE mutations; otherwise an
+                        // older phone snapshot can resurrect alarms removed on the watch.
+                        parseAlarmList(rawList).forEach { incoming ->
+                            val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == incoming.syncId }
+                            if (current == null || compareVersion(incoming, current) > 0) {
+                                WearAlarmListStore.upsert(applicationContext, incoming)
+                            }
                         }
                     }
                     changed = true
