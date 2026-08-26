@@ -2,7 +2,6 @@ package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
 import android.content.Intent
-import androidx.core.content.ContextCompat
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
@@ -18,6 +17,9 @@ import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Provenance of the last synced change for one alarm, for UI display. */
+data class AlarmLastChange(val fromWatch: Boolean, val timestamp: Long)
 
 @Singleton
 class AlarmSyncCoordinator @Inject constructor(
@@ -68,23 +70,28 @@ class AlarmSyncCoordinator @Inject constructor(
     }
 
     suspend fun applyRemote(payload: AlarmSyncPayload): Result<Unit> = runCatching {
-        val current = localVersion(payload.syncId)
         val localAlarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+        // Deletes always win: independent revision counters on phone and watch
+        // otherwise let a stale-looking DELETE be dropped and the alarm resurrected
+        // by a later snapshot.
+        if (payload.operation == AlarmSyncOperation.DELETE) {
+            if (localAlarmId != 0L) {
+                alarmRepository.deleteById(localAlarmId)
+                val known = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
+                known.remove(localAlarmId.toString())
+                preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, known).remove(tokenKey(localAlarmId)).apply()
+            }
+            val currentVersion = localVersion(payload.syncId)
+            val revision = maxOf(payload.revision, currentVersion?.revision ?: 0L)
+            rememberVersion(payload.syncId, revision, maxOf(payload.timestamp, currentVersion?.timestamp ?: 0L), payload.source, payload.originDeviceId)
+            return@runCatching
+        }
+        val current = localVersion(payload.syncId)
         val incoming = AlarmSyncEnvelope(deviceId = payload.originDeviceId, syncId = payload.syncId, alarmId = localAlarmId,
             operation = payload.operation, source = payload.source, revision = payload.revision, timestamp = payload.timestamp,
             payload = AlarmSyncCodec.encode(payload))
         if (current != null && incoming.compareVersion(current) <= 0) return@runCatching
         when (payload.operation) {
-            AlarmSyncOperation.DELETE -> {
-                val id = preferences.getLong(alarmIdKey(payload.syncId), 0L)
-                if (id != 0L) {
-                    alarmRepository.deleteById(id)
-                    val known = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
-                    known.remove(id.toString())
-                    preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, known).remove(tokenKey(id)).apply()
-                }
-                rememberVersion(payload.syncId, payload.revision, payload.timestamp, payload.source, payload.originDeviceId)
-            }
             AlarmSyncOperation.CREATE, AlarmSyncOperation.UPDATE, AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
                 val incomingAlarm = AlarmSyncCodec.decodeAlarm(payload).getOrThrow()
                 val existingId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
@@ -103,7 +110,9 @@ class AlarmSyncCoordinator @Inject constructor(
                 remoteSuppressions[savedId] = payload.alarmToken?.let(::hash) ?: ""
                 if (payload.operation == AlarmSyncOperation.DISABLE) alarmCommand(payload, AlarmService.ACTION_DISMISS)
             }
-            AlarmSyncOperation.RINGING -> startAlarm(payload)
+            // The watch plays its own feedback when the alarm fires; RINGING must
+            // not start media playback on the phone. Snooze/dismiss still mirror.
+            AlarmSyncOperation.RINGING -> Unit
             AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
             AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
         }
@@ -176,18 +185,20 @@ class AlarmSyncCoordinator @Inject constructor(
         preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, currentIds.map(Long::toString).toSet()).apply()
     }
 
-    private fun startAlarm(payload: AlarmSyncPayload) {
-        val id = preferences.getLong(alarmIdKey(payload.syncId), 0L); if (id == 0L) return
-        ContextCompat.startForegroundService(context, Intent(context, AlarmService::class.java).apply {
-            action = AlarmService.ACTION_START_ALARM; putExtra(AlarmScheduler.EXTRA_ALARM_ID, id); putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
-        })
-    }
-
     private fun alarmCommand(payload: AlarmSyncPayload, action: String) {
         val id = preferences.getLong(alarmIdKey(payload.syncId), 0L); if (id == 0L) return
         context.startService(Intent(context, AlarmService::class.java).apply {
             this.action = action; putExtra(AlarmScheduler.EXTRA_ALARM_ID, id); putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
         })
+    }
+
+    /** Who made the last synchronized change to this alarm and when. Null if never synced. */
+    fun lastChangeFor(alarmId: Long): AlarmLastChange? {
+        val syncId = preferences.getString(syncIdKey(alarmId), null) ?: return null
+        val timestamp = preferences.getLong(timestampKey(syncId), 0L); if (timestamp == 0L) return null
+        val source = preferences.getString(sourceKey(syncId), null) ?: return null
+        val parsed = runCatching { AlarmSyncSource.valueOf(source) }.getOrNull() ?: return null
+        return AlarmLastChange(fromWatch = parsed == AlarmSyncSource.WATCH, timestamp = timestamp)
     }
 
     private fun ensureSyncId(alarmId: Long) = preferences.getString(syncIdKey(alarmId), null)

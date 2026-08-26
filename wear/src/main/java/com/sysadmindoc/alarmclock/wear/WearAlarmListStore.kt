@@ -138,5 +138,5 @@ object WearAlarmListStore {
         prefs.edit { putString(KEY_TOMBSTONES, json.toString()) }
     }
 
-    private const val SOURCE_WATCH = "WATCH"
+    const val SOURCE_WATCH = "WATCH"
 }

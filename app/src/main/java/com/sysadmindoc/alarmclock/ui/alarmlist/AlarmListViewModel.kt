@@ -10,6 +10,8 @@ import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
 import com.sysadmindoc.alarmclock.domain.NextAlarmCalculator
 import com.sysadmindoc.alarmclock.domain.VacationAlarmPolicy
+import com.sysadmindoc.alarmclock.sync.AlarmLastChange
+import com.sysadmindoc.alarmclock.sync.AlarmSyncCoordinator
 import com.sysadmindoc.alarmclock.ui.templates.AlarmTemplate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -82,7 +84,9 @@ data class AlarmListUiState(
     // this, the scheduler silently suppressed them while the UI still said
     // "Next alarm in 3 days". 0/0 = no active window.
     val vacationStartMillis: Long = 0L,
-    val vacationEndMillis: Long = 0L
+    val vacationEndMillis: Long = 0L,
+    // Which device last changed each alarm and when (sync provenance).
+    val syncChanges: Map<Long, AlarmLastChange> = emptyMap()
 )
 
 @HiltViewModel
@@ -92,7 +96,8 @@ class AlarmListViewModel @Inject constructor(
     private val scheduler: AlarmScheduler,
     private val calculator: NextAlarmCalculator,
     private val preferencesManager: PreferencesManager,
-    private val eventRepository: AlarmEventRepository
+    private val eventRepository: AlarmEventRepository,
+    private val syncCoordinator: AlarmSyncCoordinator
 ) : ViewModel() {
 
     /** One-shot events for polished list action feedback. */
@@ -168,7 +173,8 @@ class AlarmListViewModel @Inject constructor(
             } else 0L,
             vacationEndMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
                 settings.vacationEndMillis
-            } else 0L
+            } else 0L,
+            syncChanges = sorted.mapNotNull { alarm -> syncCoordinator.lastChangeFor(alarm.id)?.let { alarm.id to it } }.toMap()
         )
     }.stateIn(
         viewModelScope,

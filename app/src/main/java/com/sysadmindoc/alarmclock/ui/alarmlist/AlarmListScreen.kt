@@ -636,6 +636,7 @@ fun AlarmListScreen(
                                             is24Hour = state.is24HourFormat,
                                             suppressedByVacation = suppressedByVacation,
                                             isActivePaneSelection = useTwoPane && selectedAlarmId == alarm.id,
+                                            lastChanged = state.syncChanges[alarm.id],
                                             onToggle = { viewModel.toggleAlarm(alarm) },
                                             onForceToggle = { viewModel.forceDisableAlarm(alarm) },
                                             onClick = {
@@ -1225,6 +1226,7 @@ private fun AlarmCard(
     is24Hour: Boolean,
     suppressedByVacation: Boolean = false,
     isActivePaneSelection: Boolean = false,
+    lastChanged: com.sysadmindoc.alarmclock.sync.AlarmLastChange? = null,
     onToggle: () -> Unit,
     onForceToggle: () -> Unit = {},
     onClick: () -> Unit,
@@ -1375,6 +1377,17 @@ private fun AlarmCard(
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2
+                )
+            }
+
+            lastChanged?.let { change ->
+                val timePattern = if (is24Hour) "HH:mm" else "h:mm a"
+                val changedAt = java.time.format.DateTimeFormatter.ofPattern(timePattern)
+                    .format(java.time.Instant.ofEpochMilli(change.timestamp).atZone(java.time.ZoneId.systemDefault()))
+                Text(
+                    text = "Изменено на ${if (change.fromWatch) "часах" else "телефоне"} в $changedAt",
+                    color = TextMuted,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }

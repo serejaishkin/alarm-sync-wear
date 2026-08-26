@@ -74,9 +74,11 @@ class WakeSyncAlarmListActivity : Activity() {
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
             val repeat = repeatLabel(alarm.repeatDays)
+            val changedAt = android.text.format.DateFormat.format("HH:mm", alarm.updatedAt)
+            val changedLabel = "Изменено на ${if (alarm.source == WearAlarmListStore.SOURCE_WATCH) "часах" else "телефоне"} в $changedAt"
             val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             row.addView(Button(this).apply {
-                text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n$repeat · ${if (alarm.enabled) "Включён" else "Выключен"}"
+                text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n$repeat · ${if (alarm.enabled) "Включён" else "Выключен"} · $changedLabel"
                 isAllCaps = false
                 setOnClickListener {
                     startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java)
