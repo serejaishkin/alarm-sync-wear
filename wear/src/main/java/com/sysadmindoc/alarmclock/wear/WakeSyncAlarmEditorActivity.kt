@@ -36,40 +36,46 @@ class WakeSyncAlarmEditorActivity : Activity() {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(20, 12, 20, 24)
         }
+        WearUi.styleRoot(this, content)
         content.addView(TextView(this).apply {
             text = if (syncId == null) "WakeSync — Новый будильник" else "WakeSync — Редактирование"
             gravity = Gravity.CENTER
+            WearUi.styleHeader(this@WakeSyncAlarmEditorActivity, this)
         })
         val time = LinearLayout(this).apply { gravity = Gravity.CENTER }
         hour = picker(0, 23, 7)
         minute = picker(0, 59, 0)
         time.addView(hour)
-        time.addView(TextView(this).apply { text = ":" })
+        time.addView(TextView(this).apply { text = ":"; WearUi.styleHeader(this@WakeSyncAlarmEditorActivity, this) })
         time.addView(minute)
         content.addView(time)
 
         label = EditText(this).apply { hint = "Название"; setSingleLine(true) }
         content.addView(label)
-        content.addView(TextView(this).apply { text = "Повтор" })
+        content.addView(TextView(this).apply { text = "Повтор"; WearUi.styleSectionLabel(this@WakeSyncAlarmEditorActivity, this) })
         repeatChecks = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс").map { day ->
             CheckBox(this).apply { text = day }
         }
         repeatChecks.forEach(content::addView)
 
-        content.addView(TextView(this).apply { text = "Отсрочка (мин)" })
+        content.addView(TextView(this).apply { text = "Отсрочка (мин)"; WearUi.styleSectionLabel(this@WakeSyncAlarmEditorActivity, this) })
         snooze = picker(1, 60, 10)
         content.addView(snooze)
         vibration = CheckBox(this).apply { text = "Вибрация"; isChecked = true }
         content.addView(vibration)
-        content.addView(TextView(this).apply { text = "Громкость" })
+        content.addView(TextView(this).apply { text = "Громкость"; WearUi.styleSectionLabel(this@WakeSyncAlarmEditorActivity, this) })
         volume = SeekBar(this).apply { max = 100; progress = 100 }
         content.addView(volume)
         content.addView(Button(this).apply {
             text = "Сохранить"
+            WearUi.styleActionButton(this@WakeSyncAlarmEditorActivity, this, R.color.dismiss_green)
             setOnClickListener { saveAlarm() }
         })
 
-        setContentView(ScrollView(this).apply { addView(content) })
+        val scroll = ScrollView(this)
+        WearUi.styleRoot(this, scroll)
+        scroll.addView(content)
+        setContentView(scroll)
     }
 
     private fun picker(min: Int, max: Int, value: Int) = NumberPicker(this).apply {

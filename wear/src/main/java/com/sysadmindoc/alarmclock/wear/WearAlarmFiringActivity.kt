@@ -30,23 +30,28 @@ class WearAlarmFiringActivity : ComponentActivity() {
             gravity = Gravity.CENTER
             setPadding(24, 24, 24, 24)
         }
+        WearUi.styleRoot(this, root)
         root.addView(TextView(this).apply {
             text = String.format("%02d:%02d", entry.hour, entry.minute)
-            textSize = 44f
+            textSize = 46f
             gravity = Gravity.CENTER
+            WearUi.styleHeader(this@WearAlarmFiringActivity, this)
         })
         if (entry.label.isNotBlank()) root.addView(TextView(this).apply {
             text = entry.label
             textSize = 18f
             gravity = Gravity.CENTER
+            WearUi.styleSectionLabel(this@WearAlarmFiringActivity, this)
         })
 
         root.addView(Button(this).apply {
             text = "Отложить ${entry.snoozeDurationMinutes} мин"
+            WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.snooze_yellow)
             setOnClickListener { snooze(entry) }
         })
         root.addView(Button(this).apply {
             text = "Выключить"
+            WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.dismiss_green)
             setOnClickListener { dismiss(entry) }
         })
         setContentView(root)

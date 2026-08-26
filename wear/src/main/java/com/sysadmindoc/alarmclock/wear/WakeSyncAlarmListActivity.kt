@@ -32,10 +32,11 @@ class WakeSyncAlarmListActivity : Activity() {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(14, 12, 14, 18)
         }
+        WearUi.styleRoot(this, root)
         root.addView(TextView(this).apply {
             text = "WakeSync\nБудильники"
-            textSize = 18f
             gravity = Gravity.CENTER
+            WearUi.styleHeader(this@WakeSyncAlarmListActivity, this)
         })
         val scroll = ScrollView(this)
         list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -43,6 +44,7 @@ class WakeSyncAlarmListActivity : Activity() {
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         root.addView(Button(this).apply {
             text = "+ Новый будильник"
+            WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
             setOnClickListener {
                 startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java))
             }
@@ -67,6 +69,7 @@ class WakeSyncAlarmListActivity : Activity() {
                 text = "Нет будильников\nСинхронизация запрошена"
                 gravity = Gravity.CENTER
                 setPadding(8, 30, 8, 30)
+                WearUi.styleSectionLabel(this@WakeSyncAlarmListActivity, this)
             })
             return
         }
@@ -79,7 +82,7 @@ class WakeSyncAlarmListActivity : Activity() {
             val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             row.addView(Button(this).apply {
                 text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n$repeat · ${if (alarm.enabled) "Включён" else "Выключен"} · $changedLabel"
-                isAllCaps = false
+                WearUi.styleCardButton(this@WakeSyncAlarmListActivity, this)
                 setOnClickListener {
                     startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java)
                         .putExtra("syncId", alarm.syncId)
@@ -89,6 +92,7 @@ class WakeSyncAlarmListActivity : Activity() {
             val actions = LinearLayout(this).apply { gravity = Gravity.CENTER }
             actions.addView(Button(this).apply {
                 text = if (alarm.enabled) "Выкл" else "Вкл"
+                WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
                 setOnClickListener {
                     if (alarm.enabled) {
                         WakeSyncPeerController.sendDisable(this@WakeSyncAlarmListActivity, alarm.syncId, alarm.alarmToken)
@@ -102,6 +106,7 @@ class WakeSyncAlarmListActivity : Activity() {
             })
             actions.addView(Button(this).apply {
                 text = "Удалить"
+                WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_red)
                 setOnClickListener {
                     WakeSyncPeerController.sendDelete(this@WakeSyncAlarmListActivity, alarm.syncId)
                     WearAlarmListStore.remove(this@WakeSyncAlarmListActivity, alarm.syncId)

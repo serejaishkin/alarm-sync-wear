@@ -1,34 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- New launcher glyph: ringing alarm bell (replaces the old clock face). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
-    <path
-        android:fillColor="#F6FAFF"
-        android:pathData="M256,256m-154,0a154,154 0,1 0,308 0a154,154 0,1 0,-308 0" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M256,256m-154,0a154,154 0,1 0,308 0a154,154 0,1 0,-308 0"
-        android:strokeColor="#5CA6FF"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="18" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M256,256 L214,214"
-        android:strokeColor="#102237"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="26" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M256,256 L320,224"
-        android:strokeColor="#102237"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="22" />
-    <path
-        android:fillColor="#5CA6FF"
-        android:pathData="M256,256m-18,0a18,18 0,1 0,36 0a18,18 0,1 0,-36 0" />
+    <group
+        android:scaleX="14"
+        android:scaleY="14"
+        android:translateX="88"
+        android:translateY="88">
+        <path
+            android:fillColor="#6FB7FF"
+            android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.64,5.36 6,7.92 6,11v5l-2,2v1h16v-1zM18.52,3.45l1.42,-1.43c2.37,1.83 3.91,4.65 4.12,7.82h-2.06c-0.19,-2.42 -1.38,-4.74 -3.48,-6.39zM7.58,3.45C5.48,5.1 4.29,7.42 4.1,9.84L2.04,9.84c0.21,-3.17 1.75,-5.99 4.12,-7.82z" />
+    </group>
 </vector>

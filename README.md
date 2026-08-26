@@ -14,7 +14,7 @@
 
 ## Download
 
-**Latest signed APK** - [Releases page](https://github.com/SysAdminDoc/AlarmClockXtreme/releases/latest)
+**Latest signed APK** - [Releases page](https://github.com/serejaishkin/alarm-sync-wear/releases/latest)
 
 ```
 adb install AlarmClockXtreme-v1.15.33-play-release.apk
@@ -29,7 +29,7 @@ Current release-hardening work is focused on public F-Droid inclusion, signed-re
 ## Build From Source
 
 ```bash
-git clone https://github.com/SysAdminDoc/AlarmClockXtreme.git
+git clone https://github.com/serejaishkin/alarm-sync-wear.git
 cd AlarmClockXtreme
 ./gradlew assemblePlayDebug
 # Install: adb install app/build/outputs/apk/play/debug/app-play-debug.apk

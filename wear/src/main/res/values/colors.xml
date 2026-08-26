@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette mirrored from the phone app (ui/theme/Color.kt) so both
+         surfaces share one visual language. -->
+    <color name="surface_dark">#FF070B11</color>
+    <color name="surface_medium">#FF0F1721</color>
+    <color name="surface_card">#FF15202E</color>
+    <color name="surface_light">#FF1B2737</color>
+    <color name="text_primary">#FFF1F5FB</color>
+    <color name="text_secondary">#FFA9BED8</color>
+    <color name="text_muted">#FF7E93AE</color>
+    <color name="accent_blue">#FF6FB7FF</color>
+    <color name="accent_red">#FFFF7E7A</color>
+    <color name="snooze_yellow">#FFF5C96B</color>
+    <color name="dismiss_green">#FF63D7AE</color>
+</resources>
