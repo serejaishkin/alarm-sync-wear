@@ -115,6 +115,7 @@ class AlarmSyncCoordinator @Inject constructor(
             AlarmSyncOperation.RINGING -> Unit
             AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
             AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
+            AlarmSyncOperation.DELETE -> Unit // handled above before the version gate
         }
     }
 

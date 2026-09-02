@@ -14,6 +14,7 @@ import com.sysadmindoc.alarmclock.sync.AlarmLastChange
 import com.sysadmindoc.alarmclock.sync.AlarmSyncCoordinator
 import com.sysadmindoc.alarmclock.ui.templates.AlarmTemplate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -112,6 +113,16 @@ class AlarmListViewModel @Inject constructor(
     private val _isSelectionMode = MutableStateFlow(false)
     private var lastSortCycleMillis = 0L
 
+    /** Sync provenance computed on IO — SharedPreferences reads must not run on Main. */
+    private val syncChangesFlow: StateFlow<Map<Long, AlarmLastChange>> = repository.observeAll()
+        .map { alarms ->
+            alarms.associate { alarm -> alarm.id to syncCoordinator.lastChangeFor(alarm.id) }
+                .filterValues { it != null }
+                .mapValues { it.value!! }
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     // Ticker emits every 30s so the remaining-time countdown stays fresh
     private val ticker = flow {
         while (true) {
@@ -121,61 +132,65 @@ class AlarmListViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Unit)
 
     val uiState: StateFlow<AlarmListUiState> = combine(
-        repository.observeAll(),
-        repository.observeNextAlarm(),
-        preferencesManager.settings,
-        _sortOrder,
-        combine(ticker, _selectedIds, _isSelectionMode, _undoAlarm, combine(_selectedGroup, _selectedProfile) { g, p -> g to p }) { _, sel, mode, undo, gp ->
-            SelectionSnapshot(sel, mode, undo, gp.first, gp.second)
-        }
-    ) { alarms, nextAlarm, settings, sort, snap ->
-        var filtered = alarms
-        if (!snap.selectedGroup.isNullOrBlank()) {
-            filtered = filtered.filter { it.group == snap.selectedGroup }
-        }
-        if (!snap.selectedProfile.isNullOrBlank()) {
-            filtered = filtered.filter { it.profileName == snap.selectedProfile }
-        }
+        combine(
+            repository.observeAll(),
+            repository.observeNextAlarm(),
+            preferencesManager.settings,
+            _sortOrder,
+            combine(ticker, _selectedIds, _isSelectionMode, _undoAlarm, combine(_selectedGroup, _selectedProfile) { g, p -> g to p }) { _, sel, mode, undo, gp ->
+                SelectionSnapshot(sel, mode, undo, gp.first, gp.second)
+            }
+        ) { alarms, nextAlarm, settings, sort, snap ->
+            var filtered = alarms
+            if (!snap.selectedGroup.isNullOrBlank()) {
+                filtered = filtered.filter { it.group == snap.selectedGroup }
+            }
+            if (!snap.selectedProfile.isNullOrBlank()) {
+                filtered = filtered.filter { it.profileName == snap.selectedProfile }
+            }
 
-        val sorted = sortAlarmsForList(filtered, sort)
+            val sorted = sortAlarmsForList(filtered, sort)
 
-        // Extract unique groups from all alarms (not filtered), hiding the
-        // empty/default group so the chip row never gets a blank filter.
-        val groups = alarms.map { it.group.trim() }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .sorted()
-        val profiles = alarms.map { it.profileName.trim() }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .sorted()
-        val now = System.currentTimeMillis()
+            // Extract unique groups from all alarms (not filtered), hiding the
+            // empty/default group so the chip row never gets a blank filter.
+            val groups = alarms.map { it.group.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+            val profiles = alarms.map { it.profileName.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+            val now = System.currentTimeMillis()
 
-        AlarmListUiState(
-            alarms = sorted,
-            nextAlarm = nextAlarm,
-            remainingTime = if (nextAlarm != null && nextAlarm.nextTriggerTime > 0) {
-                calculator.formatRemaining(nextAlarm.nextTriggerTime)
-            } else "",
-            vacationActive = VacationAlarmPolicy.isActive(settings, now),
-            sortOrder = sort,
-            is24HourFormat = settings.is24HourFormat,
-            groups = groups,
-            selectedGroup = snap.selectedGroup,
-            profiles = profiles,
-            selectedProfile = snap.selectedProfile,
-            undoAlarm = snap.undoAlarm,
-            selectedIds = snap.selectedIds,
-            isSelectionMode = snap.isSelectionMode,
-            napDefaultMinutes = settings.napDefaultMinutes,
-            vacationStartMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
-                settings.vacationStartMillis
-            } else 0L,
-            vacationEndMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
-                settings.vacationEndMillis
-            } else 0L,
-            syncChanges = sorted.mapNotNull { alarm -> syncCoordinator.lastChangeFor(alarm.id)?.let { alarm.id to it } }.toMap()
-        )
+            AlarmListUiState(
+                alarms = sorted,
+                nextAlarm = nextAlarm,
+                remainingTime = if (nextAlarm != null && nextAlarm.nextTriggerTime > 0) {
+                    calculator.formatRemaining(nextAlarm.nextTriggerTime)
+                } else "",
+                vacationActive = VacationAlarmPolicy.isActive(settings, now),
+                sortOrder = sort,
+                is24HourFormat = settings.is24HourFormat,
+                groups = groups,
+                selectedGroup = snap.selectedGroup,
+                profiles = profiles,
+                selectedProfile = snap.selectedProfile,
+                undoAlarm = snap.undoAlarm,
+                selectedIds = snap.selectedIds,
+                isSelectionMode = snap.isSelectionMode,
+                napDefaultMinutes = settings.napDefaultMinutes,
+                vacationStartMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
+                    settings.vacationStartMillis
+                } else 0L,
+                vacationEndMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
+                    settings.vacationEndMillis
+                } else 0L
+            )
+        },
+        syncChangesFlow
+    ) { base, changes ->
+        base.copy(syncChanges = changes)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
