@@ -39,6 +39,7 @@ class AlarmSyncCoordinator @Inject constructor(
 
     fun start() {
         if (observationJob?.isActive == true) return
+        android.util.Log.i("AlarmSync", "Starting sync coordinator")
         observationJob = scope.launch {
             alarmRepository.observeAll().collectLatest { synchronizeSnapshot(it) }
         }
@@ -168,9 +169,12 @@ class AlarmSyncCoordinator @Inject constructor(
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision, originDeviceId = deviceId)
             val envelope = AlarmSyncEnvelope(deviceId = deviceId, syncId = syncId, alarmId = alarm.id, operation = operation,
                 source = AlarmSyncSource.PHONE, revision = revision, timestamp = payload.timestamp, payload = AlarmSyncCodec.encode(payload))
-            if (transportProvider.transport().send(envelope).isSuccess) {
+            val result = transportProvider.transport().send(envelope)
+            if (result.isSuccess) {
                 preferences.edit().putString(tokenKey(alarm.id), payload.alarmToken?.let(::hash) ?: tokenHash).apply()
                 rememberVersion(syncId, revision, payload.timestamp, AlarmSyncSource.PHONE, deviceId)
+            } else {
+                android.util.Log.e("AlarmSync", "Send failed for $operation $syncId: ${result.exceptionOrNull()?.message}")
             }
         }
         for (alarmId in previousIds - currentIds) {

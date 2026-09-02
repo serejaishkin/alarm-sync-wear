@@ -1,6 +1,7 @@
 package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.wearable.Node
@@ -20,6 +21,7 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
 
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
         val payload = envelope.payload ?: ""
+        Log.d(TAG, "Sending ${envelope.operation} for ${envelope.syncId} rev=${envelope.revision}")
         val request = PutDataMapRequest.create("$PATH_ALARM_STATE/${envelope.syncId}").apply {
             dataMap.putString(KEY_MUTATION, payload)
             dataMap.putLong(KEY_REVISION, envelope.revision)
@@ -77,10 +79,14 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private suspend fun awaitPutDataItem(request: PutDataRequest) = suspendCancellableCoroutine<com.google.android.gms.wearable.DataItem> { c ->
         Wearable.getDataClient(appContext).putDataItem(request)
             .addOnSuccessListener(OnSuccessListener { item -> if (c.isActive) c.resume(item) })
-            .addOnFailureListener(OnFailureListener { e -> if (c.isActive) c.resumeWithException(e) })
+            .addOnFailureListener(OnFailureListener { e ->
+                Log.e(TAG, "putDataItem failed: ${e.message}", e)
+                if (c.isActive) c.resumeWithException(e)
+            })
     }
 
     companion object {
+        private const val TAG = "WearDataLayer"
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
         // Stable Data Layer path, matching the reference project's communication model.
         const val PATH_ALARM_SNAPSHOT = "/alarms/next"
