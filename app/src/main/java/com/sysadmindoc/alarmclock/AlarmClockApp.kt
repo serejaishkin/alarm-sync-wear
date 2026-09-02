@@ -72,6 +72,7 @@ class AlarmClockApp : Application(), Configuration.Provider {
         fun alarmIncidentRepository(): com.sysadmindoc.alarmclock.data.repository.AlarmIncidentRepository
         fun webhookService(): com.sysadmindoc.alarmclock.service.WebhookService
         fun preferencesManager(): PreferencesManager
+        fun syncCoordinator(): com.sysadmindoc.alarmclock.sync.AlarmSyncCoordinator
     }
 
     override fun onCreate() {
@@ -136,6 +137,10 @@ class AlarmClockApp : Application(), Configuration.Provider {
             notifier.startObserving()
         }
         wearNextAlarmBridge.start()
+
+        // Start alarm sync with Wear OS — observes Room alarms and sends
+        // mutations to the watch via the Data Layer transport.
+        entryPoint.syncCoordinator().start()
 
         // v1.7.0: Unpack yt-dlp binaries off the main thread so the YouTube
         // download path is ready by the time the user opens the ringtone
