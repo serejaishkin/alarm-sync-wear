@@ -24,13 +24,33 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 
 ## Roadmap
 
-Current release-hardening work is focused on public F-Droid inclusion, signed-release automation, API 37 platform readiness, Wear action acknowledgement, localization/pseudo-locale cleanup, and permission/store-declaration drift guards. Local planning details stay in the repository maintainer backlog; public release notes and issues track user-visible changes.
+### Done
+- Phone ↔ Watch alarm sync via Wear OS Data Layer (CREATE / UPDATE / DELETE / ENABLE / DISABLE / SNOOZE / DISMISS)
+- Authoritative DELETE — deletions always win, no more alarm resurrection via snapshots
+- Watch alarm firing no longer triggers phone media playback (RINGING is watch-local only)
+- Sync provenance display — "Changed on watch/phone at HH:mm" on both phone and watch lists
+- Dark blue theme ported from phone to Wear OS UI (list, editor, firing screen)
+- New bell icon replacing old clock face (adaptive + monochrome + legacy PNGs)
+- Cold-start jank fix — sync provenance reads moved off main thread
+
+### In Progress
+- Diagnosing Data Layer delivery failures (transport logging added, awaiting user logcat)
+- Cold-start optimization — WorkManager lazy init, Hilt DI cascade, SharedPreferences I/O on main thread remain
+
+### Backlog
+- BLE transport fallback for devices without Google Play Services
+- Full phone → watch snapshot reconciliation on reconnect
+- Watch → phone: proper tombstone cleanup after echo-DELETE
+- Localization — replace hardcoded Russian strings in wear module with resource strings
+- Wear OS Compose migration (current UI is programmatic Views)
+- F-Droid flavor: stub-less direct sync path (currently no-op)
+- Signed release builds, CI/CD, Play Store / F-Droid submission
 
 ## Build From Source
 
 ```bash
 git clone https://github.com/serejaishkin/alarm-sync-wear.git
-cd AlarmClockXtreme
+cd alarm-sync-wear
 ./gradlew assemblePlayDebug
 # Install: adb install app/build/outputs/apk/play/debug/app-play-debug.apk
 ./gradlew :wear:assembleDebug
