@@ -29,14 +29,13 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
         } else {
             Log.i(TAG, "Google Play Services available")
         }
-        // Log connected nodes on init so we can see if the watch is reachable
         Wearable.getNodeClient(appContext).connectedNodes
             .addOnSuccessListener { nodes ->
                 if (nodes.isEmpty()) {
                     Log.w(TAG, "No connected Wear OS nodes — Data Layer will not deliver")
                 } else {
                     nodes.forEach { node ->
-                        Log.i(TAG, "Connected node: ${node.displayName} id=${node.id} near=${node.isNear}")
+                        Log.i(TAG, "Connected node: ${node.displayName} id=${node.id}")
                     }
                 }
             }
@@ -114,7 +113,6 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     companion object {
         private const val TAG = "WearDataLayer"
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
-        // Stable Data Layer path, matching the reference project's communication model.
         const val PATH_ALARM_SNAPSHOT = "/alarms/next"
         const val KEY_MUTATION = "mutation"
         const val KEY_REVISION = "revision"
