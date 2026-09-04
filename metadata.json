@@ -1,0 +1,6 @@
+{
+  "name": "WakeSync — Wear OS Alarm Sync",
+  "description": "Interactive dual-device simulator and protocol engine for WakeSync two-way alarm synchronization between Android and Wear OS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
