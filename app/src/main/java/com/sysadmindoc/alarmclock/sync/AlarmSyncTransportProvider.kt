@@ -1,6 +1,7 @@
 package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,11 +30,18 @@ class AlarmSyncTransportProvider @Inject constructor(
             val clazz = Class.forName("com.sysadmindoc.alarmclock.sync.WearDataLayerTransport")
             val constructor = clazz.getConstructor(Context::class.java)
             constructor.newInstance(context) as AlarmSyncTransport
-        }.getOrElse { NoOpAlarmSyncTransport }
+        }.getOrElse { e ->
+            Log.w(TAG, "WearDataLayerTransport not available (fdroid build?): ${e.message}")
+            NoOpAlarmSyncTransport
+        }
     }
 
     private object NoOpAlarmSyncTransport : AlarmSyncTransport {
         override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> =
             Result.failure(IllegalStateException("Wear Data Layer transport is unavailable"))
+    }
+
+    companion object {
+        private const val TAG = "AlarmSync"
     }
 }

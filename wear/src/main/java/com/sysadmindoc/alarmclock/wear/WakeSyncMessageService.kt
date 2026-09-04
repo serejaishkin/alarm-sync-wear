@@ -5,29 +5,54 @@ import android.content.Context
 import android.content.Intent
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
+import android.util.Log
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import org.json.JSONObject
 
 /** Receives persistent phone-side alarm state through DataClient. */
 class WakeSyncMessageService : WearableListenerService() {
+
+    override fun onCreate() {
+        super.onCreate()
+        // Log connected nodes on watch side too
+        Wearable.getNodeClient(this).connectedNodes
+            .addOnSuccessListener { nodes ->
+                if (nodes.isEmpty()) {
+                    Log.w(TAG, "Watch: No connected phone nodes — Data Layer will not receive")
+                } else {
+                    nodes.forEach { node ->
+                        Log.i(TAG, "Watch: Connected phone: ${node.displayName} id=${node.id}")
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Watch: Failed to list nodes: ${e.message}", e)
+            }
+    }
+
     override fun onDataChanged(dataEvents: DataEventBuffer) {
+        Log.d(TAG, "onDataChanged: received ${dataEvents.count} events")
         for (event in dataEvents) {
             if (event.type != DataEvent.TYPE_CHANGED) continue
             val path = event.dataItem.uri.path.orEmpty()
+            Log.d(TAG, "Data event path: $path")
             if (!path.startsWith(PATH_ALARM_STATE_PREFIX)) continue
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
             val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
             if (encoded.isBlank()) continue
+            Log.d(TAG, "Applying mutation: ${encoded.take(200)}")
             applyPersistentMutation(encoded)
         }
     }
 
     /** MessageClient remains the low-latency path for alarm mutations. */
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.d(TAG, "onMessageReceived: path=${messageEvent.path}")
         if (messageEvent.path != PATH_MUTATION) return
         applyPersistentMutation(String(messageEvent.data, Charsets.UTF_8))
     }
@@ -136,6 +161,7 @@ class WakeSyncMessageService : WearableListenerService() {
     }
 
     companion object {
+        private const val TAG = "WakeSyncWatch"
         const val PATH_MUTATION = "/wakesync/alarm/mutation"
         private const val PATH_ALARM_STATE_PREFIX = "/wakesync/alarm/state/"
         private const val KEY_MUTATION = "mutation"

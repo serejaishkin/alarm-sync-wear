@@ -2,6 +2,8 @@ package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
 import android.util.Log
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.wearable.Node
@@ -18,6 +20,30 @@ import kotlin.coroutines.resumeWithException
 /** Play-flavor transport using the Wear OS Data Layer. */
 class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     private val appContext = context.applicationContext
+
+    init {
+        val gmsStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(appContext)
+        if (gmsStatus != ConnectionResult.SUCCESS) {
+            Log.e(TAG, "Google Play Services unavailable! status=$gmsStatus " +
+                "(${GoogleApiAvailability.getInstance().getErrorString(gmsStatus)})")
+        } else {
+            Log.i(TAG, "Google Play Services available")
+        }
+        // Log connected nodes on init so we can see if the watch is reachable
+        Wearable.getNodeClient(appContext).connectedNodes
+            .addOnSuccessListener { nodes ->
+                if (nodes.isEmpty()) {
+                    Log.w(TAG, "No connected Wear OS nodes — Data Layer will not deliver")
+                } else {
+                    nodes.forEach { node ->
+                        Log.i(TAG, "Connected node: ${node.displayName} id=${node.id} near=${node.isNear}")
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to list connected nodes: ${e.message}", e)
+            }
+    }
 
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
         val payload = envelope.payload ?: ""
