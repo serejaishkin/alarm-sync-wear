@@ -2,6 +2,7 @@ package com.sysadmindoc.alarmclock.sync
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.sysadmindoc.alarmclock.data.model.Alarm
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
@@ -72,10 +73,14 @@ class AlarmSyncCoordinator @Inject constructor(
 
     suspend fun applyRemote(payload: AlarmSyncPayload): Result<Unit> = runCatching {
         val localAlarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+        Log.i(TAG, "applyRemote: op=${payload.operation} syncId=${payload.syncId} rev=${payload.revision} " +
+            "ts=${payload.timestamp} src=${payload.source} origin=${payload.originDeviceId} localAlarmId=$localAlarmId " +
+            "enabled=${payload.enabled} hasToken=${payload.alarmToken != null}")
         // Deletes always win: independent revision counters on phone and watch
         // otherwise let a stale-looking DELETE be dropped and the alarm resurrected
         // by a later snapshot.
         if (payload.operation == AlarmSyncOperation.DELETE) {
+            Log.i(TAG, "applyRemote: DELETE bypass for syncId=${payload.syncId} localAlarmId=$localAlarmId")
             if (localAlarmId != 0L) {
                 alarmRepository.deleteById(localAlarmId)
                 val known = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
@@ -85,16 +90,30 @@ class AlarmSyncCoordinator @Inject constructor(
             val currentVersion = localVersion(payload.syncId)
             val revision = maxOf(payload.revision, currentVersion?.revision ?: 0L)
             rememberVersion(payload.syncId, revision, maxOf(payload.timestamp, currentVersion?.timestamp ?: 0L), payload.source, payload.originDeviceId)
+            Log.i(TAG, "applyRemote: DELETE completed for syncId=${payload.syncId}")
             return@runCatching
         }
         val current = localVersion(payload.syncId)
         val incoming = AlarmSyncEnvelope(deviceId = payload.originDeviceId, syncId = payload.syncId, alarmId = localAlarmId,
             operation = payload.operation, source = payload.source, revision = payload.revision, timestamp = payload.timestamp,
             payload = AlarmSyncCodec.encode(payload))
-        if (current != null && incoming.compareVersion(current) <= 0) return@runCatching
+        if (current != null && incoming.compareVersion(current) <= 0) {
+            Log.w(TAG, "applyRemote: VERSION GATE BLOCKED op=${payload.operation} syncId=${payload.syncId} " +
+                "incoming(rev=${incoming.revision},ts=${incoming.timestamp},src=${incoming.source}) " +
+                "current(rev=${current.revision},ts=${current.timestamp},src=${current.source})")
+            return@runCatching
+        }
+        Log.i(TAG, "applyRemote: VERSION GATE PASSED op=${payload.operation} syncId=${payload.syncId}")
         when (payload.operation) {
             AlarmSyncOperation.CREATE, AlarmSyncOperation.UPDATE, AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
-                val incomingAlarm = AlarmSyncCodec.decodeAlarm(payload).getOrThrow()
+                val decodeResult = AlarmSyncCodec.decodeAlarm(payload)
+                if (decodeResult.isFailure) {
+                    Log.e(TAG, "applyRemote: decodeAlarm FAILED for syncId=${payload.syncId}", decodeResult.exceptionOrNull())
+                    return@runCatching
+                }
+                val incomingAlarm = decodeResult.getOrThrow()
+                Log.i(TAG, "applyRemote: decoded alarm hour=${incomingAlarm.hour} min=${incomingAlarm.minute} " +
+                    "enabled=${incomingAlarm.isEnabled} label=${incomingAlarm.label}")
                 val existingId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
                 val savedId = if (existingId != 0L && alarmRepository.getById(existingId) != null) {
                     val updated = incomingAlarm.copy(id = existingId, isEnabled = when (payload.operation) {
@@ -107,15 +126,30 @@ class AlarmSyncCoordinator @Inject constructor(
                     val newId = alarmRepository.save(incomingAlarm.copy(id = 0L, nextTriggerTime = 0L).sanitized())
                     alarmRepository.getById(newId)?.let { alarmScheduler.schedule(it, requestWidgetUpdate = true) }; newId
                 }
+                Log.i(TAG, "applyRemote: DB updated savedId=$savedId op=${payload.operation} " +
+                    "isEnabled=${if (payload.operation == AlarmSyncOperation.ENABLE) true else if (payload.operation == AlarmSyncOperation.DISABLE) false else incomingAlarm.isEnabled}")
                 rememberIdentity(payload.syncId, savedId, payload.revision, payload.timestamp, payload.alarmToken, payload.source, payload.originDeviceId)
-                remoteSuppressions[savedId] = payload.alarmToken?.let(::hash) ?: ""
+                // Fix: re-encode token from local DB state so hash matches what synchronizeSnapshot will produce
+                val localAlarm = alarmRepository.getById(savedId)
+                val localToken = localAlarm?.let { AlarmSyncCodec.create(it, payload.syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, 0L, originDeviceId = deviceId).alarmToken }
+                remoteSuppressions[savedId] = localToken?.let(::hash) ?: ""
+                Log.i(TAG, "applyRemote: remoteSuppressions[$savedId] = ${remoteSuppressions[savedId]!!.take(16)}...")
                 if (payload.operation == AlarmSyncOperation.DISABLE) alarmCommand(payload, AlarmService.ACTION_DISMISS)
             }
             // The watch plays its own feedback when the alarm fires; RINGING must
             // not start media playback on the phone. Snooze/dismiss still mirror.
-            AlarmSyncOperation.RINGING -> Unit
-            AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
-            AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
+            AlarmSyncOperation.RINGING -> {
+                Log.i(TAG, "applyRemote: RINGING ignored (watch plays its own feedback)")
+                Unit
+            }
+            AlarmSyncOperation.SNOOZE -> {
+                Log.i(TAG, "applyRemote: SNOOZE for syncId=${payload.syncId}")
+                alarmCommand(payload, AlarmService.ACTION_SNOOZE)
+            }
+            AlarmSyncOperation.DISMISS -> {
+                Log.i(TAG, "applyRemote: DISMISS for syncId=${payload.syncId}")
+                alarmCommand(payload, AlarmService.ACTION_DISMISS)
+            }
             AlarmSyncOperation.DELETE -> Unit // handled above before the version gate
         }
     }
@@ -159,22 +193,29 @@ class AlarmSyncCoordinator @Inject constructor(
             val syncId = ensureSyncId(alarm.id)
             val currentToken = AlarmSyncCodec.create(alarm, syncId, AlarmSyncOperation.UPDATE, AlarmSyncSource.PHONE, 0L, originDeviceId = deviceId).alarmToken ?: continue
             val tokenHash = hash(currentToken)
-            if (remoteSuppressions.remove(alarm.id) == tokenHash) {
+            val suppressed = remoteSuppressions.remove(alarm.id)
+            if (suppressed == tokenHash) {
                 preferences.edit().putString(tokenKey(alarm.id), tokenHash).apply()
+                Log.i(TAG, "synchronizeSnapshot: SUPPRESSED echo for alarmId=${alarm.id} syncId=$syncId (remote suppression match)")
                 continue
             }
-            if (preferences.getString(tokenKey(alarm.id), null) == tokenHash) continue
+            if (preferences.getString(tokenKey(alarm.id), null) == tokenHash) {
+                Log.d(TAG, "synchronizeSnapshot: SKIP unchanged alarmId=${alarm.id} syncId=$syncId")
+                continue
+            }
             val operation = if (preferences.getString(tokenKey(alarm.id), null) == null) AlarmSyncOperation.CREATE else AlarmSyncOperation.UPDATE
             val revision = nextRevision(syncId)
             val payload = AlarmSyncCodec.create(alarm, syncId, operation, AlarmSyncSource.PHONE, revision, originDeviceId = deviceId)
             val envelope = AlarmSyncEnvelope(deviceId = deviceId, syncId = syncId, alarmId = alarm.id, operation = operation,
                 source = AlarmSyncSource.PHONE, revision = revision, timestamp = payload.timestamp, payload = AlarmSyncCodec.encode(payload))
+            Log.i(TAG, "synchronizeSnapshot: PUBLISHING $operation for alarmId=${alarm.id} syncId=$syncId rev=$revision " +
+                "suppressed=${if (suppressed != null) "was:${suppressed.take(16)}" else "none"} storedHash=${preferences.getString(tokenKey(alarm.id), null)?.take(16)} newHash=${tokenHash.take(16)}")
             val result = transportProvider.transport().send(envelope)
             if (result.isSuccess) {
                 preferences.edit().putString(tokenKey(alarm.id), payload.alarmToken?.let(::hash) ?: tokenHash).apply()
                 rememberVersion(syncId, revision, payload.timestamp, AlarmSyncSource.PHONE, deviceId)
             } else {
-                android.util.Log.e("AlarmSync", "Send failed for $operation $syncId: ${result.exceptionOrNull()?.message}")
+                Log.e(TAG, "Send failed for $operation $syncId: ${result.exceptionOrNull()?.message}")
             }
         }
         for (alarmId in previousIds - currentIds) {
@@ -232,5 +273,10 @@ class AlarmSyncCoordinator @Inject constructor(
     private fun timestampKey(id: String) = "timestamp_$id"
     private fun sourceKey(id: String) = "source_$id"
     private fun originDeviceKey(id: String) = "origin_device_$id"
-    companion object { private const val PREFS_NAME = "wakesync_state"; private const val KEY_DEVICE_ID = "device_id"; private const val KEY_KNOWN_ALARM_IDS = "known_alarm_ids" }
+    companion object {
+        private const val TAG = "AlarmSync"
+        private const val PREFS_NAME = "wakesync_state"
+        private const val KEY_DEVICE_ID = "device_id"
+        private const val KEY_KNOWN_ALARM_IDS = "known_alarm_ids"
+    }
 }

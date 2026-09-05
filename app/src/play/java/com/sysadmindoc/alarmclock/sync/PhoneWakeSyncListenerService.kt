@@ -30,74 +30,117 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
+        Log.i(TAG, "onDataChanged: ${dataEvents.count} event(s)")
         for (event in dataEvents) {
-            if (event.type != DataEvent.TYPE_CHANGED) continue
+            if (event.type != DataEvent.TYPE_CHANGED) {
+                Log.d(TAG, "onDataChanged: skipping non-CHANGED event type=${event.type}")
+                continue
+            }
             val path = event.dataItem.uri.path.orEmpty()
-            val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: continue
+            val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull()
+            if (dataMap == null) {
+                Log.w(TAG, "onDataChanged: null DataMap for path=$path")
+                continue
+            }
+            Log.i(TAG, "onDataChanged: path=$path keys=${dataMap.keySet()}")
 
             when {
                 path.startsWith(PATH_ALARM_STATE_PREFIX) -> {
+                    val syncId = path.removePrefix(PATH_ALARM_STATE_PREFIX)
                     val encoded = dataMap.getString(KEY_MUTATION).orEmpty()
-                    if (encoded.isBlank()) continue
+                    if (encoded.isBlank()) {
+                        Log.w(TAG, "onDataChanged: blank mutation for syncId=$syncId")
+                        continue
+                    }
+                    Log.i(TAG, "onDataChanged: ALARM_STATE syncId=$syncId payloadLen=${encoded.length}")
                     scope.launch {
                         val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
                         if (decoded == null) {
-                            Log.w(TAG, "Ignoring invalid persistent alarm mutation")
+                            Log.w(TAG, "onDataChanged:Ignoring invalid persistent alarm mutation for syncId=$syncId payloadPreview=${encoded.take(100)}")
                             return@launch
                         }
+                        Log.i(TAG, "onDataChanged: decoded op=${decoded.operation} syncId=${decoded.syncId} rev=${decoded.revision} enabled=${decoded.enabled}")
                         coordinator.applyRemote(decoded)
-                            .onFailure { Log.e(TAG, "Failed to apply Data Layer ${decoded.operation} for ${decoded.syncId}", it) }
+                            .onFailure { Log.e(TAG, "onDataChanged: Failed to apply Data Layer ${decoded.operation} for ${decoded.syncId}", it) }
+                            .onSuccess { Log.i(TAG, "onDataChanged: Successfully applied ${decoded.operation} for ${decoded.syncId}") }
                     }
                 }
                 path == PATH_ALARM_SNAPSHOT -> {
                     val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
-                    if (rawList.isBlank()) continue
                     val snapshotTimestamp = dataMap.getLong(KEY_UPDATED_AT, System.currentTimeMillis())
+                    Log.i(TAG, "onDataChanged: ALARM_SNAPSHOT payloadLen=${rawList.length} ts=$snapshotTimestamp")
+                    if (rawList.isBlank()) continue
                     scope.launch {
                         runCatching { parseSnapshot(rawList) }
                             .onSuccess { entries ->
-                                // Snapshot is a recovery hint only. Never immediately republish
-                                // the local phone list: that was the source of alarm resurrection.
+                                Log.i(TAG, "onDataChanged: parsed ${entries.size} snapshot entries")
                                 coordinator.applyWatchSnapshot(entries, snapshotTimestamp)
-                                    .onFailure { Log.e(TAG, "Failed to reconcile Watch snapshot", it) }
+                                    .onFailure { Log.e(TAG, "onDataChanged:Failed to reconcile Watch snapshot", it) }
+                                    .onSuccess { Log.i(TAG, "onDataChanged: Watch snapshot reconciled (${entries.size} entries)") }
                             }
-                            .onFailure { Log.e(TAG, "Failed to parse Watch snapshot", it) }
+                            .onFailure { Log.e(TAG, "onDataChanged:Failed to parse Watch snapshot", it) }
                     }
                 }
+                else -> Log.d(TAG, "onDataChanged: unhandled path=$path")
             }
         }
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.i(TAG, "onMessageReceived: path=${messageEvent.path} dataLen=${messageEvent.data?.size ?: 0}")
         when (messageEvent.path) {
             AlarmSyncTransportPaths.ALARM_MUTATION -> {
                 val encoded = messageEvent.data.toString(Charsets.UTF_8)
+                Log.i(TAG, "onMessageReceived: ALARM_MUTATION payloadLen=${encoded.length}")
                 scope.launch {
-                    val decoded = AlarmSyncCodec.decode(encoded).getOrNull() ?: return@launch
+                    val decoded = AlarmSyncCodec.decode(encoded).getOrNull()
+                    if (decoded == null) {
+                        Log.w(TAG, "onMessageReceived: Failed to decode ALARM_MUTATION payloadPreview=${encoded.take(100)}")
+                        return@launch
+                    }
+                    Log.i(TAG, "onMessageReceived: decoded op=${decoded.operation} syncId=${decoded.syncId} rev=${decoded.revision} enabled=${decoded.enabled} src=${decoded.source}")
                     val result = when (decoded.operation) {
                         AlarmSyncOperation.SNOOZE -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE) }
                         AlarmSyncOperation.DISMISS -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_DISMISS) }
                         else -> coordinator.applyRemote(decoded)
                     }
-                    result.onFailure { Log.e(TAG, "Failed to apply ${decoded.operation} for ${decoded.syncId}", it) }
+                    result.onFailure { Log.e(TAG, "onMessageReceived: Failed to apply ${decoded.operation} for ${decoded.syncId}", it) }
+                        .onSuccess { Log.i(TAG, "onMessageReceived: Successfully applied ${decoded.operation} for ${decoded.syncId}") }
                 }
             }
-            PATH_CREATE_REQUEST -> scope.launch {
-                runCatching { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
-                    .onFailure { Log.e(TAG, "Failed to create alarm from Wear", it) }
+            PATH_CREATE_REQUEST -> {
+                Log.i(TAG, "onMessageReceived: CREATE_REQUEST")
+                scope.launch {
+                    runCatching { createFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
+                        .onFailure { Log.e(TAG, "onMessageReceived:Failed to create alarm from Wear", it) }
+                        .onSuccess { Log.i(TAG, "onMessageReceived: Alarm created from Wear") }
+                }
             }
-            PATH_UPDATE_REQUEST -> scope.launch {
-                runCatching { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
-                    .onFailure { Log.e(TAG, "Failed to update alarm from Wear", it) }
+            PATH_UPDATE_REQUEST -> {
+                Log.i(TAG, "onMessageReceived: UPDATE_REQUEST")
+                scope.launch {
+                    runCatching { updateFromWear(messageEvent.data.toString(Charsets.UTF_8)) }
+                        .onFailure { Log.e(TAG, "onMessageReceived:Failed to update alarm from Wear", it) }
+                        .onSuccess { Log.i(TAG, "onMessageReceived: Alarm updated from Wear") }
+                }
             }
-            PATH_REQUEST_SNAPSHOT -> scope.launch {
-                runCatching { coordinator.syncNow() }
-                    .onFailure { Log.e(TAG, "Failed to publish snapshot to Wear", it) }
+            PATH_REQUEST_SNAPSHOT -> {
+                Log.i(TAG, "onMessageReceived: REQUEST_SNAPSHOT")
+                scope.launch {
+                    runCatching { coordinator.syncNow() }
+                        .onFailure { Log.e(TAG, "onMessageReceived:Failed to publish snapshot to Wear", it) }
+                        .onSuccess { Log.i(TAG, "onMessageReceived: Snapshot published to Wear") }
+                }
             }
-            PATH_WATCH_SNAPSHOT -> scope.launch {
-                runCatching { applyWatchSnapshotMessage(messageEvent.data.toString(Charsets.UTF_8)) }
-                    .onFailure { Log.e(TAG, "Failed to apply Watch snapshot", it) }
+            PATH_WATCH_SNAPSHOT -> {
+                Log.i(TAG, "onMessageReceived: WATCH_SNAPSHOT")
+                scope.launch {
+                    runCatching { applyWatchSnapshotMessage(messageEvent.data.toString(Charsets.UTF_8)) }
+                        .onFailure { Log.e(TAG, "onMessageReceived:Failed to apply Watch snapshot", it) }
+                        .onSuccess { Log.i(TAG, "onMessageReceived: Watch snapshot applied") }
+                }
             }
+            else -> Log.d(TAG, "onMessageReceived: unhandled path=${messageEvent.path}")
         }
     }
 

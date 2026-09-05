@@ -1,6 +1,7 @@
 package com.sysadmindoc.alarmclock.wear
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import org.json.JSONArray
@@ -15,6 +16,7 @@ object WakeSyncPeerController {
     const val PATH_WATCH_SNAPSHOT = "/wakesync/alarm/watch_snapshot"
     const val KEY_MUTATION = "mutation"
     const val KEY_TIMESTAMP = "timestamp"
+    private const val TAG = "WakeSyncWatch"
     private const val PROTOCOL_VERSION = 1
     private const val KEY_ALARM_LIST = "alarm_list"
     private const val KEY_UPDATED_AT = "updated_at"
@@ -43,7 +45,9 @@ object WakeSyncPeerController {
     }
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
+        Log.i(TAG, "sendAlarmMutation: op=$operation syncId=${entry.syncId} rev=${entry.revision} enabled=${entry.enabled} hasToken=${entry.alarmToken != null}")
         val payload = buildPayload(entry, operation).toString()
+        Log.d(TAG, "sendAlarmMutation: payload=${payload.take(200)}")
         sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
         if (operation != "SNOOZE" && operation != "DISMISS" && operation != "RINGING") sendDataItem(context, entry.syncId, payload)
     }

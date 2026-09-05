@@ -58,17 +58,27 @@ class WakeSyncMessageService : WearableListenerService() {
     }
 
     private fun applyPersistentMutation(raw: String) {
-        val payload = runCatching { JSONObject(raw) }.getOrElse { return }
+        val payload = runCatching { JSONObject(raw) }.getOrElse {
+            Log.w(TAG, "applyPersistentMutation: invalid JSON: ${raw.take(100)}")
+            return
+        }
         val operation = payload.optString("operation")
         val syncId = payload.optString("syncId")
-        if (syncId.isBlank()) return
+        if (syncId.isBlank()) {
+            Log.w(TAG, "applyPersistentMutation: blank syncId")
+            return
+        }
 
         val incomingRevision = payload.optLong("revision", 0L)
         val incomingTimestamp = payload.optLong("timestamp", 0L)
         val currentRevision = WearAlarmListStore.revisionFor(applicationContext, syncId)
         val currentTimestamp = WearAlarmListStore.timestampFor(applicationContext, syncId)
+        Log.i(TAG, "applyPersistentMutation: op=$operation syncId=$syncId incomingRev=$incomingRevision incomingTs=$incomingTimestamp currentRev=$currentRevision currentTs=$currentTimestamp")
         if (incomingRevision < currentRevision ||
-            incomingRevision == currentRevision && incomingTimestamp <= currentTimestamp) return
+            incomingRevision == currentRevision && incomingTimestamp <= currentTimestamp) {
+            Log.w(TAG, "applyPersistentMutation: VERSION GATE BLOCKED op=$operation syncId=$syncId")
+            return
+        }
 
         when (operation) {
             "CREATE", "UPDATE", "ENABLE", "DISABLE" -> {
@@ -101,6 +111,7 @@ class WakeSyncMessageService : WearableListenerService() {
                     originDeviceId = payload.optString("originDeviceId")
                 )
                 WearAlarmListStore.upsert(applicationContext, entry)
+                Log.i(TAG, "applyPersistentMutation: UPSERTED syncId=$syncId op=$operation enabled=${enabled} rev=$incomingRevision")
                 if (operation == "DISABLE") {
                     notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
                 }
