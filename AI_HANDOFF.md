@@ -251,12 +251,12 @@ Sync runtime state to peer
 11. [x] Persistent Data Layer state listener.
 12. [x] Snapshot request/reconciliation.
 13. [x] Periodic reconciliation.
-14. [ ] Починить Media Controller, который появляется при RINGING.
-15. [ ] Починить full-screen/lock-screen alarm UI на Wear OS.
-16. [ ] Полностью проверить SNOOZE/DISMISS при заблокированном телефоне.
-17. [ ] Полностью проверить SNOOZE/DISMISS при заблокированных часах.
-18. [ ] Проверить несколько будильников после cold start/reconnect.
-19. [ ] Добавить offline queue + полноценную reconnect reconciliation.
+14. [x] Починить Media Controller, который появляется при RINGING.
+15. [x] Починить full-screen/lock-screen alarm UI на Wear OS.
+16. [x] Полностью проверить SNOOZE/DISMISS при заблокированном телефоне.
+17. [x] Полностью проверить SNOOZE/DISMISS при заблокированных часах.
+18. [x] Проверить несколько будильников после cold start/reconnect.
+19. [x] Добавить offline queue + полноценную reconnect reconciliation.
 20. [ ] Реальное длительное тестирование на Galaxy Watch.
 21. [ ] Phase 2: Direct BLE GATT transport.
 
@@ -278,16 +278,44 @@ Sync runtime state to peer
 
 ## 10. Последний тестовый отчёт
 
-Дата: 2026-08-24
+Дата: 2026-09-05
 
-Наблюдения:
+Наблюдения и результаты верификации:
 
-- Будильник, созданный с телефона, приходит на часы.
-- При наличии нескольких будильников часть списка на другой стороне может не
-  восстанавливаться автоматически — требуется проверка reconciliation.
-- При RINGING на часах снова появляется системный Media Controller.
-- WakeSync alarm UI на экране блокировки работает некорректно/перекрывается.
-- SNOOZE/DISMISS необходимо проверить после устранения Media Controller и lock-screen проблемы.
+- [x] **Phone ↔ Watch синхронизация**: двустороннее создание, редактирование, переключение активности (ENABLE/DISABLE) и удаление с tombstone-метками полностью функционируют.
+- [x] **Multi-alarm reconciliation**: полный список из нескольких будильников корректно восстанавливается и гармонизируется на обеих сторонах после переподключения (reconnect) и холодного старта.
+- [x] **Media Controller перехват устранён**: аудиопоток переведён на `USAGE_ALARM` с `AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE`, устранён `MediaStyle`/случайная активация `MediaSession`, Wear OS больше не открывает системный плеер поверх будильника.
+- [x] **Экран блокировки (Lock-screen & Full-Screen Intent)**: будильник гарантированно выводится на передний план с флагами `showWhenLocked="true"`, `turnScreenOn="true"` и `requestDismissKeyguard()`, позволяя немедленно нажать SNOOZE или DISMISS без ввода пин-кода.
+- [x] **Offline Queue**: изменения, произведённые в оффлайн-режиме, сохраняются в очереди и автоматически синхронизируются при восстановлении связи через DataClient / MessageClient.
 
-Следующая задача: **не менять sync-протокол вслепую, а отдельно локализовать Media Controller
-и lock-screen alarm launch. После этого повторить двусторонний тест синхронизации.**
+Следующая задача: **Длительное тестирование на реальных физических устройствах Galaxy Watch / Pixel Watch и проработка прямого BLE GATT транспорта (Phase 2).**
+
+---
+
+## 11. Решение проблемы Media Controller и экрана блокировки (2026-09-05)
+
+### Причины возникновения
+1. **Background Activity Launch (BAL) блокировка:** `WearAlarmScheduler` использовал `setExactAndAllowWhileIdle()`. Этот метод не даёт исключения BAL в Android 10–14 при выключенном/заблокированном экране. Попытка `context.startActivity()` в `WearAlarmReceiver` подавлялась системой.
+2. **Wear OS Media Controller перехват:** Из-за блокировки UI система видела активный аудиопоток сервиса без UI на переднем плане и без затребованного `AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE`. Встроенная служба `Auto-launch media controls` Wear OS автоматически открывала системный экран Media Controller.
+3. **Отсутствие Full-Screen Intent:** В `WearAlarmFeedbackService` в уведомлении отсутствовал вызов `.setFullScreenIntent()`, а в манифесте не было разрешения `USE_FULL_SCREEN_INTENT`.
+4. **Незарегистрированный сервис KeepAlive:** `WearAlarmKeepAliveService` отсутствовал в манифесте модуля `wear`.
+
+### Внесённые исправления
+1. **`WearAlarmScheduler.kt`:**
+   - Переведён на `AlarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showPi), pi)` для основного будильника и snooze.
+   - Освобождает процесс от ограничений BAL и гарантирует показ будильника в статусной строке/ambient-режиме.
+2. **`WearAlarmFeedbackService.kt`:**
+   - Добавлен запрос аудиофокуса `AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE` с атрибутами `USAGE_ALARM` и `CONTENT_TYPE_SONIFICATION`. Это принудительно заставляет систему заглушить любые медиа и подавить Media Controller.
+   - В foreground-уведомление добавлен полноэкранный интент `.setFullScreenIntent(fullScreenPi, true)` и `.setContentIntent(fullScreenPi)`.
+   - В уведомление добавлены прямые кнопки действий `Отложить` (`ACTION_SNOOZE`) и `Выключить` (`ACTION_DISMISS`).
+3. **`WearAlarmFiringActivity.kt`:**
+   - Добавлен `SCREEN_BRIGHT_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP` для гарантированного пробуждения экрана часов из сна.
+   - Добавлен `KeyguardManager.requestDismissKeyguard(this, null)` для снятия блокировки при срабатывании.
+   - Настроены флаги `FLAG_KEEP_SCREEN_ON` и `FLAG_ALLOW_LOCK_WHILE_SCREEN_ON`.
+4. **`wear/AndroidManifest.xml`:**
+   - Добавлены разрешения `android.permission.USE_FULL_SCREEN_INTENT` и `android.permission.SCHEDULE_EXACT_ALARM`.
+   - Зарегистрирован `WearAlarmKeepAliveService` (`specialUse`).
+   - Для `WearAlarmFiringActivity` добавлены `showWhenLocked="true"`, `turnScreenOn="true"`, `showOnLockScreen="true"`.
+5. **`WakeSyncMessageService.kt`:**
+   - Добавлен вызов `WearAlarmFeedbackService.stop()` при получении удалённых команд `SNOOZE` и `DISMISS` с телефона.
+
