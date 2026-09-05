@@ -56,11 +56,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -105,6 +107,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -127,6 +130,7 @@ import com.sysadmindoc.alarmclock.ui.components.appOutlinedTextFieldColors
 import com.sysadmindoc.alarmclock.ui.components.appSwitchColors
 import com.sysadmindoc.alarmclock.ui.templates.TemplatePickerSheet
 import com.sysadmindoc.alarmclock.ui.theme.AccentRed
+import com.sysadmindoc.alarmclock.ui.theme.BorderSubtle
 import com.sysadmindoc.alarmclock.ui.theme.ClockTimeSmall
 import com.sysadmindoc.alarmclock.ui.theme.DismissGreen
 import com.sysadmindoc.alarmclock.ui.theme.LocalAppShapeTokens
@@ -668,17 +672,20 @@ fun AlarmListScreen(
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                TextButton(
+                                OutlinedButton(
                                     onClick = { showTemplates = true },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Templates")
                                 }
-                                TextButton(
+                                Button(
                                     onClick = onAddAlarm,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                 ) {
                                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -1048,34 +1055,50 @@ private fun AlarmHeader(
     sortLabel: String,
     onCycleSort: () -> Unit,
 ) {
-    AlarmClockHeroHeader(
-        title = "Alarms",
-        subtitle = when {
-            hasAlarms && remainingTime.isNotBlank() -> "Next alarm · $remainingTime"
-            alarmCount > 0 -> "All alarms paused"
-            else -> "No alarms scheduled"
-        },
-        actions = {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "WakeSync Alarms",
+                color = TextPrimary,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
             IconButton(onClick = onCycleSort) {
                 Icon(
                     Icons.AutoMirrored.Filled.Sort,
                     contentDescription = sortLabel,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-        },
-        badge = if (vacationActive) {
-            {
-                AppStatusChip(
-                    label = "Vacation mode",
-                    icon = Icons.Default.BeachAccess,
-                    color = SnoozeYellow
-                )
-            }
-        } else {
-            null
         }
-    )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(12.dp)
+            )
+            Text(
+                text = if (vacationActive) "Vacation mode active" else "Auto-sync enabled",
+                color = TextMuted,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
 }
 
 @Composable
@@ -1237,8 +1260,9 @@ private fun AlarmCard(
     onShowHistory: () -> Unit = {},
     onLongClick: () -> Unit
 ) {
-    var showMenu by remember { mutableStateOf(false) }
     val shapeTokens = LocalAppShapeTokens.current
+    val cardAlpha = if (alarm.isEnabled) 1f else 0.55f
+    val (timeStr, periodStr) = splitAlarmTime(alarm, is24Hour)
 
     Card(
         modifier = Modifier
@@ -1250,7 +1274,7 @@ private fun AlarmCard(
                     stateDescription = "Selected"
                 }
             },
-        shape = shapeTokens.card,
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = when {
                 isActivePaneSelection -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
@@ -1259,136 +1283,165 @@ private fun AlarmCard(
             }
         )
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            // ── Time + label + toggle ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = timeStr,
+                            color = if (alarm.isEnabled) TextPrimary else TextMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            lineHeight = 32.sp,
+                            letterSpacing = 0.sp
+                        )
+                        if (periodStr.isNotBlank()) {
+                            Text(
+                                text = periodStr,
+                                color = if (alarm.isEnabled) TextMuted else TextMuted.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                    }
+                    if (alarm.label.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = alarm.label,
+                            color = if (alarm.isEnabled) TextSecondary else TextMuted,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Toggle pill
+                val alarmToggleLabel = alarm.label.ifBlank { timeStr }
+                Box(
+                    modifier = Modifier
+                        .combinedClickable(
+                            onClick = { onToggle() },
+                            onLongClick = { if (alarm.isEnabled) onForceToggle() }
+                        )
+                        .semantics {
+                            contentDescription = "$alarmToggleLabel alarm"
+                            stateDescription = if (alarm.isEnabled) "Enabled" else "Disabled"
+                            role = Role.Switch
+                        }
+                ) {
+                    Switch(
+                        checked = alarm.isEnabled,
+                        onCheckedChange = null,
+                        colors = appSwitchColors(),
+                        modifier = Modifier.clearAndSetSemantics {}
+                    )
+                }
+            }
+
+            // ── Divider ──
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(
+                color = BorderSubtle,
+                thickness = 0.5.dp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ── Footer: repeat + remaining · action icons ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = formatAlarmTime(alarm, is24Hour),
-                        color = if (alarm.isEnabled) TextPrimary else TextMuted,
-                        style = ClockTimeSmall
-                    )
-                    Text(
-                        text = alarm.label.ifBlank { alarm.repeatLabel },
-                        color = if (alarm.isEnabled) TextSecondary else TextMuted,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                val repeatText = buildList {
+                    if (alarm.repeatLabel.isNotBlank()) add(alarm.repeatLabel)
+                    alarm.shiftPatternChipLabel()?.let(::add)
+                }.joinToString(" · ")
+
+                val remainingText = if (alarm.isEnabled) nextRemainingLabel(alarm) else ""
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val alarmToggleLabel = alarm.label.ifBlank { formatAlarmTime(alarm, is24Hour) }
-                    Box(
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = { onToggle() },
-                                onLongClick = { if (alarm.isEnabled) onForceToggle() }
-                            )
-                            .semantics {
-                                contentDescription = "$alarmToggleLabel alarm"
-                                stateDescription = if (alarm.isEnabled) "Enabled" else "Disabled"
-                                role = Role.Switch
-                            }
-                    ) {
-                        Switch(
-                            checked = alarm.isEnabled,
-                            onCheckedChange = null,
-                            colors = appSwitchColors(),
-                            modifier = Modifier.clearAndSetSemantics {}
+                    if (repeatText.isNotBlank()) {
+                        Text(
+                            text = repeatText,
+                            color = TextMuted,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, "Alarm options", tint = TextSecondary)
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                onClick = { showMenu = false; onClick() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Duplicate") },
-                                leadingIcon = { Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(18.dp)) },
-                                onClick = { showMenu = false; onDuplicate() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Share") },
-                                leadingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.size(18.dp)) },
-                                onClick = { showMenu = false; onShare() }
-                            )
-                            if (alarm.isEnabled && alarm.isRecurringSchedule) {
-                                DropdownMenuItem(
-                                    text = { Text("Skip next") },
-                                    leadingIcon = { Icon(Icons.Default.SkipNext, null, modifier = Modifier.size(18.dp)) },
-                                    onClick = { showMenu = false; onSkipNext() }
-                                )
-                            }
-                            DropdownMenuItem(
-                                text = { Text("History") },
-                                leadingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.size(18.dp)) },
-                                onClick = { showMenu = false; onShowHistory() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete", color = AccentRed) },
-                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = AccentRed, modifier = Modifier.size(18.dp)) },
-                                onClick = { showMenu = false; onDelete() }
+                    if (remainingText.isNotBlank() && repeatText.isNotBlank()) {
+                        Text("·", color = TextMuted.copy(alpha = 0.5f), fontSize = 11.sp)
+                    }
+                    if (remainingText.isNotBlank()) {
+                        Text(
+                            text = remainingText,
+                            color = if (alarm.isEnabled) MaterialTheme.colorScheme.primary else TextMuted,
+                            fontSize = 11.sp,
+                            fontWeight = if (alarm.isEnabled) FontWeight.Medium else FontWeight.Normal,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (alarm.isEnabled) {
+                        IconButton(onClick = { onShowHistory() }, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "Test ring",
+                                tint = TextMuted,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
+                    }
+                    IconButton(onClick = onClick, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit",
+                            tint = TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete",
+                            tint = TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }
 
-            Text(
-                // v1.5.2: Be honest when vacation mode is swallowing the fire.
-                text = if (suppressedByVacation) {
-                    "Paused until vacation ends"
-                } else {
-                    nextOccurrenceLabel(alarm, is24Hour)
-                },
-                color = if (suppressedByVacation) SnoozeYellow else TextMuted,
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            val metadata = buildList {
-                if (alarm.label.isNotBlank() && alarm.repeatLabel.isNotBlank()) add(alarm.repeatLabel)
-                alarm.shiftPatternChipLabel()?.let(::add)
-                if (alarm.usesFixedTimezone) add(alarm.fixedTimezoneId)
-                if (alarm.group.isNotBlank()) add(alarm.group)
-                if (alarm.challengeType != "NONE") add(challengeTypeLabel(alarm.challengeType))
-                if (alarm.ringtoneUri == "silent") add("Silent")
-            }
-            if (metadata.isNotEmpty()) {
-                Text(
-                    text = metadata.joinToString(" · "),
-                    color = TextSecondary,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
-                )
-            }
-
+            // ── Sync info tag ──
             lastChanged?.let { change ->
-                val timePattern = if (is24Hour) "HH:mm" else "h:mm a"
-                val changedAt = java.time.format.DateTimeFormatter.ofPattern(timePattern)
-                    .format(java.time.Instant.ofEpochMilli(change.timestamp).atZone(java.time.ZoneId.systemDefault()))
-                Text(
-                    text = "Изменено на ${if (change.fromWatch) "часах" else "телефоне"} в $changedAt",
-                    color = TextMuted,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Source: ${if (change.fromWatch) "WATCH" else "PHONE"}",
+                        color = TextMuted.copy(alpha = 0.7f),
+                        fontSize = 9.sp
+                    )
+                }
             }
         }
     }
@@ -1582,6 +1635,32 @@ private fun formatAlarmTime(alarm: Alarm, is24Hour: Boolean): String {
         val hour12 = if (alarm.hour % 12 == 0) 12 else alarm.hour % 12
         val amPm = if (alarm.hour < 12) "AM" else "PM"
         "$hour12:${String.format("%02d", alarm.minute)} $amPm"
+    }
+}
+
+/** Splits time into (timeStr, periodStr). 24h returns ("07:00", ""). 12h returns ("7:00", "AM"). */
+private fun splitAlarmTime(alarm: Alarm, is24Hour: Boolean): Pair<String, String> {
+    return if (is24Hour) {
+        String.format("%02d:%02d", alarm.hour, alarm.minute) to ""
+    } else {
+        val hour12 = if (alarm.hour % 12 == 0) 12 else alarm.hour % 12
+        val amPm = if (alarm.hour < 12) "AM" else "PM"
+        "$hour12:${String.format("%02d", alarm.minute)}" to amPm
+    }
+}
+
+/** Short relative remaining time like "in 23h 20m" or "in 5m". */
+private fun nextRemainingLabel(alarm: Alarm): String {
+    val now = java.lang.System.currentTimeMillis()
+    val diff = alarm.nextTriggerTime - now
+    if (diff <= 0) return ""
+    val totalMinutes = diff / 60_000
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return when {
+        hours > 0 -> "in ${hours}h ${minutes}m"
+        minutes > 0 -> "in ${minutes}m"
+        else -> "in <1m"
     }
 }
 
