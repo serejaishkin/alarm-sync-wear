@@ -80,7 +80,7 @@ class WakeSyncAlarmListActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             // Ample top/bottom padding to account for circular watch face curvature
-            setPadding(16, 32, 16, 44)
+            setPadding(24, 24, 24, 36)
         }
 
         // Header Title
@@ -92,7 +92,7 @@ class WakeSyncAlarmListActivity : Activity() {
 
         // Subtitle / Status
         statusText = TextView(this).apply {
-            text = "Будильники"
+            text = "Alarms"
             gravity = Gravity.CENTER
             textSize = 12f
             setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_secondary))
@@ -142,7 +142,7 @@ class WakeSyncAlarmListActivity : Activity() {
 
         if (alarms.isEmpty()) {
             listContainer.addView(TextView(this).apply {
-                text = "Нет будильников\nНажмите «+ Новый»"
+                text = "No alarms\nTap «+ New alarm»"
                 gravity = Gravity.CENTER
                 setPadding(8, 20, 8, 20)
                 textSize = 13f
@@ -151,7 +151,7 @@ class WakeSyncAlarmListActivity : Activity() {
             return
         }
 
-        statusText.text = "Всего: ${alarms.size}"
+        statusText.text = "Synced to Watch \u2022 ${alarms.size} alarms"
 
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
@@ -216,7 +216,7 @@ class WakeSyncAlarmListActivity : Activity() {
             }
 
             val toggleBtn = Button(this).apply {
-                this.text = if (alarm.enabled) "ВКЛ" else "ВЫКЛ"
+                this.text = if (alarm.enabled) "On" else "Off"
                 isAllCaps = false
                 textSize = 12f
                 val colorRes = if (alarm.enabled) R.color.dismiss_green else R.color.text_muted
@@ -233,7 +233,7 @@ class WakeSyncAlarmListActivity : Activity() {
             actions.addView(toggleBtn, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 6 })
 
             val deleteBtn = Button(this).apply {
-                this.text = "Удалить"
+                this.text = "Delete"
                 isAllCaps = false
                 textSize = 12f
                 WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_red)
