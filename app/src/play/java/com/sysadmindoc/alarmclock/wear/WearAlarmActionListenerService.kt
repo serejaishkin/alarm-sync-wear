@@ -21,17 +21,17 @@ class WearAlarmActionListenerService : WearableListenerService() {
         if (alarmId <= 0L) return
 
         when (messageEvent.path) {
-            WearAlarmData.PATH_ACTION_SKIP -> {
+            WearAlarmData.PATH_ACTION_SKIP, WearAlarmData.PATH_WAKESYNC_ACTION_SKIP -> {
                 sendBroadcast(Intent(applicationContext, SkipNextReceiver::class.java).apply {
                     putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
                 })
             }
-            WearAlarmData.PATH_ACTION_SNOOZE -> forwardFiringOnly(
+            WearAlarmData.PATH_ACTION_SNOOZE, WearAlarmData.PATH_WAKESYNC_ACTION_SNOOZE -> forwardFiringOnly(
                 alarmId = alarmId,
                 receiver = SnoozeReceiver::class.java,
                 actionName = "snooze"
             )
-            WearAlarmData.PATH_ACTION_DISMISS -> forwardFiringOnly(
+            WearAlarmData.PATH_ACTION_DISMISS, WearAlarmData.PATH_WAKESYNC_ACTION_DISMISS -> forwardFiringOnly(
                 alarmId = alarmId,
                 receiver = DismissReceiver::class.java,
                 actionName = "dismiss"

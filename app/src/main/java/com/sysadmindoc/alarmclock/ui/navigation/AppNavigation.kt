@@ -265,7 +265,6 @@ private fun WakeSyncNavHost(
         composable(Screen.Stopwatch.route) { StopwatchScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onNavigateToStats = {},
                 onNavigateToStopwatch = { navController.navigate(Screen.Stopwatch.route) },
                 onNavigateToBedtime = { navController.navigate(Screen.Bedtime.route) },
                 onOpenOnboardingChecklist = { navController.navigate(Screen.Onboarding.route) { launchSingleTop = true } }

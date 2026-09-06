@@ -26,6 +26,7 @@
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/alarmclockxtreme/action/" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/wakesync/action/" />
             </intent-filter>
         </service>
         <receiver android:name=".sync.PhoneLocalAlarmTriggerReceiver" android:exported="false">

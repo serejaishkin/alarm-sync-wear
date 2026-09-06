@@ -18,10 +18,10 @@ class WearActionListenerService : WearableListenerService() {
 
     override fun onMessageReceived(event: MessageEvent) {
         val operation = when (event.path) {
-            PATH_SNOOZE -> AlarmSyncOperation.SNOOZE
-            PATH_DISMISS -> AlarmSyncOperation.DISMISS
-            PATH_ENABLE -> AlarmSyncOperation.ENABLE
-            PATH_DISABLE -> AlarmSyncOperation.DISABLE
+            PATH_SNOOZE, PATH_WAKESYNC_SNOOZE -> AlarmSyncOperation.SNOOZE
+            PATH_DISMISS, PATH_WAKESYNC_DISMISS -> AlarmSyncOperation.DISMISS
+            PATH_ENABLE, PATH_WAKESYNC_ENABLE -> AlarmSyncOperation.ENABLE
+            PATH_DISABLE, PATH_WAKESYNC_DISABLE -> AlarmSyncOperation.DISABLE
             else -> return
         }
         val alarmId = runCatching {
@@ -40,6 +40,10 @@ class WearActionListenerService : WearableListenerService() {
         const val PATH_DISMISS = "/alarmclockxtreme/action/dismiss"
         const val PATH_ENABLE = "/alarmclockxtreme/action/enable"
         const val PATH_DISABLE = "/alarmclockxtreme/action/disable"
+        const val PATH_WAKESYNC_SNOOZE = "/wakesync/action/snooze"
+        const val PATH_WAKESYNC_DISMISS = "/wakesync/action/dismiss"
+        const val PATH_WAKESYNC_ENABLE = "/wakesync/action/enable"
+        const val PATH_WAKESYNC_DISABLE = "/wakesync/action/disable"
         private const val KEY_ALARM_ID = "alarm_id"
     }
 }

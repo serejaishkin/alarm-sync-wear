@@ -5,11 +5,19 @@ import androidx.core.content.edit
 import com.google.android.gms.wearable.DataMap
 
 object WearAlarmData {
-    // Same stable Data Layer path used by the reference project.
+    // Primary stable Data Layer path matching phone WakeSync transport
     const val PATH_NEXT_ALARM = "/alarms/next"
+    const val PATH_LEGACY_NEXT_ALARM = "/alarmclockxtreme/next_alarm"
+
     const val PATH_ACTION_SKIP = "/alarmclockxtreme/action/skip"
     const val PATH_ACTION_SNOOZE = "/alarmclockxtreme/action/snooze"
     const val PATH_ACTION_DISMISS = "/alarmclockxtreme/action/dismiss"
+    const val PATH_ACTION_DISABLE = "/alarmclockxtreme/action/disable"
+
+    const val PATH_WAKESYNC_ACTION_SKIP = "/wakesync/action/skip"
+    const val PATH_WAKESYNC_ACTION_SNOOZE = "/wakesync/action/snooze"
+    const val PATH_WAKESYNC_ACTION_DISMISS = "/wakesync/action/dismiss"
+    const val PATH_WAKESYNC_ACTION_DISABLE = "/wakesync/action/disable"
 
     const val KEY_HAS_ALARM = "has_alarm"
     const val KEY_ALARM_ID = "alarm_id"
@@ -25,12 +33,14 @@ object WearAlarmData {
     const val CLICK_SKIP = "skip"
     const val CLICK_SNOOZE = "snooze"
     const val CLICK_DISMISS = "dismiss"
+    const val CLICK_DISABLE = "disable"
 
     /** Map a tile clickable ID to the Data Layer message path, or null if it is not an action. */
     fun actionPathForClick(clickableId: String): String? = when (clickableId) {
         CLICK_SKIP -> PATH_ACTION_SKIP
         CLICK_SNOOZE -> PATH_ACTION_SNOOZE
         CLICK_DISMISS -> PATH_ACTION_DISMISS
+        CLICK_DISABLE -> PATH_ACTION_DISABLE
         else -> null
     }
 }
@@ -104,9 +114,9 @@ object WearAlarmText {
     }
 
     fun complicationShortTitle(snapshot: WearAlarmSnapshot): String = when {
-        snapshot.isFiring -> "ACX"
+        snapshot.isFiring -> "Wake"
         snapshot.hasAlarm -> snapshot.label.ifBlank { "Next" }.take(SHORT_TITLE_LIMIT)
-        else -> "ACX"
+        else -> "Wake"
     }
 
     fun complicationLongText(snapshot: WearAlarmSnapshot, now: Long = System.currentTimeMillis()): String = when {
@@ -125,29 +135,41 @@ object WearAlarmStore {
     fun load(context: Context): WearAlarmSnapshot {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         return WearAlarmSnapshot(
-            hasAlarm = prefs.getBoolean(WearAlarmData.KEY_HAS_ALARM, false), alarmId = prefs.getLong(WearAlarmData.KEY_ALARM_ID, -1L),
-            label = prefs.getString(WearAlarmData.KEY_LABEL, "").orEmpty(), timeLabel = prefs.getString(WearAlarmData.KEY_TIME_LABEL, "").orEmpty(),
-            triggerTime = prefs.getLong(WearAlarmData.KEY_TRIGGER_TIME, 0L), isFiring = prefs.getBoolean(WearAlarmData.KEY_IS_FIRING, false),
-            updatedAt = prefs.getLong(WearAlarmData.KEY_UPDATED_AT, 0L), timezonePolicy = prefs.getString(WearAlarmData.KEY_TIMEZONE_POLICY, "LOCAL").orEmpty(),
+            hasAlarm = prefs.getBoolean(WearAlarmData.KEY_HAS_ALARM, false),
+            alarmId = prefs.getLong(WearAlarmData.KEY_ALARM_ID, -1L),
+            label = prefs.getString(WearAlarmData.KEY_LABEL, "").orEmpty(),
+            timeLabel = prefs.getString(WearAlarmData.KEY_TIME_LABEL, "").orEmpty(),
+            triggerTime = prefs.getLong(WearAlarmData.KEY_TRIGGER_TIME, 0L),
+            isFiring = prefs.getBoolean(WearAlarmData.KEY_IS_FIRING, false),
+            updatedAt = prefs.getLong(WearAlarmData.KEY_UPDATED_AT, 0L),
+            timezonePolicy = prefs.getString(WearAlarmData.KEY_TIMEZONE_POLICY, "LOCAL").orEmpty(),
             fixedTimezoneId = prefs.getString(WearAlarmData.KEY_FIXED_TIMEZONE_ID, "").orEmpty()
         )
     }
 
     fun save(context: Context, snapshot: WearAlarmSnapshot) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
-            putBoolean(WearAlarmData.KEY_HAS_ALARM, snapshot.hasAlarm); putLong(WearAlarmData.KEY_ALARM_ID, snapshot.alarmId)
-            putString(WearAlarmData.KEY_LABEL, snapshot.label); putString(WearAlarmData.KEY_TIME_LABEL, snapshot.timeLabel)
-            putLong(WearAlarmData.KEY_TRIGGER_TIME, snapshot.triggerTime); putBoolean(WearAlarmData.KEY_IS_FIRING, snapshot.isFiring)
-            putLong(WearAlarmData.KEY_UPDATED_AT, snapshot.updatedAt); putString(WearAlarmData.KEY_TIMEZONE_POLICY, snapshot.timezonePolicy)
+            putBoolean(WearAlarmData.KEY_HAS_ALARM, snapshot.hasAlarm)
+            putLong(WearAlarmData.KEY_ALARM_ID, snapshot.alarmId)
+            putString(WearAlarmData.KEY_LABEL, snapshot.label)
+            putString(WearAlarmData.KEY_TIME_LABEL, snapshot.timeLabel)
+            putLong(WearAlarmData.KEY_TRIGGER_TIME, snapshot.triggerTime)
+            putBoolean(WearAlarmData.KEY_IS_FIRING, snapshot.isFiring)
+            putLong(WearAlarmData.KEY_UPDATED_AT, snapshot.updatedAt)
+            putString(WearAlarmData.KEY_TIMEZONE_POLICY, snapshot.timezonePolicy)
             putString(WearAlarmData.KEY_FIXED_TIMEZONE_ID, snapshot.fixedTimezoneId)
         }
     }
 
     fun fromDataMap(dataMap: DataMap): WearAlarmSnapshot = WearAlarmSnapshot(
-        hasAlarm = dataMap.getBoolean(WearAlarmData.KEY_HAS_ALARM, false), alarmId = dataMap.getLong(WearAlarmData.KEY_ALARM_ID, -1L),
-        label = dataMap.getString(WearAlarmData.KEY_LABEL, "").orEmpty(), timeLabel = dataMap.getString(WearAlarmData.KEY_TIME_LABEL, "").orEmpty(),
-        triggerTime = dataMap.getLong(WearAlarmData.KEY_TRIGGER_TIME, 0L), isFiring = dataMap.getBoolean(WearAlarmData.KEY_IS_FIRING, false),
-        updatedAt = dataMap.getLong(WearAlarmData.KEY_UPDATED_AT, 0L), timezonePolicy = dataMap.getString(WearAlarmData.KEY_TIMEZONE_POLICY, "LOCAL").orEmpty(),
+        hasAlarm = dataMap.getBoolean(WearAlarmData.KEY_HAS_ALARM, false),
+        alarmId = dataMap.getLong(WearAlarmData.KEY_ALARM_ID, -1L),
+        label = dataMap.getString(WearAlarmData.KEY_LABEL, "").orEmpty(),
+        timeLabel = dataMap.getString(WearAlarmData.KEY_TIME_LABEL, "").orEmpty(),
+        triggerTime = dataMap.getLong(WearAlarmData.KEY_TRIGGER_TIME, 0L),
+        isFiring = dataMap.getBoolean(WearAlarmData.KEY_IS_FIRING, false),
+        updatedAt = dataMap.getLong(WearAlarmData.KEY_UPDATED_AT, 0L),
+        timezonePolicy = dataMap.getString(WearAlarmData.KEY_TIMEZONE_POLICY, "LOCAL").orEmpty(),
         fixedTimezoneId = dataMap.getString(WearAlarmData.KEY_FIXED_TIMEZONE_ID, "").orEmpty()
     )
 }

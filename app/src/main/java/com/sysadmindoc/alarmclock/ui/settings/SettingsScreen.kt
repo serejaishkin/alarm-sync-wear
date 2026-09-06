@@ -229,7 +229,6 @@ private fun LazyListScope.settingsItem(
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToStats: () -> Unit = {},
     onNavigateToStopwatch: () -> Unit = {},
     onNavigateToBedtime: () -> Unit = {},
     onOpenOnboardingChecklist: () -> Unit = {},

@@ -346,6 +346,10 @@
                     android:host="*"
                     android:pathPrefix="/alarmclockxtreme/action"
                     android:scheme="wear" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/wakesync/action"
+                    android:scheme="wear" />
             </intent-filter>
         </service>
 

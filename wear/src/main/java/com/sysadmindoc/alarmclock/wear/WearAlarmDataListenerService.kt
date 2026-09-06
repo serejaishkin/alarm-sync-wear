@@ -26,7 +26,7 @@ class WearAlarmDataListenerService : WearableListenerService() {
             val path = event.dataItem.uri.path.orEmpty()
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: return@forEach
             when {
-                path == WearAlarmData.PATH_NEXT_ALARM -> {
+                path == WearAlarmData.PATH_NEXT_ALARM || path == WearAlarmData.PATH_LEGACY_NEXT_ALARM -> {
                     WearAlarmStore.save(applicationContext, WearAlarmStore.fromDataMap(dataMap))
                     val rawList = dataMap.getString(KEY_ALARM_LIST).orEmpty()
                     if (rawList.isNotBlank()) {
