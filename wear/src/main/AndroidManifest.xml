@@ -53,6 +53,12 @@
             </intent-filter>
         </receiver>
 
+        <provider
+            android:name=".WakeSyncStartupProvider"
+            android:authorities="${applicationId}.wakesync.startup"
+            android:exported="false"
+            android:initOrder="100" />
+
         <service android:name=".WearAlarmFeedbackService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
