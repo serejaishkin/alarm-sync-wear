@@ -45,8 +45,8 @@ data class AlarmSyncEnvelope(
         require(syncId == other.syncId) { "Cannot compare different alarms" }
 
         return when {
-            revision != other.revision -> revision.compareTo(other.revision)
             timestamp != other.timestamp -> timestamp.compareTo(other.timestamp)
+            revision != other.revision -> revision.compareTo(other.revision)
             source != other.source -> sourcePriority(source).compareTo(sourcePriority(other.source))
             deviceId != other.deviceId -> deviceId.compareTo(other.deviceId)
             else -> 0

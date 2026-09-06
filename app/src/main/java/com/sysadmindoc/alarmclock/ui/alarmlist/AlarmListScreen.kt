@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -69,6 +70,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -146,6 +148,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,6 +171,12 @@ fun AlarmListScreen(
 
     var statsAlarmLabel by remember { mutableStateOf<String?>(null) }
     val alarmStats by viewModel.alarmStats.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        while (true) {
+            viewModel.syncWithWatch()
+            delay(2_000L)
+        }
+    }
     if (statsAlarmLabel != null && alarmStats != null) {
         val stats = alarmStats!!
         AlertDialog(
@@ -391,6 +400,7 @@ fun AlarmListScreen(
                             AlarmSortOrder.ENABLED_FIRST -> "Active first"
                         },
                         onCycleSort = viewModel::cycleSortOrder,
+                        onSync = viewModel::syncWithWatch,
                     )
                 }
 
@@ -1055,6 +1065,7 @@ private fun AlarmHeader(
     vacationActive: Boolean,
     sortLabel: String,
     onCycleSort: () -> Unit,
+    onSync: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1133,6 +1144,13 @@ private fun AlarmHeader(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
+            Spacer(modifier = Modifier.weight(1f))
+            OutlinedButton(
+                onClick = onSync,
+                contentPadding = ButtonDefaults.ContentPadding
+            ) {
+                Text("Sync watch", fontSize = 12.sp)
+            }
         }
     }
 }
@@ -1470,10 +1488,17 @@ private fun AlarmCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Icon(
+                        imageVector = if (change.fromWatch) Icons.Filled.Watch else Icons.Filled.PhoneAndroid,
+                        contentDescription = null,
+                        tint = TextMuted.copy(alpha = 0.7f),
+                        modifier = Modifier.size(13.dp)
+                    )
                     Text(
-                        text = "Source: ${if (change.fromWatch) "WATCH" else "PHONE"}",
+                        text = if (change.fromWatch) "Created/changed on watch" else "Created/changed on phone",
                         color = TextMuted.copy(alpha = 0.7f),
                         fontSize = 9.sp
                     )

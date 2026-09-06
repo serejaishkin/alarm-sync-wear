@@ -74,8 +74,8 @@ class WakeSyncMessageService : WearableListenerService() {
         val currentRevision = WearAlarmListStore.revisionFor(applicationContext, syncId)
         val currentTimestamp = WearAlarmListStore.timestampFor(applicationContext, syncId)
         Log.i(TAG, "applyPersistentMutation: op=$operation syncId=$syncId incomingRev=$incomingRevision incomingTs=$incomingTimestamp currentRev=$currentRevision currentTs=$currentTimestamp")
-        if (incomingRevision < currentRevision ||
-            incomingRevision == currentRevision && incomingTimestamp <= currentTimestamp) {
+        if (incomingTimestamp < currentTimestamp ||
+            incomingTimestamp == currentTimestamp && incomingRevision <= currentRevision) {
             Log.w(TAG, "applyPersistentMutation: VERSION GATE BLOCKED op=$operation syncId=$syncId")
             return
         }

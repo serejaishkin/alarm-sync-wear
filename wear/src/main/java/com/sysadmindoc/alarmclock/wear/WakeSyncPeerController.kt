@@ -45,11 +45,14 @@ object WakeSyncPeerController {
     }
 
     fun sendAlarmMutation(context: Context, entry: WearAlarmListStore.Entry, operation: String) {
-        Log.i(TAG, "sendAlarmMutation: op=$operation syncId=${entry.syncId} rev=${entry.revision} enabled=${entry.enabled} hasToken=${entry.alarmToken != null}")
+        Log.i(TAG, "sendAlarmMutation: op=$operation syncId=${entry.syncId} rev=${entry.revision} enabled=${entry.enabled} hasToken=${entry.alarmToken.isNotBlank()}")
         val payload = buildPayload(entry, operation).toString()
         Log.d(TAG, "sendAlarmMutation: payload=${payload.take(200)}")
         sendRawMessage(context, PATH_MUTATION, payload.toByteArray(Charsets.UTF_8))
-        if (operation != "SNOOZE" && operation != "DISMISS" && operation != "RINGING") sendDataItem(context, entry.syncId, payload)
+        // MessageClient gives the action low latency on Samsung Wear OS.
+        // DataClient makes it durable when the phone process is asleep or the
+        // Bluetooth/Wear OS bridge briefly drops the message.
+        sendDataItem(context, entry.syncId, payload)
     }
 
     fun sendDelete(context: Context, syncId: String, revision: Long, timestamp: Long = System.currentTimeMillis()) {

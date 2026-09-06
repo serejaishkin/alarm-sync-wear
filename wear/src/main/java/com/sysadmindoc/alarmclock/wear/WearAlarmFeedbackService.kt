@@ -3,6 +3,7 @@ package com.sysadmindoc.alarmclock.wear
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.AudioAttributes
@@ -67,17 +68,30 @@ class WearAlarmFeedbackService : Service() {
         vibrator?.cancel()
     }
 
-    private fun buildNotification(label: String): Notification =
-        NotificationCompat.Builder(this, CHANNEL_ID)
+    private fun buildNotification(label: String): Notification {
+        val fullScreenIntent = Intent(this, WearAlarmFiringActivity::class.java).apply {
+            putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this,
+            syncId.hashCode(),
+            fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
             .setContentTitle("Будильник")
             .setContentText(label.ifBlank { "Время вставать" })
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setContentIntent(fullScreenPendingIntent)
             .setOngoing(true)
             .setSilent(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
+    }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= 26) {

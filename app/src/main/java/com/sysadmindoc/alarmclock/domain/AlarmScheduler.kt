@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -74,11 +75,13 @@ class AlarmScheduler @Inject constructor(
             return
         }
 
-        if (!canScheduleExactAlarms()) {
-            cancelScheduledEntries(sanitizedAlarm.id)
-            repository.updateNextTrigger(sanitizedAlarm.id, 0)
-            requestWidgetUpdateIfNeeded(requestWidgetUpdate)
-            return
+        val exactAlarmsAllowed = canScheduleExactAlarms()
+        if (!exactAlarmsAllowed) {
+            // Keep the alarm armed even when the user has not granted exact
+            // alarm access. An inexact wake-up is preferable to silently
+            // dropping the alarm; the settings screen can still guide the
+            // user to grant exact scheduling for minute-accurate delivery.
+            Log.w("AlarmScheduler", "Exact alarm access unavailable; using inexact fallback for ${sanitizedAlarm.id}")
         }
 
         // v1.11.6 (roadmap N6): hard-suspend all alarms when the user has
@@ -210,7 +213,11 @@ class AlarmScheduler @Inject constructor(
         }
 
         repository.updateNextTrigger(sanitizedAlarm.id, triggerTime)
-        scheduleAlarmClock(sanitizedAlarm.id, triggerTime)
+        if (exactAlarmsAllowed) {
+            scheduleAlarmClock(sanitizedAlarm.id, triggerTime)
+        } else {
+            scheduleInexactFallback(sanitizedAlarm.id, triggerTime)
+        }
         DirectBootAlarmCache.saveIfEarlier(context, sanitizedAlarm, triggerTime)
         scheduleSupportingWork(sanitizedAlarm, triggerTime)
         requestWidgetUpdateIfNeeded(requestWidgetUpdate)
@@ -566,6 +573,7 @@ class AlarmScheduler @Inject constructor(
                     pendingIntent
                 )
             }
+
             recordScheduleIncident(
                 alarmId = alarmId,
                 fireId = fireId,
@@ -623,6 +631,23 @@ class AlarmScheduler @Inject constructor(
                 reasonCode = "SET_ALARM_CLOCK_FAILED_${e.javaClass.simpleName}"
             )
         }
+    }
+
+    private fun scheduleInexactFallback(alarmId: Long, triggerTime: Long) {
+        val fireId = AlarmIncidentEvent.fireIdFor(alarmId, triggerTime)
+        val pendingIntent = createPendingIntent(alarmId, triggerTime, fireId)
+        alarmManager.setAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerTime,
+            pendingIntent
+        )
+        recordScheduleIncident(
+            alarmId = alarmId,
+            fireId = fireId,
+            triggerTime = triggerTime,
+            status = AlarmIncidentEvent.STATUS_SUCCEEDED,
+            reasonCode = "SET_INEXACT_ALLOW_WHILE_IDLE"
+        )
     }
 
     private fun recordScheduleIncident(

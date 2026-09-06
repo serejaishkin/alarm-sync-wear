@@ -227,6 +227,13 @@ class AlarmListViewModel @Inject constructor(
             AlarmSortOrder.CREATED -> AlarmSortOrder.ENABLED_FIRST
             AlarmSortOrder.ENABLED_FIRST -> AlarmSortOrder.TIME
         }
+
+    }
+
+    fun syncWithWatch() {
+        viewModelScope.launch {
+            syncCoordinator.syncNow()
+        }
     }
 
     fun moveAlarm(

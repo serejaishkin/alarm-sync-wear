@@ -123,12 +123,12 @@ class WakeSyncAlarmEditorActivity : Activity() {
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 8 })
 
         adjustRow.addView(createStepButton("Мин -") {
-            minuteValue = if (minuteValue <= 0) 55 else minuteValue - 5
+            minuteValue = if (minuteValue <= 0) 59 else minuteValue - 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 4 })
 
         adjustRow.addView(createStepButton("Мин +") {
-            minuteValue = if (minuteValue >= 55) 0 else minuteValue + 5
+            minuteValue = if (minuteValue >= 59) 0 else minuteValue + 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f))
 
@@ -280,12 +280,12 @@ class WakeSyncAlarmEditorActivity : Activity() {
         vibrationButton = Button(this).apply {
             isAllCaps = false
             textSize = 12f
-            updateVibrationButtonText()
             setOnClickListener {
                 vibrationEnabled = !vibrationEnabled
                 updateVibrationButtonText()
             }
         }
+        updateVibrationButtonText()
         content.addView(vibrationButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 10 })
 
         // Volume
@@ -407,7 +407,11 @@ class WakeSyncAlarmEditorActivity : Activity() {
             volume = volumePercent,
             revision = (existing?.revision ?: 0L) + 1L,
             updatedAt = now,
-            alarmToken = existing?.alarmToken ?: UUID.randomUUID().toString()
+            alarmToken = existing?.alarmToken ?: UUID.randomUUID().toString(),
+            source = WearAlarmListStore.SOURCE_WATCH,
+            originDeviceId = getSharedPreferences("wakesync_identity", MODE_PRIVATE)
+                .getString("device_id", null)
+                ?: "WATCH"
         )
     }
 

@@ -1,6 +1,7 @@
 package com.sysadmindoc.alarmclock.wear
 
 import android.content.ComponentName
+import android.util.Log
 import androidx.wear.tiles.TileService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import com.google.android.gms.wearable.DataEvent
@@ -12,6 +13,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class WearAlarmDataListenerService : WearableListenerService() {
+    override fun onCreate() {
+        super.onCreate()
+        Log.i(TAG, "Wear data listener started")
+    }
+
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
             WakeSyncPeerController.PATH_REQUEST_WATCH_SNAPSHOT,
@@ -20,10 +26,12 @@ class WearAlarmDataListenerService : WearableListenerService() {
     }
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
+        Log.i(TAG, "onDataChanged: ${dataEvents.count} event(s)")
         var changed = false
         dataEvents.forEach { event ->
             if (event.type != DataEvent.TYPE_CHANGED) return@forEach
             val path = event.dataItem.uri.path.orEmpty()
+            Log.i(TAG, "onDataChanged path=$path")
             val dataMap = runCatching { DataMapItem.fromDataItem(event.dataItem).dataMap }.getOrNull() ?: return@forEach
             when {
                 path == WearAlarmData.PATH_NEXT_ALARM || path == WearAlarmData.PATH_LEGACY_NEXT_ALARM -> {
@@ -86,14 +94,14 @@ class WearAlarmDataListenerService : WearableListenerService() {
     }
     private fun compareVersion(a: WearAlarmListStore.Entry, b: WearAlarmListStore.Entry): Int = compareVersion(a.revision, a.updatedAt, a.source, a.originDeviceId, b)
     private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Entry): Int = when {
-        revision != b.revision -> revision.compareTo(b.revision)
         timestamp != b.updatedAt -> timestamp.compareTo(b.updatedAt)
+        revision != b.revision -> revision.compareTo(b.revision)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.originDeviceId)
     }
     private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Tombstone): Int = when {
-        revision != b.revision -> revision.compareTo(b.revision)
         timestamp != b.timestamp -> timestamp.compareTo(b.timestamp)
+        revision != b.revision -> revision.compareTo(b.revision)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.deviceId)
     }
@@ -119,5 +127,9 @@ class WearAlarmDataListenerService : WearableListenerService() {
         TileService.getUpdater(applicationContext).requestUpdate(NextAlarmTileService::class.java)
         ComplicationDataSourceUpdateRequester.create(applicationContext, ComponentName(applicationContext, NextAlarmComplicationDataSourceService::class.java)).requestUpdateAll()
     }
-    companion object { const val KEY_ALARM_LIST = "alarm_list"; const val KEY_UPDATED_AT = "updated_at" }
+    companion object {
+        const val KEY_ALARM_LIST = "alarm_list"
+        const val KEY_UPDATED_AT = "updated_at"
+        private const val TAG = "WakeSyncWatch"
+    }
 }

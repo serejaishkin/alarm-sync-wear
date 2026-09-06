@@ -14,6 +14,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
@@ -32,6 +34,7 @@ class AlarmSyncCoordinator @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val remoteSuppressions = mutableMapOf<Long, String>()
+    private val syncMutex = Mutex()
     private var observationJob: Job? = null
 
     private val deviceId: String
@@ -42,11 +45,17 @@ class AlarmSyncCoordinator @Inject constructor(
         if (observationJob?.isActive == true) return
         android.util.Log.i("AlarmSync", "Starting sync coordinator")
         observationJob = scope.launch {
-            alarmRepository.observeAll().collectLatest { synchronizeSnapshot(it) }
+            alarmRepository.observeAll().collectLatest { syncMutex.withLock { synchronizeSnapshot(it) } }
         }
     }
 
-    suspend fun syncNow() = synchronizeSnapshot(alarmRepository.getAll())
+    suspend fun syncNow() {
+        syncMutex.withLock {
+            val alarms = alarmRepository.getAll()
+            synchronizeSnapshot(alarms)
+            publishFullSnapshot(alarms)
+        }
+    }
     fun stop() { observationJob?.cancel(); observationJob = null }
 
     suspend fun registerWearCreatedAlarm(syncId: String, alarmId: Long, revision: Long, timestamp: Long, alarmToken: String?) {
@@ -71,25 +80,40 @@ class AlarmSyncCoordinator @Inject constructor(
         start()
     }
 
-    suspend fun applyRemote(payload: AlarmSyncPayload): Result<Unit> = runCatching {
+    suspend fun applyRemote(payload: AlarmSyncPayload): Result<Unit> =
+        syncMutex.withLock { applyRemoteUnlocked(payload) }
+
+    private suspend fun applyRemoteUnlocked(payload: AlarmSyncPayload): Result<Unit> = runCatching {
         val localAlarmId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
         Log.i(TAG, "applyRemote: op=${payload.operation} syncId=${payload.syncId} rev=${payload.revision} " +
             "ts=${payload.timestamp} src=${payload.source} origin=${payload.originDeviceId} localAlarmId=$localAlarmId " +
             "enabled=${payload.enabled} hasToken=${payload.alarmToken != null}")
-        // Deletes always win: independent revision counters on phone and watch
-        // otherwise let a stale-looking DELETE be dropped and the alarm resurrected
-        // by a later snapshot.
         if (payload.operation == AlarmSyncOperation.DELETE) {
-            Log.i(TAG, "applyRemote: DELETE bypass for syncId=${payload.syncId} localAlarmId=$localAlarmId")
+            val currentVersion = localVersion(payload.syncId)
+            val incomingDelete = AlarmSyncEnvelope(
+                deviceId = payload.originDeviceId,
+                syncId = payload.syncId,
+                alarmId = localAlarmId,
+                operation = payload.operation,
+                source = payload.source,
+                revision = payload.revision,
+                timestamp = payload.timestamp,
+                payload = AlarmSyncCodec.encode(payload)
+            )
+            if (currentVersion != null && incomingDelete.compareVersion(currentVersion) <= 0) {
+                Log.w(TAG, "applyRemote: VERSION GATE BLOCKED DELETE syncId=${payload.syncId} " +
+                    "incoming(rev=${payload.revision},ts=${payload.timestamp}) " +
+                    "current(rev=${currentVersion.revision},ts=${currentVersion.timestamp})")
+                return@runCatching
+            }
+            Log.i(TAG, "applyRemote: DELETE accepted for syncId=${payload.syncId} localAlarmId=$localAlarmId")
             if (localAlarmId != 0L) {
                 alarmRepository.deleteById(localAlarmId)
                 val known = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty().toMutableSet()
                 known.remove(localAlarmId.toString())
                 preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, known).remove(tokenKey(localAlarmId)).apply()
             }
-            val currentVersion = localVersion(payload.syncId)
-            val revision = maxOf(payload.revision, currentVersion?.revision ?: 0L)
-            rememberVersion(payload.syncId, revision, maxOf(payload.timestamp, currentVersion?.timestamp ?: 0L), payload.source, payload.originDeviceId)
+            rememberVersion(payload.syncId, payload.revision, payload.timestamp, payload.source, payload.originDeviceId)
             Log.i(TAG, "applyRemote: DELETE completed for syncId=${payload.syncId}")
             return@runCatching
         }
@@ -106,12 +130,15 @@ class AlarmSyncCoordinator @Inject constructor(
         Log.i(TAG, "applyRemote: VERSION GATE PASSED op=${payload.operation} syncId=${payload.syncId}")
         when (payload.operation) {
             AlarmSyncOperation.CREATE, AlarmSyncOperation.UPDATE, AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
-                val decodeResult = AlarmSyncCodec.decodeAlarm(payload)
-                if (decodeResult.isFailure) {
-                    Log.e(TAG, "applyRemote: decodeAlarm FAILED for syncId=${payload.syncId}", decodeResult.exceptionOrNull())
-                    return@runCatching
-                }
-                val incomingAlarm = decodeResult.getOrThrow()
+                val incomingAlarm = AlarmSyncCodec.decodeAlarm(payload)
+                    .getOrElse {
+                        // Older Wear builds send the editable fields with a local
+                        // alarmToken, not a phone-compatible AlarmShare token.
+                        // The fields are already part of the versioned envelope,
+                        // so use them as the canonical CREATE/UPDATE payload.
+                        Log.w(TAG, "applyRemote: using field payload for ${payload.syncId}; alarmToken is not share-compatible", it)
+                        alarmFromPayload(payload)
+                    }
                 Log.i(TAG, "applyRemote: decoded alarm hour=${incomingAlarm.hour} min=${incomingAlarm.minute} " +
                     "enabled=${incomingAlarm.isEnabled} label=${incomingAlarm.label}")
                 val existingId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
@@ -231,11 +258,51 @@ class AlarmSyncCoordinator @Inject constructor(
         preferences.edit().putStringSet(KEY_KNOWN_ALARM_IDS, currentIds.map(Long::toString).toSet()).apply()
     }
 
+    /**
+     * A snapshot request is a recovery operation, not an incremental sync.
+     * Always publish every local alarm so a restarted or cleared watch can
+     * rebuild its list even when the phone-side token cache is unchanged.
+     */
+    private suspend fun publishFullSnapshot(alarms: List<Alarm>) {
+        val entries = alarms.mapNotNull { alarm ->
+            if (alarm.id == 0L) return@mapNotNull null
+            val syncId = ensureSyncId(alarm.id)
+            val version = localVersion(syncId)
+            AlarmSyncSnapshotEntry(
+                alarm = alarm,
+                syncId = syncId,
+                revision = version?.revision ?: 0L,
+                updatedAt = version?.timestamp ?: alarm.createdAt,
+                source = AlarmSyncSource.PHONE,
+                originDeviceId = deviceId
+            )
+        }
+        transportProvider.transport().publishFullSnapshot(entries)
+            .onSuccess { Log.i(TAG, "publishFullSnapshot: sent ${entries.size} alarms to Wear") }
+            .onFailure { Log.e(TAG, "publishFullSnapshot: failed for ${entries.size} alarms", it) }
+    }
+
     private fun alarmCommand(payload: AlarmSyncPayload, action: String) {
         val id = preferences.getLong(alarmIdKey(payload.syncId), 0L); if (id == 0L) return
         context.startService(Intent(context, AlarmService::class.java).apply {
             this.action = action; putExtra(AlarmScheduler.EXTRA_ALARM_ID, id); putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
         })
+    }
+
+    private fun alarmFromPayload(payload: AlarmSyncPayload): Alarm {
+        val days = payload.repeatDays.mapNotNull { day ->
+            java.time.DayOfWeek.entries.getOrNull(day - 1)
+        }.toSet()
+        return Alarm(
+            hour = (payload.hour ?: 7).coerceIn(0, 23),
+            minute = (payload.minute ?: 0).coerceIn(0, 59),
+            label = (payload.label ?: "Alarm").take(120),
+            isEnabled = payload.enabled ?: true,
+            repeatDays = days,
+            vibrationEnabled = payload.vibrationEnabled ?: true,
+            volume = (payload.volume ?: 100).coerceIn(0, 100),
+            snoozeDurationMinutes = (payload.snoozeDurationMinutes ?: 10).coerceIn(1, 60)
+        ).sanitized()
     }
 
     /** Who made the last synchronized change to this alarm and when. Null if never synced. */

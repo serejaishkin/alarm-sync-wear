@@ -3,6 +3,7 @@ package com.sysadmindoc.alarmclock.wear
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 
 /** Wakes the Wear alarm engine and UI without depending on the app process. */
 class WearAlarmReceiver : BroadcastReceiver() {
@@ -30,14 +31,25 @@ class WearAlarmReceiver : BroadcastReceiver() {
 
         val firing = Intent(context, WearAlarmFiringActivity::class.java).apply {
             putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            )
         }
         runCatching { context.startActivity(firing) }
+            .onFailure { Log.e(TAG, "Failed to open firing screen for syncId=$syncId", it) }
 
         // Repeating alarms get their next occurrence immediately. Snooze owns
         // its own exact alarm and must not be replaced here.
         if (!WearAlarmScheduler.isSnooze(intent)) {
             WearAlarmScheduler.rescheduleAfterDismiss(context, entry)
         }
+
+    }
+
+    companion object {
+        private const val TAG = "WakeSyncWatch"
     }
 }

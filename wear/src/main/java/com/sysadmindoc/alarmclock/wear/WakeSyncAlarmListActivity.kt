@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -24,6 +26,16 @@ class WakeSyncAlarmListActivity : Activity() {
     private lateinit var listContainer: LinearLayout
     private lateinit var statusText: TextView
     private lateinit var scrollView: ScrollView
+    private val syncHandler = Handler(Looper.getMainLooper())
+    private var touchStartY = 0f
+    private var touchStartedAtTop = false
+    private var pullSyncTriggered = false
+    private val periodicSync = object : Runnable {
+        override fun run() {
+            requestPhoneSnapshot()
+            syncHandler.postDelayed(this, SYNC_INTERVAL_MS)
+        }
+    }
 
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "alarms") {
@@ -40,10 +52,12 @@ class WakeSyncAlarmListActivity : Activity() {
         super.onStart()
         getSharedPreferences(PREFS_ALARMS, Context.MODE_PRIVATE)
             .registerOnSharedPreferenceChangeListener(prefsListener)
+        syncHandler.post(periodicSync)
     }
 
     override fun onStop() {
         super.onStop()
+        syncHandler.removeCallbacks(periodicSync)
         getSharedPreferences(PREFS_ALARMS, Context.MODE_PRIVATE)
             .unregisterOnSharedPreferenceChangeListener(prefsListener)
     }
@@ -62,6 +76,28 @@ class WakeSyncAlarmListActivity : Activity() {
             isFillViewport = true
             isFocusable = true
             isFocusableInTouchMode = true
+            setOnTouchListener { _, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        touchStartY = event.rawY
+                        touchStartedAtTop = scrollY == 0
+                        pullSyncTriggered = false
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (!pullSyncTriggered && touchStartedAtTop &&
+                            event.rawY - touchStartY > PULL_TO_SYNC_DISTANCE
+                        ) {
+                            pullSyncTriggered = true
+                            requestPhoneSnapshot()
+                            statusText.text = "Синхронизация..."
+                        }
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        pullSyncTriggered = false
+                    }
+                }
+                false
+            }
             // Rotary knob / crown scroll support for Galaxy Watch and Pixel Watch
             setOnGenericMotionListener { _, event ->
                 if (event.action == MotionEvent.ACTION_SCROLL) {
@@ -259,6 +295,8 @@ class WakeSyncAlarmListActivity : Activity() {
 
     companion object {
         private const val PREFS_ALARMS = "wakesync_alarm_list"
+        private const val SYNC_INTERVAL_MS = 2_000L
+        private const val PULL_TO_SYNC_DISTANCE = 72f
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
         private val DAY_NAMES = mapOf(
             1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт", 5 to "Пт", 6 to "Сб", 7 to "Вс"
