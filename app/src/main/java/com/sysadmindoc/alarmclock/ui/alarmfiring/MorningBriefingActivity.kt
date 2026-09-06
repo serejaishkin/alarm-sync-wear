@@ -42,7 +42,7 @@ import com.sysadmindoc.alarmclock.ui.components.AppSectionTitle
 import com.sysadmindoc.alarmclock.ui.components.AppStatusChip
 import com.sysadmindoc.alarmclock.ui.components.AppSurfaceCard
 import com.sysadmindoc.alarmclock.ui.theme.AccentBlue
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.ui.theme.DismissGreen
 import com.sysadmindoc.alarmclock.ui.theme.HeaderTop
 import com.sysadmindoc.alarmclock.ui.theme.SnoozeYellow
@@ -87,7 +87,7 @@ class MorningBriefingActivity : ComponentActivity() {
         val routine = intent.getStringExtra(EXTRA_ROUTINE) ?: ""
 
         setContent {
-            AlarmClockXtremeTheme {
+            WakeSyncTheme {
                 MorningBriefingScreen(
                     time = time,
                     date = date,

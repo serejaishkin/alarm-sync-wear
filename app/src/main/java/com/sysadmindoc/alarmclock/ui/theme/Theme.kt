@@ -99,7 +99,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun AlarmClockXtremeTheme(
+fun WakeSyncTheme(
     accentColorHex: String? = null,
     dynamicColor: Boolean = false,
     expressiveMode: Boolean = false,
@@ -177,3 +177,12 @@ fun AlarmClockXtremeTheme(
         )
     }
 }
+
+@Composable
+fun AlarmClockXtremeTheme(
+    accentColorHex: String? = null,
+    dynamicColor: Boolean = true,
+    expressiveMode: Boolean = true,
+    reduceMotionAndFlashing: Boolean = false,
+    content: @Composable () -> Unit
+) = WakeSyncTheme(accentColorHex, dynamicColor, expressiveMode, reduceMotionAndFlashing, content)

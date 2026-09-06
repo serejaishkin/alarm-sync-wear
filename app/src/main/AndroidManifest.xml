@@ -114,14 +114,14 @@
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AlarmClockXtreme"
+        android:theme="@style/Theme.WakeSync"
         tools:targetApi="36">
 
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AlarmClockXtreme">
+            android:theme="@style/Theme.WakeSync">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -161,7 +161,7 @@
             android:launchMode="singleTop"
             android:noHistory="true"
             android:permission="com.android.alarm.permission.SET_ALARM"
-            android:theme="@style/Theme.AlarmClockXtreme.IntentProxy">
+            android:theme="@style/Theme.WakeSync.IntentProxy">
             <intent-filter>
                 <action android:name="android.intent.action.SET_ALARM" />
                 <action android:name="android.intent.action.DISMISS_ALARM" />
@@ -186,7 +186,7 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <activity
             android:name=".ui.onboarding.OnboardingTestAlarmActivity"
@@ -195,7 +195,7 @@
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <!-- Alarm Receiver -->
         <receiver
@@ -300,7 +300,7 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <!-- F6: Smart Alarm motion-monitoring service -->
         <service
@@ -357,7 +357,7 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <!-- F5: Wake Confirmation activity (shown on lock screen) -->
         <activity
@@ -365,7 +365,7 @@
             android:exported="false"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <!-- WorkManager: disable default initializer so HiltWorkerFactory can be used -->
         <provider
@@ -405,7 +405,7 @@
         <activity
             android:name=".ui.nightclock.NightClockActivity"
             android:exported="false"
-            android:theme="@style/Theme.AlarmClockXtreme" />
+            android:theme="@style/Theme.WakeSync" />
 
         <!-- v1.4.0: Quick Settings tile — "Skip next alarm" (tap to skip from shade) -->
         <service

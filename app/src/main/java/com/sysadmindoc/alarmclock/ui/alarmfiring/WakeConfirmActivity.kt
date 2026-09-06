@@ -52,7 +52,7 @@ import com.sysadmindoc.alarmclock.ui.components.AppSectionTitle
 import com.sysadmindoc.alarmclock.ui.components.AppStatusChip
 import com.sysadmindoc.alarmclock.ui.components.AppSurfaceCard
 import com.sysadmindoc.alarmclock.ui.theme.AccentRed
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.ui.theme.DismissGreen
 import com.sysadmindoc.alarmclock.ui.theme.SurfaceDark
 import com.sysadmindoc.alarmclock.ui.theme.TextMuted
@@ -108,7 +108,7 @@ class WakeConfirmActivity : ComponentActivity() {
         )
 
         setContent {
-            AlarmClockXtremeTheme {
+            WakeSyncTheme {
                 WakeConfirmScreen(
                     countdownSeconds = countdownSeconds,
                     remainingRefires = remainingRefires,

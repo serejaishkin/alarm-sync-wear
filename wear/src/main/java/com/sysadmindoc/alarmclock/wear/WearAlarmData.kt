@@ -89,10 +89,10 @@ object WearAlarmText {
     }
 
     fun contentDescription(snapshot: WearAlarmSnapshot): String = when {
-        isStale(snapshot) -> "AlarmClockXtreme phone alarm sync is stale"
-        snapshot.isFiring -> "AlarmClockXtreme alarm is ringing"
-        snapshot.hasAlarm -> "Next AlarmClockXtreme alarm ${snapshot.timeLabel.ifBlank { "scheduled" }}"
-        else -> "No AlarmClockXtreme alarm synced from phone"
+        isStale(snapshot) -> "WakeSync phone alarm sync is stale"
+        snapshot.isFiring -> "WakeSync alarm is ringing"
+        snapshot.hasAlarm -> "Next WakeSync alarm ${snapshot.timeLabel.ifBlank { "scheduled" }}"
+        else -> "No WakeSync alarm synced from phone"
     }
 
     fun complicationShortText(snapshot: WearAlarmSnapshot): String = when {

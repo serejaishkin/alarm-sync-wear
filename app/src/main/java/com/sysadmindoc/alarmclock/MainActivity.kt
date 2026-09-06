@@ -21,7 +21,7 @@ import com.sysadmindoc.alarmclock.service.AlarmService
 import com.sysadmindoc.alarmclock.ui.alarmfiring.AlarmFiringActivity
 import com.sysadmindoc.alarmclock.ui.components.WhatsNewDialog
 import com.sysadmindoc.alarmclock.ui.navigation.AppNavigation
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.util.WhatsNewTracker
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             val settings = preferencesManager.settings.collectAsStateWithLifecycle(
                 initialValue = AppSettings()
             )
-            AlarmClockXtremeTheme(
+            WakeSyncTheme(
                 accentColorHex = settings.value.accentColor,
                 dynamicColor = settings.value.dynamicColorEnabled,
                 expressiveMode = settings.value.expressiveModeEnabled,

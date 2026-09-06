@@ -23,7 +23,7 @@ import androidx.core.content.ContextCompat
 import com.sysadmindoc.alarmclock.R
 import com.sysadmindoc.alarmclock.service.AlarmAudioRouting
 import com.sysadmindoc.alarmclock.service.AlarmService
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.ui.theme.DismissGreen
 import com.sysadmindoc.alarmclock.ui.theme.SurfaceDark
 import com.sysadmindoc.alarmclock.ui.theme.TextMuted
@@ -199,7 +199,7 @@ class OnboardingTestAlarmActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         startTestSignal()
         setContent {
-            AlarmClockXtremeTheme {
+            WakeSyncTheme {
                 TestAlarmContent(onDismiss = { completeAndFinish() })
             }
         }

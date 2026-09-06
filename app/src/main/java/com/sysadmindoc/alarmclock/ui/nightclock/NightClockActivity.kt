@@ -42,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.ui.theme.BlueLight
 import com.sysadmindoc.alarmclock.ui.theme.SnoozeYellow
 import com.sysadmindoc.alarmclock.ui.theme.LocalMotionEnabled
@@ -74,7 +74,7 @@ class NightClockActivity : ComponentActivity() {
 
         setContent {
             val settings by preferencesManager.settings.collectAsStateWithLifecycle(AppSettings())
-            AlarmClockXtremeTheme(reduceMotionAndFlashing = settings.reduceMotionAndFlashing) {
+            WakeSyncTheme(reduceMotionAndFlashing = settings.reduceMotionAndFlashing) {
                 NightClockScreen(onExit = { finish() })
             }
         }

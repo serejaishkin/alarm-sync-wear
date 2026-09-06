@@ -53,7 +53,7 @@ class NextAlarmComplicationDataSourceService : SuspendingComplicationDataSourceS
             text = plainText(WearAlarmText.complicationLongText(snapshot)),
             contentDescription = plainText(WearAlarmText.contentDescription(snapshot))
         )
-            .setTitle(plainText("AlarmClockXtreme"))
+            .setTitle(plainText("WakeSync"))
             .setMonochromaticImage(icon())
             .build()
     }

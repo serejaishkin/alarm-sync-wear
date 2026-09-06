@@ -28,7 +28,7 @@ import com.sysadmindoc.alarmclock.data.repository.AlarmIncidentRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
 import com.sysadmindoc.alarmclock.service.AlarmFireDismissContract
 import com.sysadmindoc.alarmclock.ui.alarmfiring.challenges.Challenge
-import com.sysadmindoc.alarmclock.ui.theme.AlarmClockXtremeTheme
+import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.util.FlipDetector
 import com.sysadmindoc.alarmclock.util.PhotoMatcher
 import com.sysadmindoc.alarmclock.util.ProximityCoverDetector
@@ -298,7 +298,7 @@ class AlarmFiringActivity : ComponentActivity() {
 
         setContent {
             val reduceMotionAndFlashing by viewModel.reduceMotionAndFlashing.collectAsStateWithLifecycle()
-            AlarmClockXtremeTheme(reduceMotionAndFlashing = reduceMotionAndFlashing) {
+            WakeSyncTheme(reduceMotionAndFlashing = reduceMotionAndFlashing) {
                 AlarmFiringScreen(
                     onDismiss = { dismiss() },
                     onSnooze = { snooze() },
