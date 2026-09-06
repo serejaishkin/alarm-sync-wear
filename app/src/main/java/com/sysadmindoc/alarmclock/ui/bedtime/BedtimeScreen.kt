@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.AlarmOff
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Remove
@@ -649,6 +650,46 @@ fun BedtimeScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
+        }
+
+        item {
+            AppSurfaceCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable {
+                        val intent = Intent(
+                            context,
+                            com.sysadmindoc.alarmclock.ui.nightclock.NightClockActivity::class.java
+                        )
+                        context.startActivity(intent)
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DarkMode,
+                        contentDescription = "Night clock",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_night_clock),
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_night_clock_description),
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
         }
 
         item {

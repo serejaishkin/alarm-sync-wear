@@ -42,23 +42,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.BeachAccess
-import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -131,18 +122,10 @@ import com.sysadmindoc.alarmclock.ui.components.AppInputShape
 import com.sysadmindoc.alarmclock.ui.components.appOutlinedTextFieldColors
 import com.sysadmindoc.alarmclock.ui.components.appSwitchColors
 import com.sysadmindoc.alarmclock.ui.adaptive.shouldUseTwoPaneLayout
-import com.sysadmindoc.alarmclock.data.backup.BackupExportWarning
-import com.sysadmindoc.alarmclock.data.backup.BackupImportMode
-import com.sysadmindoc.alarmclock.data.backup.BackupImportOptions
-import com.sysadmindoc.alarmclock.data.backup.BackupImportPreview
-import com.sysadmindoc.alarmclock.data.backup.FossifyImportErrorKind
-import com.sysadmindoc.alarmclock.data.backup.FossifyImportException
-import com.sysadmindoc.alarmclock.data.backup.FossifyImportPreview
 import com.sysadmindoc.alarmclock.data.health.HealthConnectAvailability
 import com.sysadmindoc.alarmclock.data.health.HealthConnectSleepSummary
 import com.sysadmindoc.alarmclock.data.preferences.AppSettings
 import com.sysadmindoc.alarmclock.data.readiness.TestAlarmProof
-import com.sysadmindoc.alarmclock.data.support.SupportExportFile
 import com.sysadmindoc.alarmclock.ui.permissions.PermissionRequestCard
 import com.sysadmindoc.alarmclock.ui.theme.AccentBlue
 import com.sysadmindoc.alarmclock.ui.theme.AccentRed
@@ -167,7 +150,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private data class SettingsPaneCategory(
     val id: String,
@@ -190,22 +172,10 @@ private val settingsPaneCategories = listOf(
         icon = Icons.Default.Alarm
     ),
     SettingsPaneCategory(
-        id = "integrations",
-        titleRes = R.string.settings_pane_integrations,
-        descriptionRes = R.string.settings_pane_integrations_description,
-        icon = Icons.Default.Link
-    ),
-    SettingsPaneCategory(
         id = "personalization",
         titleRes = R.string.settings_pane_personalization,
         descriptionRes = R.string.settings_pane_personalization_description,
         icon = Icons.Default.AutoAwesome
-    ),
-    SettingsPaneCategory(
-        id = "backup",
-        titleRes = R.string.settings_pane_backup,
-        descriptionRes = R.string.settings_pane_backup_description,
-        icon = Icons.Default.Backup
     ),
     SettingsPaneCategory(
         id = "utilities",
@@ -229,14 +199,10 @@ private fun LazyListScope.settingsItem(
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToStopwatch: () -> Unit = {},
-    onNavigateToBedtime: () -> Unit = {},
     onOpenOnboardingChecklist: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val supportExportResult by viewModel.supportExportResult.collectAsStateWithLifecycle()
-    val supportExportBusy by viewModel.supportExportBusy.collectAsStateWithLifecycle()
 
     // v1.7.1: Re-check battery-optimisation status whenever the user returns
     // to this screen — most commonly after they bounced out to the system
@@ -268,12 +234,6 @@ fun SettingsScreen(
         mutableStateOf(AppLanguageManager.currentOption(context))
     }
     val languagePickerSupported = AppLanguageManager.isSupported()
-    val screenScope = rememberCoroutineScope()
-    val supportBundleSubject = stringResource(R.string.settings_support_bundle_subject)
-    val shareSupportBundleTitle = stringResource(R.string.settings_share_support_bundle)
-    val crashLogSubject = stringResource(R.string.settings_crash_log_subject)
-    val shareCrashLogTitle = stringResource(R.string.settings_share_crash_log)
-    val shareUnavailableMessage = stringResource(R.string.settings_share_unavailable)
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -307,25 +267,6 @@ fun SettingsScreen(
     } else {
         null
     }
-    fun shareSupportExport(
-        export: SupportExportFile,
-        subject: String = supportBundleSubject,
-        chooserTitle: String = shareSupportBundleTitle
-    ) {
-        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            type = export.mimeType
-            putExtra(Intent.EXTRA_STREAM, export.uri)
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        try {
-            context.startActivity(Intent.createChooser(sendIntent, chooserTitle))
-        } catch (_: Exception) {
-            viewModel.setSupportExportShareFailed()
-            Toast.makeText(context, shareUnavailableMessage, Toast.LENGTH_SHORT).show()
-        }
-    }
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -772,38 +713,11 @@ fun SettingsScreen(
             }
             }
 
-            if (!showSettingsHome && selectedPane.id == "integrations") {
-            settingsItem("integrations-services") {
-                IntegrationsSection(state, viewModel)
-            }
-            settingsItem("integrations-holidays") {
-                HolidaysSection(state, viewModel)
-            }
-            settingsItem("integrations-hue") {
-                PhilipsHueSection(state, viewModel)
-            }
-            settingsItem("integrations-health") {
-            HealthConnectSection(
-                state = state,
-                viewModel = viewModel,
-                onRequestPermissions = requestHealthConnectPermissions
-            )
-            }
-            settingsItem("integrations-connections") {
-                ConnectionsSection(state)
-            }
-            }
             if (!showSettingsHome && selectedPane.id == "personalization") {
             settingsItem("personalization") {
                 PersonalizationSection(state, viewModel)
             }
             }
-            if (!showSettingsHome && selectedPane.id == "backup") {
-            settingsItem("backup-restore") {
-                BackupRestoreSection(viewModel, is24HourFormat = state.settings.is24HourFormat)
-            }
-            }
-
             if (!showSettingsHome && selectedPane.id == "utilities") {
             settingsItem("utilities-shortcuts") {
             SettingsGroup(
@@ -828,91 +742,7 @@ fun SettingsScreen(
                     enabled = languagePickerSupported,
                     onClick = { showLanguageDialog = true }
                 )
-
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.Speed,
-                    title = stringResource(R.string.nav_stopwatch),
-                    description = stringResource(R.string.settings_stopwatch_description),
-                    onClick = onNavigateToStopwatch
-                )
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.Bedtime,
-                    title = stringResource(R.string.nav_bedtime),
-                    description = stringResource(R.string.settings_bedtime_description),
-                    onClick = onNavigateToBedtime
-                )
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.DarkMode,
-                    title = stringResource(R.string.settings_night_clock),
-                    description = stringResource(R.string.settings_night_clock_description),
-                    onClick = {
-                        val intent = Intent(
-                            context,
-                            com.sysadmindoc.alarmclock.ui.nightclock.NightClockActivity::class.java
-                        )
-                        context.startActivity(intent)
-                    }
-                )
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.BugReport,
-                    title = stringResource(R.string.settings_export_support_bundle),
-                    description = if (supportExportBusy) {
-                        stringResource(R.string.settings_packaging_diagnostics)
-                    } else {
-                        stringResource(R.string.settings_support_bundle_description)
-                    },
-                    onClick = {
-                        if (!supportExportBusy) {
-                            screenScope.launch {
-                                viewModel.createSupportExport()
-                                    .onSuccess { export -> shareSupportExport(export) }
-                            }
-                        }
-                    }
-                )
             }
-            }
-
-            if (supportExportBusy) {
-                settingsItem("utilities-support-progress") {
-                AppSurfaceCard(highlighted = true) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_packaging_export),
-                            color = TextPrimary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-                }
-            }
-
-            supportExportResult?.let { message ->
-                settingsItem("utilities-support-result") {
-                val failed = isFailureStatusMessage(message)
-                AppFeedbackCard(
-                    title = stringResource(
-                        if (failed) R.string.settings_support_export_failed else R.string.settings_export_ready
-                    ),
-                    message = message,
-                    icon = if (failed) Icons.Default.Warning else Icons.Default.BugReport,
-                    color = if (failed) AccentRed else DismissGreen,
-                    onDismiss = viewModel::clearSupportExportResult
-                )
-                }
             }
 
             settingsItem("utilities-about") {
@@ -925,30 +755,6 @@ fun SettingsScreen(
                 SettingsInfo(stringResource(R.string.settings_android), state.androidVersion)
                 SettingsInfo(stringResource(R.string.settings_license), stringResource(R.string.settings_license_value))
                 SettingsInfo(stringResource(R.string.settings_source), stringResource(R.string.settings_source_value))
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.BugReport,
-                    title = stringResource(R.string.settings_share_crash_log),
-                    description = if (supportExportBusy) {
-                        stringResource(R.string.settings_packaging_diagnostics)
-                    } else {
-                        stringResource(R.string.settings_share_crash_log_description)
-                    },
-                    onClick = {
-                        if (!supportExportBusy) {
-                            screenScope.launch {
-                                viewModel.createCrashLogExport()
-                                    .onSuccess { export ->
-                                        shareSupportExport(
-                                            export = export,
-                                            subject = crashLogSubject,
-                                            chooserTitle = shareCrashLogTitle
-                                        )
-                                    }
-                            }
-                        }
-                    }
-                )
             }
             }
             }

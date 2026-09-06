@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -73,6 +74,7 @@ private val primaryNavItems = listOf(
     BottomNavItem(Screen.AlarmList, R.string.nav_alarms, Icons.Default.Alarm),
     BottomNavItem(Screen.Bedtime, R.string.nav_bedtime, Icons.Default.Bedtime),
     BottomNavItem(Screen.Timer, R.string.nav_timer, Icons.Default.Timer),
+    BottomNavItem(Screen.Stopwatch, R.string.nav_stopwatch, Icons.Default.Speed),
     BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Default.Settings),
 )
 
@@ -265,8 +267,6 @@ private fun WakeSyncNavHost(
         composable(Screen.Stopwatch.route) { StopwatchScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onNavigateToStopwatch = { navController.navigate(Screen.Stopwatch.route) },
-                onNavigateToBedtime = { navController.navigate(Screen.Bedtime.route) },
                 onOpenOnboardingChecklist = { navController.navigate(Screen.Onboarding.route) { launchSingleTop = true } }
             )
         }
