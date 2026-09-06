@@ -40,22 +40,17 @@ import com.sysadmindoc.alarmclock.ui.alarmedit.AlarmEditScreen
 import com.sysadmindoc.alarmclock.ui.alarmlist.GoogleStyleAlarmScreen
 import com.sysadmindoc.alarmclock.ui.bedtime.BedtimeScreen
 import com.sysadmindoc.alarmclock.ui.components.BottomNavContainer
-import com.sysadmindoc.alarmclock.ui.dashboard.DashboardScreen
-import com.sysadmindoc.alarmclock.ui.news.NewsScreen
 import com.sysadmindoc.alarmclock.ui.onboarding.OnboardingScreen
 import com.sysadmindoc.alarmclock.ui.settings.SettingsScreen
 import com.sysadmindoc.alarmclock.ui.share.SharedAlarmImportScreen
-import com.sysadmindoc.alarmclock.ui.stats.StatsScreen
 import com.sysadmindoc.alarmclock.ui.stopwatch.StopwatchScreen
 import com.sysadmindoc.alarmclock.ui.theme.SurfaceDark
 import com.sysadmindoc.alarmclock.ui.theme.TextMuted
 import com.sysadmindoc.alarmclock.ui.theme.TextPrimary
 import com.sysadmindoc.alarmclock.ui.timer.TimerScreen
-import com.sysadmindoc.alarmclock.ui.worldclock.WorldClockScreen
 import com.sysadmindoc.alarmclock.util.ReliabilityDoctor
 
 sealed class Screen(val route: String) {
-    data object Dashboard : Screen("dashboard")
     data object AlarmList : Screen("alarm_list")
     data object AlarmEdit : Screen("alarm_edit/{alarmId}") {
         fun createRoute(alarmId: Long) = "alarm_edit/$alarmId"
@@ -64,11 +59,8 @@ sealed class Screen(val route: String) {
     data object Stopwatch : Screen("stopwatch")
     data object Settings : Screen("settings")
     data object Bedtime : Screen("bedtime")
-    data object Stats : Screen("stats")
     data object Onboarding : Screen("onboarding")
-    data object WorldClock : Screen("world_clock")
     data object SharedAlarmImport : Screen("shared_alarm_import")
-    data object News : Screen("news")
 }
 
 data class BottomNavItem(
@@ -273,19 +265,11 @@ private fun WakeSyncNavHost(
         composable(Screen.Stopwatch.route) { StopwatchScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onNavigateToStats = { navController.navigate(Screen.Stats.route) },
+                onNavigateToStats = {},
                 onNavigateToStopwatch = { navController.navigate(Screen.Stopwatch.route) },
                 onNavigateToBedtime = { navController.navigate(Screen.Bedtime.route) },
                 onOpenOnboardingChecklist = { navController.navigate(Screen.Onboarding.route) { launchSingleTop = true } }
             )
         }
-        composable(Screen.Stats.route) { StatsScreen(onNavigateBack = { navController.popBackStack() }) }
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(onOpenAlarms = {
-                navController.navigate(Screen.AlarmList.route) { launchSingleTop = true }
-            })
-        }
-        composable(Screen.WorldClock.route) { WorldClockScreen() }
-        composable(Screen.News.route) { NewsScreen() }
     }
 }

@@ -17,4 +17,7 @@
     <string name="wakesync_edit">Изменить</string>
     <string name="wakesync_duplicate">Дублировать</string>
     <string name="wakesync_delete">Удалить</string>
+    <string name="wakesync_sync_active">Синхронизация с часами активна</string>
+    <string name="wakesync_synced_badge">Синхронизирован с часами</string>
+    <string name="wakesync_device_pair">Телефон ⇄ Часы</string>
 </resources>

@@ -829,13 +829,7 @@ fun SettingsScreen(
                     enabled = languagePickerSupported,
                     onClick = { showLanguageDialog = true }
                 )
-                HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
-                UtilityShortcutCard(
-                    icon = Icons.Default.BarChart,
-                    title = stringResource(R.string.settings_alarm_statistics),
-                    description = stringResource(R.string.settings_alarm_statistics_description),
-                    onClick = onNavigateToStats
-                )
+
                 HorizontalDivider(color = TextMuted.copy(alpha = 0.14f))
                 UtilityShortcutCard(
                     icon = Icons.Default.Speed,

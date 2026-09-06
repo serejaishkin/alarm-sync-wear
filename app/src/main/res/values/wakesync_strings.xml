@@ -17,4 +17,7 @@
     <string name="wakesync_edit">Edit</string>
     <string name="wakesync_duplicate">Duplicate</string>
     <string name="wakesync_delete">Delete</string>
+    <string name="wakesync_sync_active">Wear OS Sync Active</string>
+    <string name="wakesync_synced_badge">Synced to Watch</string>
+    <string name="wakesync_device_pair">Phone ⇄ Watch</string>
 </resources>
