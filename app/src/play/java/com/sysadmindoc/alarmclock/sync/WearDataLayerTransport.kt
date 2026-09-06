@@ -47,6 +47,15 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
     override suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit> = runCatching {
         val payload = envelope.payload ?: ""
         Log.d(TAG, "Sending ${envelope.operation} for ${envelope.syncId} rev=${envelope.revision}")
+        // MessageClient wakes the Wear listener immediately. Keep the
+        // DataClient write below as the durable retry/recovery path.
+        awaitConnectedNodes().forEach { node ->
+            runCatching {
+                awaitSendMessage(node.id, payload.toByteArray(Charsets.UTF_8))
+            }.onFailure { e ->
+                Log.w(TAG, "MessageClient send failed for ${node.id}: ${e.message}")
+            }
+        }
         val request = PutDataMapRequest.create("$PATH_ALARM_STATE/${envelope.syncId}").apply {
             dataMap.putString(KEY_MUTATION, payload)
             dataMap.putLong(KEY_REVISION, envelope.revision)
@@ -56,6 +65,23 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             dataMap.putString(KEY_DEVICE_ID, envelope.deviceId)
         }.asPutDataRequest().setUrgent()
         awaitPutDataItem(request)
+    }
+
+    override fun requestWatchSnapshot(): Result<Unit> = runCatching {
+        Wearable.getNodeClient(appContext).connectedNodes
+            .addOnSuccessListener { nodes ->
+                nodes.forEach { node ->
+                    Wearable.getMessageClient(appContext)
+                        .sendMessage(node.id, PATH_REQUEST_WATCH_SNAPSHOT, ByteArray(0))
+                        .addOnFailureListener { e ->
+                            Log.w(TAG, "requestWatchSnapshot failed for ${node.id}: ${e.message}")
+                        }
+                }
+                Log.i(TAG, "Requested Watch snapshot from ${nodes.size} node(s)")
+            }
+            .addOnFailureListener { e ->
+                Log.w(TAG, "Unable to find Wear nodes for snapshot request", e)
+            }
     }
 
     override suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = publishDataItem(
@@ -110,10 +136,20 @@ class WearDataLayerTransport(context: Context) : AlarmSyncTransport {
             })
     }
 
+    private suspend fun awaitSendMessage(nodeId: String, payload: ByteArray) =
+        suspendCancellableCoroutine<Int> { c ->
+            Wearable.getMessageClient(appContext)
+                .sendMessage(nodeId, PATH_MUTATION, payload)
+                .addOnSuccessListener { result -> if (c.isActive) c.resume(result) }
+                .addOnFailureListener { error -> if (c.isActive) c.resumeWithException(error) }
+        }
+
     companion object {
         private const val TAG = "WearDataLayer"
         const val PATH_ALARM_STATE = "/wakesync/alarm/state"
+        const val PATH_MUTATION = "/wakesync/alarm/mutation"
         const val PATH_ALARM_SNAPSHOT = "/alarms/next"
+        const val PATH_REQUEST_WATCH_SNAPSHOT = "/wakesync/alarm/request_watch_snapshot"
         const val KEY_MUTATION = "mutation"
         const val KEY_REVISION = "revision"
         const val KEY_TIMESTAMP = "timestamp"

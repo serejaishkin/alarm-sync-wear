@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 /**
@@ -43,6 +44,20 @@ class WearAlarmFeedbackService : Service() {
                 val label = intent.getStringExtra(EXTRA_LABEL).orEmpty()
                 startForeground(NOTIFICATION_ID, buildNotification(label))
                 startFeedback()
+                // Samsung Wear OS may keep a full-screen notification behind
+                // the lock screen. Launch the same alarm UI directly from
+                // this foreground service as a second path.
+                val firingIntent = Intent(this, WearAlarmFiringActivity::class.java).apply {
+                    putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    )
+                }
+                runCatching { startActivity(firingIntent) }
+                    .onFailure { Log.w(TAG, "Unable to open firing activity from feedback service", it) }
             }
         }
         return START_NOT_STICKY
@@ -121,6 +136,7 @@ class WearAlarmFeedbackService : Service() {
         const val ACTION_STOP = "com.sysadmindoc.alarmclock.wear.STOP_FEEDBACK"
         const val EXTRA_SYNC_ID = "syncId"
         const val EXTRA_LABEL = "label"
+        private const val TAG = "WakeSyncWatch"
 
         fun start(context: android.content.Context, syncId: String, label: String) {
             val intent = Intent(context, WearAlarmFeedbackService::class.java).apply {

@@ -99,11 +99,10 @@ class PhoneWakeSyncListenerService : WearableListenerService() {
                         return@launch
                     }
                     Log.i(TAG, "onMessageReceived: decoded op=${decoded.operation} syncId=${decoded.syncId} rev=${decoded.revision} enabled=${decoded.enabled} src=${decoded.source}")
-                    val result = when (decoded.operation) {
-                        AlarmSyncOperation.SNOOZE -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_SNOOZE) }
-                        AlarmSyncOperation.DISMISS -> runCatching { handleWearAlarmCommand(decoded.syncId, AlarmService.ACTION_DISMISS) }
-                        else -> coordinator.applyRemote(decoded)
-                    }
+                    // Use the coordinator for transient actions too. It
+                    // remembers the version before the DataClient duplicate
+                    // arrives, so one Wear action cannot execute twice.
+                    val result = coordinator.applyRemote(decoded)
                     result.onFailure { Log.e(TAG, "onMessageReceived: Failed to apply ${decoded.operation} for ${decoded.syncId}", it) }
                         .onSuccess { Log.i(TAG, "onMessageReceived: Successfully applied ${decoded.operation} for ${decoded.syncId}") }
                 }

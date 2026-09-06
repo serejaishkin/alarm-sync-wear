@@ -6,6 +6,9 @@ import com.sysadmindoc.alarmclock.data.model.Alarm
 interface AlarmSyncTransport {
     suspend fun send(envelope: AlarmSyncEnvelope): Result<Unit>
 
+    /** Ask the Wear peer to return its complete durable alarm state. */
+    fun requestWatchSnapshot(): Result<Unit> = Result.success(Unit)
+
     /** Legacy next-alarm publication hook. */
     suspend fun publishSnapshot(alarms: List<Alarm>): Result<Unit> = Result.success(Unit)
 

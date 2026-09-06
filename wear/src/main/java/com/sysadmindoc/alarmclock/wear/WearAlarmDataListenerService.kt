@@ -73,6 +73,12 @@ class WearAlarmDataListenerService : WearableListenerService() {
         val revision = o.optLong("revision", 0L)
         val timestamp = o.optLong("timestamp", System.currentTimeMillis())
         val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
+        // Action mutations are handled by WakeSyncMessageService. Do not
+        // interpret them as schedule snapshots here: this listener and the
+        // message listener are both registered for the same Data Layer path.
+        if (operation == "RINGING" || operation == "SNOOZE" || operation == "DISMISS") {
+            return true
+        }
         if (operation == "DELETE") {
             if (current != null && compareVersion(revision, timestamp, o.optString("source"), o.optString("originDeviceId"), current) <= 0) return false
             WearAlarmListStore.removeWithTombstone(applicationContext, syncId, revision, timestamp, o.optString("source", "PHONE"), o.optString("originDeviceId"))

@@ -74,6 +74,13 @@ class WakeSyncMessageService : WearableListenerService() {
         val currentRevision = WearAlarmListStore.revisionFor(applicationContext, syncId)
         val currentTimestamp = WearAlarmListStore.timestampFor(applicationContext, syncId)
         Log.i(TAG, "applyPersistentMutation: op=$operation syncId=$syncId incomingRev=$incomingRevision incomingTs=$incomingTimestamp currentRev=$currentRevision currentTs=$currentTimestamp")
+        // These are transient firing commands, not schedule state. A newer
+        // CREATE/UPDATE may legitimately have a higher timestamp/revision,
+        // but must never suppress a real-time ring or user action.
+        if (operation == "RINGING" || operation == "SNOOZE" || operation == "DISMISS") {
+            applyTransientAction(syncId, operation)
+            return
+        }
         if (incomingTimestamp < currentTimestamp ||
             incomingTimestamp == currentTimestamp && incomingRevision <= currentRevision) {
             Log.w(TAG, "applyPersistentMutation: VERSION GATE BLOCKED op=$operation syncId=$syncId")
@@ -96,14 +103,14 @@ class WakeSyncMessageService : WearableListenerService() {
                 } else current?.repeatDays.orEmpty()
                 val entry = WearAlarmListStore.Entry(
                     syncId = syncId,
-                    label = payload.optString("label", current?.label ?: ""),
-                    hour = payload.optInt("hour", current?.hour ?: 0),
-                    minute = payload.optInt("minute", current?.minute ?: 0),
+                    label = if (operation == "ENABLE" || operation == "DISABLE") current?.label ?: payload.optString("label") else payload.optString("label", current?.label ?: ""),
+                    hour = if (operation == "ENABLE" || operation == "DISABLE") current?.hour ?: payload.optInt("hour", 0) else payload.optInt("hour", current?.hour ?: 0),
+                    minute = if (operation == "ENABLE" || operation == "DISABLE") current?.minute ?: payload.optInt("minute", 0) else payload.optInt("minute", current?.minute ?: 0),
                     enabled = enabled,
-                    repeatDays = repeatDays,
-                    snoozeDurationMinutes = payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
-                    vibrationEnabled = payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
-                    volume = payload.optInt("volume", current?.volume ?: 100),
+                    repeatDays = if (operation == "ENABLE" || operation == "DISABLE") current?.repeatDays.orEmpty() else repeatDays,
+                    snoozeDurationMinutes = if (operation == "ENABLE" || operation == "DISABLE") current?.snoozeDurationMinutes ?: 10 else payload.optInt("snoozeDurationMinutes", current?.snoozeDurationMinutes ?: 10),
+                    vibrationEnabled = if (operation == "ENABLE" || operation == "DISABLE") current?.vibrationEnabled ?: true else payload.optBoolean("vibrationEnabled", current?.vibrationEnabled ?: true),
+                    volume = if (operation == "ENABLE" || operation == "DISABLE") current?.volume ?: 100 else payload.optInt("volume", current?.volume ?: 100),
                     revision = incomingRevision,
                     updatedAt = incomingTimestamp.takeIf { it > 0L } ?: System.currentTimeMillis(),
                     alarmToken = payload.optString("alarmToken").ifBlank { current?.alarmToken.orEmpty() },
@@ -126,21 +133,6 @@ class WakeSyncMessageService : WearableListenerService() {
                     payload.optString("originDeviceId")
                 )
             }
-            "SNOOZE" -> {
-                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
-                if (current != null) {
-                    WearAlarmScheduler.scheduleSnooze(applicationContext, current, current.snoozeDurationMinutes)
-                    notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_SNOOZE)
-                }
-            }
-            "DISMISS" -> {
-                val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
-                if (current != null) {
-                    WearAlarmScheduler.rescheduleAfterDismiss(applicationContext, current)
-                    notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
-                }
-            }
-            "RINGING" -> Unit
             else -> return
         }
 
@@ -148,6 +140,41 @@ class WakeSyncMessageService : WearableListenerService() {
             .putString(KEY_LAST_PAYLOAD, payload.toString())
             .putLong(KEY_RECEIVED_AT, System.currentTimeMillis())
             .apply()
+        requestUiRefresh()
+    }
+
+    private fun applyTransientAction(syncId: String, operation: String) {
+        val current = WearAlarmListStore.load(applicationContext).firstOrNull { it.syncId == syncId }
+        if (current == null) {
+            Log.w(TAG, "$operation ignored: no alarm for syncId=$syncId")
+            return
+        }
+        when (operation) {
+            "RINGING" -> if (current.enabled) {
+                WearAlarmFeedbackService.start(applicationContext, syncId, current.label)
+                val firing = Intent(applicationContext, WearAlarmFiringActivity::class.java).apply {
+                    putExtra(WearAlarmFiringActivity.EXTRA_SYNC_ID, syncId)
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    )
+                }
+                runCatching { applicationContext.startActivity(firing) }
+                    .onFailure { Log.e(TAG, "Failed to open remote firing screen for syncId=$syncId", it) }
+            }
+            "SNOOZE" -> {
+                WearAlarmFeedbackService.stop(applicationContext)
+                WearAlarmScheduler.scheduleSnooze(applicationContext, current, current.snoozeDurationMinutes)
+                notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_SNOOZE)
+            }
+            "DISMISS" -> {
+                WearAlarmFeedbackService.stop(applicationContext)
+                WearAlarmScheduler.rescheduleAfterDismiss(applicationContext, current)
+                notifyActiveFiringActivity(syncId, WearAlarmFiringActivity.ACTION_REMOTE_DISMISS)
+            }
+        }
         requestUiRefresh()
     }
 

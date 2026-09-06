@@ -46,6 +46,7 @@ import com.sysadmindoc.alarmclock.receiver.SnoozeReceiver
 import com.sysadmindoc.alarmclock.ui.alarmfiring.MorningBriefingActivity
 import com.sysadmindoc.alarmclock.util.AlarmPublicText
 import com.sysadmindoc.alarmclock.wear.WearNextAlarmBridge
+import com.sysadmindoc.alarmclock.sync.AlarmSyncCoordinator
 import com.sysadmindoc.alarmclock.worker.WakeConfirmWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -75,9 +76,11 @@ class AlarmService : Service() {
     @Inject lateinit var dismissActionExecutor: DismissActionExecutor
     @Inject lateinit var weatherRepository: WeatherRepository
     @Inject lateinit var calendarRepository: CalendarRepository
+    @Inject lateinit var alarmSyncCoordinator: AlarmSyncCoordinator
 
     companion object {
         const val ACTION_START_ALARM = "com.sysadmindoc.alarmclock.START_ALARM"
+        const val ACTION_REMOTE_RINGING = "com.sysadmindoc.alarmclock.REMOTE_RINGING"
         const val ACTION_SNOOZE = "com.sysadmindoc.alarmclock.SNOOZE"
         const val ACTION_DISMISS = "com.sysadmindoc.alarmclock.DISMISS"
         const val ACTION_SET_CHALLENGE_DUCKING =
@@ -272,6 +275,23 @@ class AlarmService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            ACTION_REMOTE_RINGING -> {
+                val alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L)
+                if (alarmId > 0L) {
+                    val scheduledAt = intent.getLongExtra(
+                        AlarmScheduler.EXTRA_SCHEDULED_AT,
+                        System.currentTimeMillis()
+                    )
+                    currentAlarmId = alarmId
+                    currentScheduledAt = scheduledAt
+                    currentFireId = intent.getStringExtra(AlarmScheduler.EXTRA_ALARM_FIRE_ID)
+                        ?: AlarmIncidentEvent.fireIdFor(alarmId, scheduledAt)
+                    activeAlarm.set(ActiveAlarmSnapshot(alarmId, scheduledAt, currentFireId))
+                    alarmFiredAt = System.currentTimeMillis()
+                    startForegroundWithPlaceholder()
+                    serviceScope.launch { showRemoteAlarm(alarmId) }
+                }
+            }
             ACTION_START_ALARM -> {
                 val alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1)
                 if (alarmId != -1L) {
@@ -419,6 +439,9 @@ class AlarmService : Service() {
             stopSelf()
             return
         }
+
+        alarmSyncCoordinator.notifyWearAction(alarmId, com.sysadmindoc.alarmclock.sync.AlarmSyncOperation.RINGING)
+            .onFailure { Log.w(TAG, "Failed to mirror phone ringing to Wear", it) }
 
         val settings = preferencesManager.getCurrentSettings()
         OnCallDndOverride.begin(this, settings.onCallModeEnabled)
@@ -1577,6 +1600,46 @@ class AlarmService : Service() {
 
     private fun alarmVibrationAttributes(): AudioAttributes {
         return AlarmAudioRouting.alarmSonificationAttributes()
+    }
+
+    /** Shows the phone alarm surface for a watch-originated ring without audio. */
+    private suspend fun showRemoteAlarm(alarmId: Long) {
+        val alarm = repository.getById(alarmId)?.sanitized() ?: run {
+            Log.w(TAG, "Remote ring ignored: alarm row missing id=$alarmId")
+            stopSelf()
+            return
+        }
+        val notification = buildAlarmNotification(alarm)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+            notificationManager?.canUseFullScreenIntent() != true
+        ) {
+            Log.w(TAG, "Full-screen alarm access is disabled; opening permission settings")
+            runCatching {
+                startActivity(Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                    data = Uri.parse("package:$packageName")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            }.onFailure { Log.w(TAG, "Unable to open full-screen permission settings", it) }
+        }
+        runCatching {
+            if (isForeground.compareAndSet(false, true)) {
+                startForeground(NOTIFICATION_ID, notification)
+            } else {
+                notificationManager?.notify(NOTIFICATION_ID, notification)
+            }
+            startActivity(
+                AlarmFireDismissContract.firingActivityIntent(
+                    this,
+                    alarmId,
+                    currentScheduledAt,
+                    currentFireId
+                )
+            )
+            Log.i(TAG, "Remote ring notification and firing UI shown alarmId=$alarmId")
+        }.onFailure {
+            Log.e(TAG, "Failed to show remote ring alarmId=$alarmId", it)
+        }
     }
 
     private suspend fun snoozeAlarm(

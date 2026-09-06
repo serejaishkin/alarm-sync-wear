@@ -27,6 +27,8 @@ import com.sysadmindoc.alarmclock.data.local.entity.AlarmIncidentEvent
 import com.sysadmindoc.alarmclock.data.repository.AlarmIncidentRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
 import com.sysadmindoc.alarmclock.service.AlarmFireDismissContract
+import com.sysadmindoc.alarmclock.sync.AlarmSyncCoordinator
+import com.sysadmindoc.alarmclock.sync.AlarmSyncOperation
 import com.sysadmindoc.alarmclock.ui.alarmfiring.challenges.Challenge
 import com.sysadmindoc.alarmclock.ui.theme.WakeSyncTheme
 import com.sysadmindoc.alarmclock.util.FlipDetector
@@ -58,6 +60,7 @@ import javax.inject.Inject
 class AlarmFiringActivity : ComponentActivity() {
 
     @Inject lateinit var alarmIncidentRepository: AlarmIncidentRepository
+    @Inject lateinit var alarmSyncCoordinator: AlarmSyncCoordinator
 
     private val viewModel: AlarmFiringViewModel by viewModels()
     private var shakeDetector: ShakeDetector? = null
@@ -655,6 +658,10 @@ class AlarmFiringActivity : ComponentActivity() {
     }
 
     private fun snooze(customMinutes: Int? = null, snoozeAtMillis: Long? = null) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            alarmSyncCoordinator.notifyWearAction(alarmId, AlarmSyncOperation.SNOOZE)
+                .onFailure { android.util.Log.w("AlarmFiringActivity", "Failed to mirror snooze to Wear", it) }
+        }
         val intent = AlarmFireDismissContract.snoozeServiceIntent(
             context = this,
             alarmId = alarmId,
@@ -686,6 +693,10 @@ class AlarmFiringActivity : ComponentActivity() {
     }
 
     private fun dismiss() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            alarmSyncCoordinator.notifyWearAction(alarmId, AlarmSyncOperation.DISMISS)
+                .onFailure { android.util.Log.w("AlarmFiringActivity", "Failed to mirror dismiss to Wear", it) }
+        }
         val state = viewModel.uiState.value
         val challengeSolveTimeMs = state.challengeStartedAtMillis
             .takeIf { it > 0L && state.requiresChallenge }

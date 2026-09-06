@@ -4,15 +4,18 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.sysadmindoc.alarmclock.data.model.Alarm
+import com.sysadmindoc.alarmclock.data.local.entity.AlarmIncidentEvent
 import com.sysadmindoc.alarmclock.data.repository.AlarmRepository
 import com.sysadmindoc.alarmclock.domain.AlarmScheduler
 import com.sysadmindoc.alarmclock.service.AlarmService
+import com.sysadmindoc.alarmclock.service.AlarmFireDismissContract
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -45,8 +48,22 @@ class AlarmSyncCoordinator @Inject constructor(
         if (observationJob?.isActive == true) return
         android.util.Log.i("AlarmSync", "Starting sync coordinator")
         observationJob = scope.launch {
-            alarmRepository.observeAll().collectLatest { syncMutex.withLock { synchronizeSnapshot(it) } }
+            // Do not use collectLatest here: cancelling an in-flight Data Layer
+            // write can lose the first CREATE during app startup/reinstall.
+            alarmRepository.observeAll().collect { syncMutex.withLock { synchronizeSnapshot(it) } }
         }
+        scope.launch {
+            requestWatchSnapshot()
+            delay(3_000L)
+            requestWatchSnapshot()
+            delay(10_000L)
+            requestWatchSnapshot()
+        }
+    }
+
+    fun requestWatchSnapshot() {
+        transportProvider.transport().requestWatchSnapshot()
+            .onFailure { Log.w(TAG, "requestWatchSnapshot failed", it) }
     }
 
     suspend fun syncNow() {
@@ -130,7 +147,16 @@ class AlarmSyncCoordinator @Inject constructor(
         Log.i(TAG, "applyRemote: VERSION GATE PASSED op=${payload.operation} syncId=${payload.syncId}")
         when (payload.operation) {
             AlarmSyncOperation.CREATE, AlarmSyncOperation.UPDATE, AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
-                val incomingAlarm = AlarmSyncCodec.decodeAlarm(payload)
+                val incomingAlarm = if (payload.source == AlarmSyncSource.WATCH &&
+                    payload.operation == AlarmSyncOperation.UPDATE
+                ) {
+                    // Wear keeps the phone-compatible token for identity, but
+                    // that token can contain an older alarm snapshot. The
+                    // editable fields in the current WATCH mutation are the
+                    // authoritative values for this update.
+                    alarmFromPayload(payload)
+                } else {
+                    AlarmSyncCodec.decodeAlarm(payload)
                     .getOrElse {
                         // Older Wear builds send the editable fields with a local
                         // alarmToken, not a phone-compatible AlarmShare token.
@@ -139,15 +165,25 @@ class AlarmSyncCoordinator @Inject constructor(
                         Log.w(TAG, "applyRemote: using field payload for ${payload.syncId}; alarmToken is not share-compatible", it)
                         alarmFromPayload(payload)
                     }
+                }
                 Log.i(TAG, "applyRemote: decoded alarm hour=${incomingAlarm.hour} min=${incomingAlarm.minute} " +
                     "enabled=${incomingAlarm.isEnabled} label=${incomingAlarm.label}")
                 val existingId = preferences.getLong(alarmIdKey(payload.syncId), 0L)
                 val savedId = if (existingId != 0L && alarmRepository.getById(existingId) != null) {
-                    val updated = incomingAlarm.copy(id = existingId, isEnabled = when (payload.operation) {
-                        AlarmSyncOperation.ENABLE -> true
-                        AlarmSyncOperation.DISABLE -> false
-                        else -> incomingAlarm.isEnabled
-                    }, nextTriggerTime = 0L).sanitized()
+                    val currentAlarm = alarmRepository.getById(existingId)!!
+                    val updated = if (payload.operation == AlarmSyncOperation.ENABLE ||
+                        payload.operation == AlarmSyncOperation.DISABLE
+                    ) {
+                        // ENABLE/DISABLE are state-only mutations. Do not copy
+                        // stale editor fields from the watch over a newer
+                        // phone-side time, label, or repeat schedule.
+                        currentAlarm.copy(
+                            isEnabled = payload.operation == AlarmSyncOperation.ENABLE,
+                            nextTriggerTime = 0L
+                        ).sanitized()
+                    } else {
+                        incomingAlarm.copy(id = existingId, nextTriggerTime = 0L).sanitized()
+                    }
                     alarmRepository.update(updated); alarmScheduler.schedule(updated, requestWidgetUpdate = true); existingId
                 } else {
                     val newId = alarmRepository.save(incomingAlarm.copy(id = 0L, nextTriggerTime = 0L).sanitized())
@@ -166,7 +202,31 @@ class AlarmSyncCoordinator @Inject constructor(
             // The watch plays its own feedback when the alarm fires; RINGING must
             // not start media playback on the phone. Snooze/dismiss still mirror.
             AlarmSyncOperation.RINGING -> {
-                Log.i(TAG, "applyRemote: RINGING ignored (watch plays its own feedback)")
+                // The watch owns sound and haptics, but the phone must still
+                // show its firing animation and challenge UI. Do not start
+                // AlarmService here: that would play a second alarm locally.
+                val id = preferences.getLong(alarmIdKey(payload.syncId), 0L)
+                val alarm = id.takeIf { it > 0L }?.let { alarmRepository.getById(it) }
+                if (id > 0L && alarm != null) {
+                    context.startForegroundService(Intent(context, AlarmService::class.java).apply {
+                        action = AlarmService.ACTION_REMOTE_RINGING
+                        putExtra(AlarmScheduler.EXTRA_ALARM_ID, id)
+                        putExtra(
+                            AlarmScheduler.EXTRA_SCHEDULED_AT,
+                            payload.timestamp.takeIf { it > 0L } ?: System.currentTimeMillis()
+                        )
+                        putExtra(
+                            AlarmScheduler.EXTRA_ALARM_FIRE_ID,
+                            AlarmIncidentEvent.fireIdFor(
+                                id,
+                                payload.timestamp.takeIf { it > 0L } ?: System.currentTimeMillis()
+                            )
+                        )
+                    })
+                    Log.i(TAG, "applyRemote: started phone remote-ring service for syncId=${payload.syncId}")
+                } else {
+                    Log.w(TAG, "applyRemote: cannot open phone firing UI; unknown alarm syncId=${payload.syncId}")
+                }
                 Unit
             }
             AlarmSyncOperation.SNOOZE -> {
@@ -190,6 +250,30 @@ class AlarmSyncCoordinator @Inject constructor(
 
     suspend fun sendWearAction(alarmId: Long, operation: AlarmSyncOperation): Result<Unit> = runCatching {
         require(operation == AlarmSyncOperation.SNOOZE || operation == AlarmSyncOperation.DISMISS || operation == AlarmSyncOperation.ENABLE || operation == AlarmSyncOperation.DISABLE)
+        sendWearMutation(alarmId, operation)
+        when (operation) {
+            AlarmSyncOperation.SNOOZE -> alarmCommandForAlarm(alarmId, AlarmService.ACTION_SNOOZE)
+            AlarmSyncOperation.DISMISS -> alarmCommandForAlarm(alarmId, AlarmService.ACTION_DISMISS)
+            AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
+                alarmRepository.setEnabled(alarmId, operation == AlarmSyncOperation.ENABLE, 0L)
+                alarmRepository.getById(alarmId)?.let { alarmScheduler.schedule(it, requestWidgetUpdate = true) }
+                if (operation == AlarmSyncOperation.DISABLE) alarmCommandForAlarm(alarmId, AlarmService.ACTION_DISMISS)
+            }
+            else -> Unit
+        }
+    }
+
+    /** Sends a local phone action to Wear without applying it again on the phone. */
+    suspend fun notifyWearAction(alarmId: Long, operation: AlarmSyncOperation): Result<Unit> = runCatching {
+        require(
+            operation == AlarmSyncOperation.RINGING ||
+                operation == AlarmSyncOperation.SNOOZE ||
+                operation == AlarmSyncOperation.DISMISS
+        )
+        sendWearMutation(alarmId, operation)
+    }
+
+    private suspend fun sendWearMutation(alarmId: Long, operation: AlarmSyncOperation) {
         val syncId = preferences.getString(syncIdKey(alarmId), null) ?: error("Alarm $alarmId is not synchronized yet")
         val revision = nextRevision(syncId)
         val alarm = alarmRepository.getById(alarmId) ?: error("Alarm not found")
@@ -197,16 +281,6 @@ class AlarmSyncCoordinator @Inject constructor(
         val envelope = AlarmSyncEnvelope(deviceId = deviceId, syncId = syncId, alarmId = alarmId, operation = operation,
             source = AlarmSyncSource.WATCH, revision = revision, timestamp = payload.timestamp, payload = AlarmSyncCodec.encode(payload))
         transportProvider.transport().send(envelope).getOrThrow()
-        when (operation) {
-            AlarmSyncOperation.SNOOZE -> alarmCommand(payload, AlarmService.ACTION_SNOOZE)
-            AlarmSyncOperation.DISMISS -> alarmCommand(payload, AlarmService.ACTION_DISMISS)
-            AlarmSyncOperation.ENABLE, AlarmSyncOperation.DISABLE -> {
-                alarmRepository.setEnabled(alarmId, operation == AlarmSyncOperation.ENABLE, 0L)
-                alarmRepository.getById(alarmId)?.let { alarmScheduler.schedule(it, requestWidgetUpdate = true) }
-                if (operation == AlarmSyncOperation.DISABLE) alarmCommand(payload, AlarmService.ACTION_DISMISS)
-            }
-            else -> Unit
-        }
         rememberVersion(syncId, revision, payload.timestamp, AlarmSyncSource.WATCH, deviceId)
     }
 
@@ -284,8 +358,14 @@ class AlarmSyncCoordinator @Inject constructor(
 
     private fun alarmCommand(payload: AlarmSyncPayload, action: String) {
         val id = preferences.getLong(alarmIdKey(payload.syncId), 0L); if (id == 0L) return
+        alarmCommandForAlarm(id, action, payload.timestamp)
+    }
+
+    private fun alarmCommandForAlarm(id: Long, action: String, scheduledAt: Long = System.currentTimeMillis()) {
         context.startService(Intent(context, AlarmService::class.java).apply {
-            this.action = action; putExtra(AlarmScheduler.EXTRA_ALARM_ID, id); putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, payload.timestamp)
+            this.action = action
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, id)
+            putExtra(AlarmScheduler.EXTRA_SCHEDULED_AT, scheduledAt)
         })
     }
 
