@@ -1,9 +1,14 @@
 package com.sysadmindoc.alarmclock.wear
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -11,110 +16,236 @@ import android.widget.TextView
 import com.google.android.gms.wearable.Wearable
 import java.util.Locale
 
-/** Equal peer list: alarms received from phone and alarms created on Wear live here. */
+/**
+ * Wear OS Alarm List Screen for WakeSync.
+ * Responsive, circular-screen safe, with real-time sync observation and rotary scrolling.
+ */
 class WakeSyncAlarmListActivity : Activity() {
-    private lateinit var list: LinearLayout
+    private lateinit var listContainer: LinearLayout
+    private lateinit var statusText: TextView
+    private lateinit var scrollView: ScrollView
+
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "alarms") {
+            runOnUiThread { render() }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         buildUi()
     }
 
+    override fun onStart() {
+        super.onStart()
+        getSharedPreferences(PREFS_ALARMS, Context.MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(prefsListener)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        getSharedPreferences(PREFS_ALARMS, Context.MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(prefsListener)
+    }
+
     override fun onResume() {
         super.onResume()
         requestPhoneSnapshot()
         render()
+        scrollView.post {
+            scrollView.requestFocus()
+        }
     }
 
     private fun buildUi() {
-        val root = LinearLayout(this).apply {
+        scrollView = ScrollView(this).apply {
+            isFillViewport = true
+            isFocusable = true
+            isFocusableInTouchMode = true
+            // Rotary knob / crown scroll support for Galaxy Watch and Pixel Watch
+            setOnGenericMotionListener { _, event ->
+                if (event.action == MotionEvent.ACTION_SCROLL) {
+                    val axis = event.getAxisValue(MotionEvent.AXIS_SCROLL)
+                    if (axis != 0f) {
+                        scrollBy(0, (-axis * 64).toInt())
+                        return@setOnGenericMotionListener true
+                    }
+                }
+                false
+            }
+        }
+        WearUi.styleRoot(this, scrollView)
+
+        val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(14, 12, 14, 18)
+            // Ample top/bottom padding to account for circular watch face curvature
+            setPadding(16, 32, 16, 44)
         }
-        WearUi.styleRoot(this, root)
-        root.addView(TextView(this).apply {
-            text = "WakeSync\nБудильники"
+
+        // Header Title
+        content.addView(TextView(this).apply {
+            text = "WakeSync"
             gravity = Gravity.CENTER
             WearUi.styleHeader(this@WakeSyncAlarmListActivity, this)
         })
-        val scroll = ScrollView(this)
-        list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        scroll.addView(list)
-        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        root.addView(Button(this).apply {
+
+        // Subtitle / Status
+        statusText = TextView(this).apply {
+            text = "Будильники"
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_secondary))
+            setPadding(0, 2, 0, 10)
+        }
+        content.addView(statusText)
+
+        // Add Alarm Button
+        val addButton = Button(this).apply {
             text = "+ Новый будильник"
             WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
             setOnClickListener {
                 startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java))
             }
-        })
-        setContentView(root)
+        }
+        content.addView(addButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12 })
+
+        // Container for alarms
+        listContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        content.addView(listContainer, LinearLayout.LayoutParams(-1, -2))
+
+        scrollView.addView(content)
+        setContentView(scrollView)
     }
 
     private fun requestPhoneSnapshot() {
-        Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
-            nodes.forEach { node ->
-                Wearable.getMessageClient(this)
-                    .sendMessage(node.id, PATH_REQUEST_SNAPSHOT, ByteArray(0))
+        runCatching {
+            Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
+                if (nodes.isNotEmpty()) {
+                    statusText.text = "Синхронизировано"
+                }
+                nodes.forEach { node ->
+                    Wearable.getMessageClient(this)
+                        .sendMessage(node.id, PATH_REQUEST_SNAPSHOT, ByteArray(0))
+                }
+            }.addOnFailureListener {
+                statusText.text = "Офлайн-режим"
             }
         }
     }
 
     private fun render() {
-        list.removeAllViews()
+        listContainer.removeAllViews()
         val alarms = WearAlarmListStore.load(this)
+
         if (alarms.isEmpty()) {
-            list.addView(TextView(this).apply {
-                text = "Нет будильников\nСинхронизация запрошена"
+            listContainer.addView(TextView(this).apply {
+                text = "Нет будильников\nНажмите «+ Новый»"
                 gravity = Gravity.CENTER
-                setPadding(8, 30, 8, 30)
-                WearUi.styleSectionLabel(this@WakeSyncAlarmListActivity, this)
+                setPadding(8, 20, 8, 20)
+                textSize = 13f
+                setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_muted))
             })
             return
         }
 
+        statusText.text = "Всего: ${alarms.size}"
+
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
             val repeat = repeatLabel(alarm.repeatDays)
-            val changedAt = android.text.format.DateFormat.format("HH:mm", alarm.updatedAt)
-            val changedLabel = "Изменено на ${if (alarm.source == WearAlarmListStore.SOURCE_WATCH) "часах" else "телефоне"} в $changedAt"
-            val row = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            row.addView(Button(this).apply {
-                text = "$time  ${alarm.label.ifBlank { "Будильник" }}\n$repeat · ${if (alarm.enabled) "Включён" else "Выключен"} · $changedLabel"
-                WearUi.styleCardButton(this@WakeSyncAlarmListActivity, this)
+            val sourceBadge = if (alarm.source == WearAlarmListStore.SOURCE_WATCH) "⌚ Часы" else "📱 Телефон"
+
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                background = WearUi.drawable(this@WakeSyncAlarmListActivity, R.drawable.bg_card_button)
+                setPadding(12, 10, 12, 10)
+                isClickable = true
+                isFocusable = true
                 setOnClickListener {
-                    startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java)
-                        .putExtra("syncId", alarm.syncId)
-                        .putExtra("alarmToken", alarm.alarmToken))
+                    startActivity(
+                        Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java)
+                            .putExtra(WakeSyncAlarmEditorActivity.EXTRA_SYNC_ID, alarm.syncId)
+                    )
                 }
-            })
-            val actions = LinearLayout(this).apply { gravity = Gravity.CENTER }
-            actions.addView(Button(this).apply {
-                text = if (alarm.enabled) "Выкл" else "Вкл"
-                WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
+            }
+
+            // Top Row: Time & State
+            val topRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            val timeView = TextView(this).apply {
+                this.text = time
+                textSize = 22f
+                setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD))
+                setTextColor(
+                    WearUi.color(
+                        this@WakeSyncAlarmListActivity,
+                        if (alarm.enabled) R.color.text_primary else R.color.text_muted
+                    )
+                )
+            }
+            topRow.addView(timeView, LinearLayout.LayoutParams(0, -2, 1f))
+
+            val sourceView = TextView(this).apply {
+                this.text = sourceBadge
+                textSize = 10f
+                setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_muted))
+            }
+            topRow.addView(sourceView)
+            card.addView(topRow)
+
+            // Label & Days Row
+            val labelText = alarm.label.ifBlank { "Будильник" }
+            val subtitleView = TextView(this).apply {
+                this.text = "$labelText · $repeat"
+                textSize = 12f
+                setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_secondary))
+                setPadding(0, 2, 0, 8)
+            }
+            card.addView(subtitleView)
+
+            // Bottom Actions Row: Toggle & Delete
+            val actions = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            val toggleBtn = Button(this).apply {
+                this.text = if (alarm.enabled) "ВКЛ" else "ВЫКЛ"
+                isAllCaps = false
+                textSize = 12f
+                val colorRes = if (alarm.enabled) R.color.dismiss_green else R.color.text_muted
+                WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, colorRes)
                 setOnClickListener {
                     if (alarm.enabled) {
                         WakeSyncPeerController.sendDisable(this@WakeSyncAlarmListActivity, alarm.syncId, alarm.alarmToken)
-                        WearAlarmListStore.upsert(this@WakeSyncAlarmListActivity, alarm.copy(enabled = false, revision = alarm.revision + 1, updatedAt = System.currentTimeMillis()))
                     } else {
                         WakeSyncPeerController.sendEnable(this@WakeSyncAlarmListActivity, alarm.syncId, alarm.alarmToken)
-                        WearAlarmListStore.upsert(this@WakeSyncAlarmListActivity, alarm.copy(enabled = true, revision = alarm.revision + 1, updatedAt = System.currentTimeMillis()))
                     }
                     render()
                 }
-            })
-            actions.addView(Button(this).apply {
-                text = "Удалить"
+            }
+            actions.addView(toggleBtn, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 6 })
+
+            val deleteBtn = Button(this).apply {
+                this.text = "Удалить"
+                isAllCaps = false
+                textSize = 12f
                 WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_red)
                 setOnClickListener {
                     WakeSyncPeerController.sendDelete(this@WakeSyncAlarmListActivity, alarm.syncId)
-                    WearAlarmListStore.remove(this@WakeSyncAlarmListActivity, alarm.syncId)
                     render()
                 }
-            })
-            row.addView(actions)
-            list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 6 })
+            }
+            actions.addView(deleteBtn, LinearLayout.LayoutParams(0, -2, 1f))
+
+            card.addView(actions)
+            listContainer.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 8 })
         }
     }
 
@@ -123,11 +254,14 @@ class WakeSyncAlarmListActivity : Activity() {
         days == setOf(1, 2, 3, 4, 5) -> "Будни"
         days == setOf(6, 7) -> "Выходные"
         days.isEmpty() -> "Один раз"
-        else -> days.sorted().joinToString(" ") { DAY_NAMES[it - 1] ?: "" }.trim()
+        else -> days.sorted().mapNotNull { DAY_NAMES[it] }.joinToString(" ")
     }
 
     companion object {
+        private const val PREFS_ALARMS = "wakesync_alarm_list"
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
-        private val DAY_NAMES = mapOf(1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт", 5 to "Пт", 6 to "Сб", 7 to "Вс")
+        private val DAY_NAMES = mapOf(
+            1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт", 5 to "Пт", 6 to "Сб", 7 to "Вс"
+        )
     }
 }

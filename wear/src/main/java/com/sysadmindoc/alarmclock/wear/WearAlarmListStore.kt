@@ -29,6 +29,7 @@ object WearAlarmListStore {
 
     private data class Version(val revision: Long, val timestamp: Long, val source: String, val deviceId: String)
 
+    @Synchronized
     fun load(context: Context): List<Entry> {
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_ALARMS, null) ?: return emptyList()
         return runCatching {
@@ -37,34 +38,58 @@ object WearAlarmListStore {
                 for (i in 0 until array.length()) {
                     val o = array.getJSONObject(i)
                     val days = o.optJSONArray("repeatDays")?.let { a -> buildSet { for (j in 0 until a.length()) add(a.optInt(j)) } } ?: emptySet()
-                    add(Entry(o.optString("syncId"), o.optString("label"), o.optInt("hour"), o.optInt("minute"),
-                        o.optBoolean("enabled", true), days, o.optInt("snoozeDurationMinutes", 10),
-                        o.optBoolean("vibrationEnabled", true), o.optInt("volume", 100), o.optLong("revision"),
-                        o.optLong("updatedAt"), o.optString("alarmToken"), o.optString("source", SOURCE_WATCH),
-                        o.optString("originDeviceId")))
+                    add(Entry(
+                        syncId = o.optString("syncId"),
+                        label = o.optString("label"),
+                        hour = o.optInt("hour"),
+                        minute = o.optInt("minute"),
+                        enabled = o.optBoolean("enabled", true),
+                        repeatDays = days,
+                        snoozeDurationMinutes = o.optInt("snoozeDurationMinutes", 10),
+                        vibrationEnabled = o.optBoolean("vibrationEnabled", true),
+                        volume = o.optInt("volume", 100),
+                        revision = o.optLong("revision"),
+                        updatedAt = o.optLong("updatedAt"),
+                        alarmToken = o.optString("alarmToken"),
+                        source = o.optString("source", SOURCE_WATCH),
+                        originDeviceId = o.optString("originDeviceId")
+                    ))
                 }
             }
         }.getOrDefault(emptyList())
     }
 
+    @Synchronized
     fun tombstones(context: Context): List<Tombstone> =
         readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)).map { (syncId, v) ->
             Tombstone(syncId, v.revision, v.timestamp, v.source, v.deviceId)
         }
 
+    @Synchronized
     fun save(context: Context, entries: List<Entry>) {
         val array = JSONArray()
         entries.sortedWith(compareBy<Entry> { it.hour * 60 + it.minute }.thenBy { it.syncId }).forEach { e ->
             val days = JSONArray(); e.repeatDays.sorted().forEach(days::put)
-            array.put(JSONObject().put("syncId", e.syncId).put("label", e.label).put("hour", e.hour).put("minute", e.minute)
-                .put("enabled", e.enabled).put("repeatDays", days).put("snoozeDurationMinutes", e.snoozeDurationMinutes)
-                .put("vibrationEnabled", e.vibrationEnabled).put("volume", e.volume).put("revision", e.revision)
-                .put("updatedAt", e.updatedAt).put("alarmToken", e.alarmToken).put("source", e.source)
+            array.put(JSONObject()
+                .put("syncId", e.syncId)
+                .put("label", e.label)
+                .put("hour", e.hour)
+                .put("minute", e.minute)
+                .put("enabled", e.enabled)
+                .put("repeatDays", days)
+                .put("snoozeDurationMinutes", e.snoozeDurationMinutes)
+                .put("vibrationEnabled", e.vibrationEnabled)
+                .put("volume", e.volume)
+                .put("revision", e.revision)
+                .put("updatedAt", e.updatedAt)
+                .put("alarmToken", e.alarmToken)
+                .put("source", e.source)
                 .put("originDeviceId", e.originDeviceId))
         }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString(KEY_ALARMS, array.toString()) }
     }
 
+    @Synchronized
     fun upsert(context: Context, entry: Entry) {
         val current = load(context).firstOrNull { it.syncId == entry.syncId }
         if (current != null && compareVersions(entry, current) <= 0) return
@@ -75,11 +100,13 @@ object WearAlarmListStore {
         WearAlarmScheduler.schedule(context, entry)
     }
 
+    @Synchronized
     fun remove(context: Context, syncId: String) {
         WearAlarmScheduler.cancel(context, syncId)
         save(context, load(context).filterNot { it.syncId == syncId })
     }
 
+    @Synchronized
     fun removeWithTombstone(context: Context, syncId: String, revision: Long, timestamp: Long, source: String = SOURCE_WATCH, deviceId: String = "") {
         remove(context, syncId)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -91,12 +118,14 @@ object WearAlarmListStore {
         }
     }
 
+    @Synchronized
     fun revisionFor(context: Context, syncId: String): Long {
         val e = load(context).firstOrNull { it.syncId == syncId }
         val t = readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))[syncId]
         return maxOf(e?.revision ?: 0L, t?.revision ?: 0L)
     }
 
+    @Synchronized
     fun timestampFor(context: Context, syncId: String): Long {
         val e = load(context).firstOrNull { it.syncId == syncId }
         val t = readTombstones(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))[syncId]

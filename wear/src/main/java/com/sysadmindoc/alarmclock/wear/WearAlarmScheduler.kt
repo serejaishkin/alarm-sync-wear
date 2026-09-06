@@ -4,9 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import java.time.DayOfWeek
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 
 /**
  * The watch schedules its own alarms. Wear Data Layer is only used to keep the
@@ -40,7 +38,6 @@ object WearAlarmScheduler {
             trigger.toInstant().toEpochMilli(),
             pi
         )
-        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun scheduleSnooze(context: Context, entry: WearAlarmListStore.Entry, minutes: Int) {
@@ -63,7 +60,6 @@ object WearAlarmScheduler {
             triggerAt,
             pi
         )
-        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun cancel(context: Context, syncId: String) {
@@ -78,7 +74,6 @@ object WearAlarmScheduler {
             context.getSystemService(AlarmManager::class.java).cancel(pi)
             pi.cancel()
         }
-        WearAlarmKeepAliveService.refresh(context)
     }
 
     fun nextTrigger(entry: WearAlarmListStore.Entry, now: ZonedDateTime = ZonedDateTime.now()): ZonedDateTime? {
@@ -86,7 +81,7 @@ object WearAlarmScheduler {
             .withMinute(entry.minute.coerceIn(0, 59))
             .withSecond(0).withNano(0)
         if (entry.repeatDays.isEmpty()) {
-            return if (time.isAfter(now)) time else null
+            return if (time.isAfter(now)) time else time.plusDays(1)
         }
         for (offset in 0..7) {
             val candidate = time.plusDays(offset.toLong())

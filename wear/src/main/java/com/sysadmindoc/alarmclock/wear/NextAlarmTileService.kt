@@ -123,8 +123,11 @@ class NextAlarmTileService : TileService() {
 
     private fun readLatestSnapshot(): WearAlarmSnapshot {
         val cached = WearAlarmStore.load(applicationContext)
+        if (cached.hasAlarm && !WearAlarmText.isStale(cached)) {
+            return cached
+        }
         val buffer = runCatching {
-            Tasks.await(Wearable.getDataClient(applicationContext).dataItems, 1_200L, TimeUnit.MILLISECONDS)
+            Tasks.await(Wearable.getDataClient(applicationContext).dataItems, 400L, TimeUnit.MILLISECONDS)
         }.getOrNull() ?: return cached
         try {
             buffer.forEach { item ->
@@ -142,7 +145,7 @@ class NextAlarmTileService : TileService() {
         val path = when (clickableId) {
             WearAlarmData.CLICK_SNOOZE -> WearAlarmData.PATH_ACTION_SNOOZE
             WearAlarmData.CLICK_DISMISS -> WearAlarmData.PATH_ACTION_DISMISS
-            CLICK_DISABLE -> "/alarmclockxtreme/action/disable"
+            CLICK_DISABLE -> WearAlarmData.PATH_ACTION_DISABLE
             else -> return null
         }
         if (!snapshot.hasAlarm || snapshot.alarmId <= 0L) return "Phone sync needed"
@@ -151,10 +154,12 @@ class NextAlarmTileService : TileService() {
             putLong(WearAlarmData.KEY_ALARM_ID, snapshot.alarmId)
             putLong(WearAlarmData.KEY_UPDATED_AT, System.currentTimeMillis())
         }.toByteArray()
+
         val nodes = runCatching {
-            Tasks.await(Wearable.getNodeClient(applicationContext).connectedNodes, 1_200L, TimeUnit.MILLISECONDS)
+            Tasks.await(Wearable.getNodeClient(applicationContext).connectedNodes, 500L, TimeUnit.MILLISECONDS)
         }.getOrDefault(emptyList())
         if (nodes.isEmpty()) return "Phone unavailable"
+
         val messageClient = Wearable.getMessageClient(applicationContext)
         var queued = 0
         nodes.forEach { node ->
@@ -168,6 +173,6 @@ class NextAlarmTileService : TileService() {
         private const val RESOURCES_VERSION = "2"
         private const val CLICK_REFRESH = "refresh"
         private const val CLICK_DISABLE = "disable"
-        private const val MESSAGE_TIMEOUT_MS = 1_200L
+        private const val MESSAGE_TIMEOUT_MS = 800L
     }
 }
