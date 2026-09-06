@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AlarmClockXtreme</string>
+    <string name="app_name">WakeSync</string>
 
     <!-- Notification channels -->
     <string name="alarm_notification_channel">Alarm</string>
     <string name="upcoming_notification_channel">Upcoming Alarms</string>
     <string name="missed_notification_channel">Missed Alarms</string>
     <string name="bedtime_notification_channel">Bedtime Reminder</string>
-    <string name="bedtime_dnd_rule_name">AlarmClockXtreme Bedtime DND</string>
+    <string name="bedtime_dnd_rule_name">WakeSync Bedtime DND</string>
     <string name="bedtime_dnd_rule_type">Bedtime DND</string>
 
     <!-- Widget -->
@@ -703,7 +703,7 @@
     <string name="settings_pane_backup_description">Encrypted export, restore preview, and conflict-safe import.</string>
     <string name="settings_pane_utilities">Utilities</string>
     <string name="settings_pane_utilities_description">Companion tools, support bundle export, app version, and license.</string>
-    <string name="settings_support_bundle_subject">AlarmClockXtreme support bundle</string>
+    <string name="settings_support_bundle_subject">WakeSync support bundle</string>
     <string name="settings_share_support_bundle">Share support bundle</string>
     <string name="settings_share_unavailable">No app is available to share this file.</string>
     <string name="settings_subtitle">Tune the app once and it stays out of your way. Changes save immediately.</string>
@@ -805,7 +805,7 @@
     <string name="settings_export_ready">Export ready</string>
     <string name="settings_share_crash_log">Share crash log</string>
     <string name="settings_share_crash_log_description">Redact and share local crash logs. Nothing is uploaded automatically.</string>
-    <string name="settings_crash_log_subject">AlarmClockXtreme crash log</string>
+    <string name="settings_crash_log_subject">WakeSync crash log</string>
     <string name="settings_about_description">A quick reference for what’s running on this device.</string>
     <string name="settings_version">Version</string>
     <string name="settings_device">Device</string>
@@ -999,7 +999,7 @@
     <string name="settings_health_update_description">Health Connect is installed but needs an update before sleep sessions can be read.</string>
     <string name="settings_health_unavailable_description">Health Connect is not available on this device.</string>
     <string name="settings_health_opt_in_description">Opt in to read recent Health Connect sleep sessions on-device for Bedtime and Stats context.</string>
-    <string name="settings_health_grant_description">Grant READ_SLEEP in Health Connect before AlarmClockXtreme can show recent sleep summaries.</string>
+    <string name="settings_health_grant_description">Grant READ_SLEEP in Health Connect before WakeSync can show recent sleep summaries.</string>
     <string name="settings_health_available_description">Recent sleep summaries are available locally from Health Connect.</string>
     <string name="settings_health_empty_description">READ_SLEEP is granted; no recent Health Connect sleep sessions were found yet.</string>
     <string name="settings_health_no_session">No session</string>
@@ -1102,7 +1102,7 @@
     <string name="settings_backup_restore_description">Keep a portable copy of alarms and app preferences for new devices or peace of mind.</string>
     <string name="settings_export">Export</string>
     <string name="settings_import">Import</string>
-    <string name="settings_plain_backup_description">Plain backups include alarms and global settings in a readable JSON file. AlarmClockXtreme warns before exporting configured secrets or private references.</string>
+    <string name="settings_plain_backup_description">Plain backups include alarms and global settings in a readable JSON file. WakeSync warns before exporting configured secrets or private references.</string>
     <string name="settings_import_fossify">Import Fossify Clock JSON</string>
     <string name="settings_import_fossify_description">Previews a bounded Fossify export without changing alarms. Confirmed alarms are appended disabled so times, weekdays, vibration, and available sounds can be reviewed first.</string>
     <string name="settings_encrypted_backup">Encrypted backup</string>

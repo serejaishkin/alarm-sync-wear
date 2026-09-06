@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AlarmClockXtreme</string>
+    <string name="app_name">WakeSync</string>
     <string name="alarm_notification_channel">Будильник</string>
     <string name="upcoming_notification_channel">Предстоящие будильники</string>
     <string name="missed_notification_channel">Пропущенные будильники</string>
@@ -815,7 +815,7 @@
     <string name="settings_health_update_description">Health Connect установлен, но требует обновления перед тем, как можно будет читать сеансы сна.</string>
     <string name="settings_health_unavailable_description">Health Connect недоступен на этом устройстве.</string>
     <string name="settings_health_opt_in_description">Подпишитесь на чтение недавних сеансов сна Health Connect на устройстве для контекста Сна и Статистики.</string>
-    <string name="settings_health_grant_description">Предоставьте READ_SLEEP в Health Connect, прежде чем AlarmClockXtreme сможет показывать недавние сводки сна.</string>
+    <string name="settings_health_grant_description">Предоставьте READ_SLEEP в Health Connect, прежде чем WakeSync сможет показывать недавние сводки сна.</string>
     <string name="settings_health_available_description">Недавние сводки сна доступны локально из Health Connect.</string>
     <string name="settings_health_empty_description">READ_SLEEP предоставлен; никаких недавних сеансов сна Health Connect ещё не найдено.</string>
     <string name="settings_hours_minutes_short">%1$d ч %2$d мин</string>
@@ -848,7 +848,7 @@
     <string name="settings_challenge_audio_ducking_description">Уменьшает только громкость проигрывателя этого будильника, пока вы решаете задание отключения; звонки всё равно заглушают его полностью.</string>
     <string name="settings_bedtime_checklist_description">Это появляется в Сне, чтобы ваша рутина оставалась последовательной, даже когда остальной день кажется занятым.</string>
     <string name="settings_backup_inspection_failed">Не удалось проверить содержимое резервной копии: %1$s</string>
-    <string name="settings_plain_backup_description">Обычные резервные копии включают будильники и глобальные настройки в читаемом файле JSON. AlarmClockXtreme предупреждает перед экспортом настроенных секретов или частных ссылок.</string>
+    <string name="settings_plain_backup_description">Обычные резервные копии включают будильники и глобальные настройки в читаемом файле JSON. WakeSync предупреждает перед экспортом настроенных секретов или частных ссылок.</string>
     <string name="settings_import_fossify">Импортировать JSON Fossify Clock</string>
     <string name="settings_import_fossify_description">Предварительный просмотр ограниченного экспорта Fossify без изменения будильников. Подтверждённые будильники добавляются отключёнными, чтобы время, будни, вибрация и доступные звуки можно было сначала проверить.</string>
     <string name="settings_encrypted_backup">Зашифрованная резервная копия</string>
