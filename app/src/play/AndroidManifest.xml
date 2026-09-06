@@ -35,8 +35,12 @@
         <receiver android:name=".sync.PhoneLocalAlarmActionReceiver" android:exported="false">
             <intent-filter><action android:name="com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_ACTION" /></intent-filter>
         </receiver>
-        <receiver android:name=".sync.WakeSyncPeriodicReceiver" android:exported="false">
+        <receiver
+            android:name=".sync.WakeSyncPeriodicReceiver"
+            android:directBootAware="true"
+            android:exported="false">
             <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="com.sysadmindoc.alarmclock.WAKESYNC_PERIODIC_SYNC" />

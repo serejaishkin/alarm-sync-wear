@@ -45,8 +45,12 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".WakeSyncPeriodicReceiver" android:exported="false">
+        <receiver
+            android:name=".WakeSyncPeriodicReceiver"
+            android:directBootAware="true"
+            android:exported="false">
             <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="com.sysadmindoc.alarmclock.wear.WAKESYNC_PERIODIC_SYNC" />

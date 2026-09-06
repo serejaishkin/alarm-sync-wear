@@ -10,7 +10,12 @@ import com.google.android.gms.wearable.Wearable
 /** Periodically requests the Wear snapshot. Phone state is published only after that snapshot is merged. */
 class WakeSyncPeriodicReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action !in setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED, ACTION_SYNC)) return
+        if (intent?.action !in setOf(
+                Intent.ACTION_LOCKED_BOOT_COMPLETED,
+                Intent.ACTION_BOOT_COMPLETED,
+                Intent.ACTION_MY_PACKAGE_REPLACED,
+                ACTION_SYNC
+            )) return
         schedule(context)
         requestWatchSnapshot(context)
     }
