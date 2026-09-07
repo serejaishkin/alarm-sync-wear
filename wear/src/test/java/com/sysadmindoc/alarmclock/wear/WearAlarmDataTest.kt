@@ -89,7 +89,7 @@ class WearAlarmDataTest {
         assertEquals("Alarm", WearAlarmText.complicationShortText(snapshot(timeLabel = "")))
         assertEquals("No alarm", WearAlarmText.complicationShortText(snapshot(hasAlarm = false)))
 
-        assertEquals("ACX", WearAlarmText.complicationShortTitle(snapshot(isFiring = true)))
+        assertEquals("WakeSync", WearAlarmText.complicationShortTitle(snapshot(isFiring = true)))
         assertEquals("Next", WearAlarmText.complicationShortTitle(snapshot(label = "")))
         // Title is clamped to the short limit.
         assertEquals(
@@ -133,13 +133,13 @@ class WearAlarmDataTest {
 
     @Test
     fun contentDescriptionReflectsState() {
-        assertEquals("AlarmClockXtreme alarm is ringing", WearAlarmText.contentDescription(snapshot(isFiring = true)))
+        assertEquals("WakeSync alarm is ringing", WearAlarmText.contentDescription(snapshot(isFiring = true)))
         assertEquals(
-            "Next AlarmClockXtreme alarm 7:30 AM",
+            "Next WakeSync alarm 7:30 AM",
             WearAlarmText.contentDescription(snapshot(timeLabel = "7:30 AM"))
         )
         assertEquals(
-            "No AlarmClockXtreme alarm synced from phone",
+            "No WakeSync alarm synced from phone",
             WearAlarmText.contentDescription(snapshot(hasAlarm = false))
         )
     }

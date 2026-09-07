@@ -14,7 +14,7 @@ internal object AlarmDeliveryWakeLock {
     const val TIMEOUT_MS = 15_000L
 
     private const val TAG = "AlarmDeliveryWakeLock"
-    private const val LOCK_TAG = "AlarmClockXtreme::AlarmDeliveryWakeLock"
+    private const val LOCK_TAG = "WakeSync::AlarmDeliveryWakeLock"
 
     fun acquire(context: Context): PowerManager.WakeLock? {
         val powerManager = context.getSystemService(PowerManager::class.java) ?: return null

@@ -316,7 +316,7 @@ fun BedtimeScreen(
                             Text(
                                 text = when {
                                     !state.bedtimeDndAccessGranted ->
-                                        "Grant DND access so AlarmClockXtreme can own an alarms-only sleep rule."
+                                        "Grant DND access so WakeSync can own an alarms-only sleep rule."
                                     state.bedtimeDndActive ->
                                         "Alarms-only mode is active for your sleep window."
                                     state.bedtimeDndEnabled ->

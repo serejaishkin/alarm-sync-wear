@@ -2,7 +2,7 @@ import java.util.Properties
 import java.io.FileInputStream
 import org.gradle.api.GradleException
 
-// AlarmClockXtreme v1.15.33
+// WakeSync v1.15.33
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")

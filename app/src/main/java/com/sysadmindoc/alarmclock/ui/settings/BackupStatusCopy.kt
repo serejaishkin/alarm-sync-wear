@@ -66,7 +66,7 @@ private fun backupRecoveryHint(cause: Throwable?): String {
         message.contains("json", ignoreCase = true) ||
             message.contains("malformed", ignoreCase = true) ||
             message.contains("parse", ignoreCase = true) ->
-            "Choose a valid AlarmClockXtreme backup file."
+            "Choose a valid WakeSync backup file."
         else ->
             "Check the file or destination and try again."
     }

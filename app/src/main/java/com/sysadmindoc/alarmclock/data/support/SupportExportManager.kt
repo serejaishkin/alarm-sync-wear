@@ -316,8 +316,8 @@ class SupportExportManager @Inject constructor(
 
     private companion object {
         const val EXPORT_DIR_NAME = "support_exports"
-        const val FILE_PREFIX = "alarmclockxtreme-support"
-        const val CRASH_LOG_FILE_PREFIX = "alarmclockxtreme-crash-logs"
+        const val FILE_PREFIX = "wakesync-support"
+        const val CRASH_LOG_FILE_PREFIX = "wakesync-crash-logs"
         const val MAX_CRASH_LOGS = 10
         const val MAX_INCIDENTS = 25
         val FILE_TIMESTAMP: DateTimeFormatter = DateTimeFormatter

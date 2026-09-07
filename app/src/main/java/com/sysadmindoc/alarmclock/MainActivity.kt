@@ -166,7 +166,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val KEY_LAST_HANDLED_SHARE_TOKEN_KEY = "last_handled_share_token_key"
         private const val KEY_PENDING_SHARE_TOKEN = "pending_share_token"
-        private const val ROADMAP_URL = "https://github.com/SysAdminDoc/AlarmClockXtreme#roadmap"
+        private const val ROADMAP_URL = "https://github.com/serejaishkin/alarm-sync-wear#roadmap"
 
         /**
          * Terse highlights for the "What's new" dialog — four concise

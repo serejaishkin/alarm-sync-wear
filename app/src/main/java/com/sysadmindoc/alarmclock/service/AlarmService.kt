@@ -264,7 +264,7 @@ class AlarmService : Service() {
         try {
             wakeLock = pm?.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
-                "AlarmClockXtreme::AlarmWakeLock"
+                "WakeSync::AlarmWakeLock"
             )?.apply {
                 acquire(30 * 60 * 1000L) // 30 minutes — covers max auto-silence; released in onDestroy()
             }
@@ -760,7 +760,7 @@ class AlarmService : Service() {
         // Disabled to prevent media control panel during alarm
         /*
         val session = mediaSession ?: run {
-            MediaSession(this, "AlarmClockXtremeAlarm").also { created ->
+            MediaSession(this, "WakeSyncAlarm").also { created ->
                 mediaSession = created
             }
         }

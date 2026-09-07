@@ -88,7 +88,7 @@ class NewsRepository @Inject constructor(
             // a plain UA flips them back to RSS. We don't impersonate a
             // browser because that would invite content-shape changes we
             // cannot parse; just identify the app honestly.
-            .header("User-Agent", "AlarmClockXtreme/${BuildConfig.VERSION_NAME} (Android)")
+            .header("User-Agent", "WakeSync/${BuildConfig.VERSION_NAME} (Android)")
             .header("Accept", "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8")
             .build()
 

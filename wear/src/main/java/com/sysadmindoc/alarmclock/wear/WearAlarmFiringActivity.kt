@@ -45,12 +45,12 @@ class WearAlarmFiringActivity : ComponentActivity() {
         })
 
         root.addView(Button(this).apply {
-            text = "Отложить ${entry.snoozeDurationMinutes} мин"
+            text = getString(R.string.wear_snooze_button, entry.snoozeDurationMinutes)
             WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.snooze_yellow)
             setOnClickListener { snooze(entry) }
         })
         root.addView(Button(this).apply {
-            text = "Выключить"
+            text = getString(R.string.wear_dismiss)
             WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.dismiss_green)
             setOnClickListener { dismiss(entry) }
         })

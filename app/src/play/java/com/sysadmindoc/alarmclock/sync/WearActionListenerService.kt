@@ -36,10 +36,10 @@ class WearActionListenerService : WearableListenerService() {
     }
 
     companion object {
-        const val PATH_SNOOZE = "/alarmclockxtreme/action/snooze"
-        const val PATH_DISMISS = "/alarmclockxtreme/action/dismiss"
-        const val PATH_ENABLE = "/alarmclockxtreme/action/enable"
-        const val PATH_DISABLE = "/alarmclockxtreme/action/disable"
+        const val PATH_SNOOZE = "/wakesync/action/snooze"
+        const val PATH_DISMISS = "/wakesync/action/dismiss"
+        const val PATH_ENABLE = "/wakesync/action/enable"
+        const val PATH_DISABLE = "/wakesync/action/disable"
         const val PATH_WAKESYNC_SNOOZE = "/wakesync/action/snooze"
         const val PATH_WAKESYNC_DISMISS = "/wakesync/action/dismiss"
         const val PATH_WAKESYNC_ENABLE = "/wakesync/action/enable"

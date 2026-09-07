@@ -1673,13 +1673,13 @@ private fun shareAlarm(context: Context, alarm: Alarm, is24Hour: Boolean) {
     val deepLink = AlarmShareCodec.createDeepLink(alarm)
     val title = alarm.label.ifBlank { "Alarm ${formatAlarmTime(alarm, is24Hour)}" }
     val shareText = buildString {
-        appendLine("AlarmClockXtreme alarm: $title")
+        appendLine("WakeSync alarm: $title")
         appendLine("Time: ${formatAlarmTime(alarm, is24Hour)}")
         append("Import: $deepLink")
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "AlarmClockXtreme alarm: $title")
+        putExtra(Intent.EXTRA_SUBJECT, "WakeSync alarm: $title")
         putExtra(Intent.EXTRA_TEXT, shareText)
     }
     runCatching {

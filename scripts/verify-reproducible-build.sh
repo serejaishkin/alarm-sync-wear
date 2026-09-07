@@ -1,11 +1,11 @@
 #!/bin/bash
-# AlarmClockXtreme - Reproducible Build Verification
+# WakeSync - Reproducible Build Verification
 # Verifies that the build is reproducible for F-Droid submission.
 # Usage: ./scripts/verify-reproducible-build.sh
 
 set -euo pipefail
 
-echo "=== AlarmClockXtreme Reproducible Build Verification ==="
+echo "=== WakeSync Reproducible Build Verification ==="
 echo ""
 
 # Check Java version

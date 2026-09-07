@@ -11,16 +11,16 @@ class ReleaseMetadataVerificationTest(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         files = {
-            "build.gradle.kts": "// AlarmClockXtreme v1.2.3\n",
+            "build.gradle.kts": "// WakeSync v1.2.3\n",
             "app/build.gradle.kts": (
-                "// AlarmClockXtreme v1.2.3\n"
+                "// WakeSync v1.2.3\n"
                 "versionCode = 42\n"
                 'versionName = "1.2.3"\n'
             ),
             "wear/build.gradle.kts": 'versionCode = 42\nversionName = "1.2.3"\n',
             "README.md": (
                 "https://img.shields.io/badge/version-1.2.3-blue\n"
-                "AlarmClockXtreme-v1.2.3-play-release.apk\n"
+                "WakeSync-v1.2.3-play-release.apk\n"
             ),
             "CHANGELOG.md": "## [1.2.3] - 2026-01-01\n",
             "scripts/verify_api37_release.py": (

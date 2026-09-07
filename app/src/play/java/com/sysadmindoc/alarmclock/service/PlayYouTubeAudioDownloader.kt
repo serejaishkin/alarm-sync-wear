@@ -181,7 +181,7 @@ class PlayYouTubeAudioDownloader @Inject constructor(
         val apiReq = Request.Builder()
             .url(GITHUB_RELEASES_LATEST)
             .header("Accept", "application/vnd.github.v3+json")
-            .header("User-Agent", "AlarmClockXtreme/${com.sysadmindoc.alarmclock.BuildConfig.VERSION_NAME}")
+            .header("User-Agent", "WakeSync/${com.sysadmindoc.alarmclock.BuildConfig.VERSION_NAME}")
             .build()
         val releaseJson = httpClient.newCall(apiReq).execute().use { resp ->
             if (!resp.isSuccessful) throw IllegalStateException("GitHub API returned ${resp.code}")
@@ -207,7 +207,7 @@ class PlayYouTubeAudioDownloader @Inject constructor(
 
         val binaryReq = Request.Builder()
             .url(downloadUrl)
-            .header("User-Agent", "AlarmClockXtreme/${com.sysadmindoc.alarmclock.BuildConfig.VERSION_NAME}")
+            .header("User-Agent", "WakeSync/${com.sysadmindoc.alarmclock.BuildConfig.VERSION_NAME}")
             .build()
         val binaryBytes = httpClient.newCall(binaryReq).execute().use { resp ->
             if (!resp.isSuccessful) throw IllegalStateException("Asset download failed: ${resp.code}")
@@ -241,7 +241,7 @@ class PlayYouTubeAudioDownloader @Inject constructor(
             }
             // worstaudio = fastest to resolve, smallest to buffer; perfect for preview.
             // CVE-2026-26331 affects callers that enable yt-dlp's --netrc-cmd
-            // option. ACX never exposes arbitrary yt-dlp options and only adds
+            // option. WakeSync never exposes arbitrary yt-dlp options and only adds
             // this fixed allow-list after validating a whitespace-free YouTube URL.
             val request = YoutubeDLRequest(youtubeUrl).apply {
                 addOption("-f", "worstaudio")
@@ -312,7 +312,7 @@ class PlayYouTubeAudioDownloader @Inject constructor(
             // Resolve the bestaudio direct URL via yt-dlp (--get-url, no
             // download). June 2026 yt-dlp CVEs around curl cookie leaks,
             // aria2c manifests, and filename-created desktop/link files affect
-            // downloader/file-write paths ACX does not enable: user input is
+            // downloader/file-write paths WakeSync does not enable: user input is
             // validated as a URL, options stay on this fixed allow-list, and
             // OkHttp writes the resolved stream into MediaStore.
             val request = YoutubeDLRequest(youtubeUrl).apply {

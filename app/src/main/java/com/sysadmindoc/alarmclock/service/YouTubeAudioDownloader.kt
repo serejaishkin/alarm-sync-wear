@@ -57,7 +57,7 @@ interface YouTubeAudioDownloader {
 
     /**
      * True when the active engine version is below [MIN_SAFE_VERSION].
-     * ACX mitigates all known CVEs via --get-url-only usage, but an outdated
+     * WakeSync mitigates all known CVEs via --get-url-only usage, but an outdated
      * engine should still be flagged in diagnostics and the download dialog.
      */
     fun isEngineOutdated(): Boolean {

@@ -8,7 +8,7 @@ import androidx.media3.common.AudioAttributes as Media3AudioAttributes
 
 /**
  * Alarm playback must be classified as system alarm audio, not media audio.
- * Android 17's hearing-aid routing is user/system managed for alarms, so ACX
+ * Android 17's hearing-aid routing is user/system managed for alarms, so WakeSync
  * deliberately sets AudioAttributes.USAGE_ALARM and, by default, does not force
  * a preferred output device from app code. The one exception is the explicit
  * "use phone speakers" opt-in, which forces the built-in speaker so a connected

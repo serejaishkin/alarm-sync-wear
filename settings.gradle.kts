@@ -24,6 +24,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AlarmClockXtreme"
+rootProject.name = "WakeSync"
 include(":app")
 include(":wear")

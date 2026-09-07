@@ -1,4 +1,4 @@
-# AlarmClockXtreme
+# WakeSync
 
 ![Version](https://img.shields.io/badge/version-1.15.33-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
@@ -9,7 +9,7 @@
 > A feature-rich, open-source alarm clock for Android with 50+ alarm fields, 30 dismiss challenges, smart wake intelligence, a built-in YouTube alarm-sound downloader, and a deep dark theme. No ads, no tracking, no accounts.
 
 <p align="center">
-  <img src="assets/screenshots/alarm-list.png" width="360" alt="AlarmClockXtreme alarm list with next alarm, alarm cards, quick actions, and bottom navigation" />
+  <img src="assets/screenshots/alarm-list.png" width="360" alt="WakeSync alarm list with next alarm, alarm cards, quick actions, and bottom navigation" />
 </p>
 
 ## Download
@@ -17,7 +17,7 @@
 **Latest signed APK** - [Releases page](https://github.com/serejaishkin/alarm-sync-wear/releases/latest)
 
 ```
-adb install AlarmClockXtreme-v1.15.33-play-release.apk
+adb install WakeSync-v1.15.33-play-release.apk
 ```
 
 The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPipe Extractor), Wear OS Data Layer bridge, Wear next-alarm tile/complication support, optional Health Connect READ_SLEEP integration, and ML Kit Digital Ink handwriting recognition. The F-Droid flavor strips proprietary or Play-distribution-adjacent phone pieces for an unencumbered build.
@@ -277,7 +277,7 @@ signatures with `apksigner`, write `SHA256SUMS.txt` and
 To verify a sideloaded APK's signing certificate:
 
 ```bash
-apksigner verify --print-certs AlarmClockXtreme-v1.15.33-play-release.apk
+apksigner verify --print-certs WakeSync-v1.15.33-play-release.apk
 ```
 
 Compare the `certificate SHA-256 digest` against the fingerprint published in
@@ -379,7 +379,7 @@ Full privacy policy: [PRIVACY_POLICY.html](PRIVACY_POLICY.html)
 
 ## Webhook Integration Recipes
 
-ACX sends an HTTPS POST with a JSON payload on alarm lifecycle events. Enable webhooks in Settings > Integrations > Webhooks and enter your HTTPS endpoint URL.
+WakeSync sends an HTTPS POST with a JSON payload on alarm lifecycle events. Enable webhooks in Settings > Integrations > Webhooks and enter your HTTPS endpoint URL.
 
 **Payload schema (v1):**
 
@@ -400,10 +400,10 @@ ACX sends an HTTPS POST with a JSON payload on alarm lifecycle events. Enable we
 
 Events: `alarm_fired`, `alarm_snoozed`, `alarm_dismissed`, `alarm_missed`, `alarm_skipped`, `test`. The `label` field is present only when `labelIncluded` is `true` (controlled by Settings > Webhooks > Include alarm labels). `fireId` is present when available.
 
-When Settings > Webhooks > Signing secret is set, ACX adds:
+When Settings > Webhooks > Signing secret is set, WakeSync adds:
 
-- `X-ACX-Timestamp`: Unix epoch seconds at send time.
-- `X-ACX-Signature`: `v1=<hmac-sha256>` over `timestamp + "." + raw_json_body`.
+- `X-WakeSync-Timestamp`: Unix epoch seconds at send time.
+- `X-WakeSync-Signature`: `v1=<hmac-sha256>` over `timestamp + "." + raw_json_body`.
 
 Reject signed payloads whose timestamp differs from receiver time by more than five minutes. Settings also shows the most recent webhook delivery result so failed automations can be diagnosed without blocking alarm dismissal.
 
@@ -415,7 +415,7 @@ Create a webhook automation in your `automations.yaml`:
 
 ```yaml
 automation:
-  - alias: "ACX alarm fired — turn on lights"
+  - alias: "WakeSync alarm fired — turn on lights"
     trigger:
       - platform: webhook
         webhook_id: "your-secret-random-id-here"
@@ -434,39 +434,39 @@ automation:
           color_temp_kelvin: 3000
 ```
 
-In ACX Settings, enter `https://your-ha-host:8123/api/webhook/your-secret-random-id-here`. Generate a unique random `webhook_id` (e.g., `uuidgen` or `python -c "import uuid; print(uuid.uuid4())"`) — do not reuse example values. Home Assistant webhook triggers do not require an API token when `local_only: true`.
+In WakeSync Settings, enter `https://your-ha-host:8123/api/webhook/your-secret-random-id-here`. Generate a unique random `webhook_id` (e.g., `uuidgen` or `python -c "import uuid; print(uuid.uuid4())"`) — do not reuse example values. Home Assistant webhook triggers do not require an API token when `local_only: true`.
 
 ### Tasker
 
-ACX requires HTTPS endpoints. For local Tasker automation, set up a local HTTPS bridge:
+WakeSync requires HTTPS endpoints. For local Tasker automation, set up a local HTTPS bridge:
 
 1. Install the **Tasker** app and the **AutoRemote** plugin (or another HTTPS-capable receiver).
 2. In Tasker, create a Profile > Event > Plugin > AutoRemote > Message Filter = `acx_alarm`.
-3. In ACX Settings, enter your AutoRemote personal HTTPS URL.
+3. In WakeSync Settings, enter your AutoRemote personal HTTPS URL.
 4. Create a Tasker Task linked to the profile with your desired actions (e.g., enable Wi-Fi, launch music app, set display brightness).
 
-Alternatively, if your network supports it, use a Tasker HTTP Server plugin with a self-signed certificate and configure ACX to POST to `https://your-phone-ip:port/alarm`.
+Alternatively, if your network supports it, use a Tasker HTTP Server plugin with a self-signed certificate and configure WakeSync to POST to `https://your-phone-ip:port/alarm`.
 
 ### MacroDroid
 
 1. In MacroDroid, create a Macro with trigger **Webhook (URL)**.
 2. Copy the generated HTTPS webhook URL (MacroDroid provides one per macro via cloud relay; requires Play Services).
-3. Paste the URL into ACX Settings > Webhooks.
+3. Paste the URL into WakeSync Settings > Webhooks.
 4. In the macro action, use **Set Variable** to capture `{webhook_body}`, then parse with `JSONPath` expressions:
    - Event: `$.event`
    - Alarm ID: `$.alarmId`
    - Display time: `$.displayTime`
 5. Add a **Condition** checking the variable against your target event (e.g., `alarm_fired`).
 
-Note: MacroDroid's saved webhook body limit is ~3800 characters. ACX payloads are well under this limit.
+Note: MacroDroid's saved webhook body limit is ~3800 characters. WakeSync payloads are well under this limit.
 
 ## FAQ
 
 **How does the YouTube alarm-sound downloader work?**
-On the Alarms tab tap "Download alarm sound from YouTube." A dialog opens with two modes: search YouTube directly (powered by NewPipe Extractor) or paste a video URL. Each result has a play/stop button to preview the audio before committing. Tap the row to download; yt-dlp resolves the best-audio stream with a fixed `--get-url` option allow-list, OkHttp streams it to your alarm library via MediaStore (`IS_ALARM=1`), and the ringtone picker re-enumerates so the new sound is immediately selectable. The Play flavor also includes a manual "Update" action for the local yt-dlp engine; ACX never updates it in the background, and a failed update keeps the existing engine in place. F-Droid builds ship without this feature for licensing reasons.
+On the Alarms tab tap "Download alarm sound from YouTube." A dialog opens with two modes: search YouTube directly (powered by NewPipe Extractor) or paste a video URL. Each result has a play/stop button to preview the audio before committing. Tap the row to download; yt-dlp resolves the best-audio stream with a fixed `--get-url` option allow-list, OkHttp streams it to your alarm library via MediaStore (`IS_ALARM=1`), and the ringtone picker re-enumerates so the new sound is immediately selectable. The Play flavor also includes a manual "Update" action for the local yt-dlp engine; WakeSync never updates it in the background, and a failed update keeps the existing engine in place. F-Droid builds ship without this feature for licensing reasons.
 
 **Why does the alarm not fire on my Xiaomi/Samsung/Huawei?**
-These manufacturers aggressively kill background apps. The app shows a manufacturer-specific warning during onboarding with steps to whitelist it. Generally: Settings > Battery > App Launch > AlarmClockXtreme > Manual > enable all toggles.
+These manufacturers aggressively kill background apps. The app shows a manufacturer-specific warning during onboarding with steps to whitelist it. Generally: Settings > Battery > App Launch > WakeSync > Manual > enable all toggles.
 
 **Why does the weather show the wrong temperature?**
 Check Settings > Dashboard > Temperature unit. The app defaults to Fahrenheit. You can also set a manual location if GPS isn't available.

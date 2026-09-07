@@ -209,7 +209,7 @@ internal fun IntegrationsSection(state: SettingsUiState, viewModel: SettingsView
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        // Warn if the user pasted a plain-http endpoint. ACX intentionally
+        // Warn if the user pasted a plain-http endpoint. WakeSync intentionally
         // keeps app-wide cleartext traffic disabled, so these endpoints cannot
         // be treated as reliable on current Android.
         val urlLower = state.settings.webhookUrl.trim().lowercase()

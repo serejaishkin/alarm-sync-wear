@@ -4,7 +4,7 @@ package com.sysadmindoc.alarmclock.sync
  * Local synchronization metadata for one logical alarm.
  *
  * This is intentionally not a Room entity yet. The first integration step
- * keeps AlarmClockXtreme's existing Alarm entity and migrations untouched.
+ * keeps WakeSync's existing Alarm entity and migrations untouched.
  * Persistence will be added as a dedicated table after the sync contract is
  * covered by tests.
  */

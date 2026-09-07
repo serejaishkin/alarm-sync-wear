@@ -89,7 +89,7 @@ class WakeSyncAlarmListActivity : Activity() {
                         ) {
                             pullSyncTriggered = true
                             requestPhoneSnapshot()
-                            statusText.text = "Синхронизация..."
+                            statusText.text = getString(R.string.wear_syncing)
                         }
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -138,7 +138,7 @@ class WakeSyncAlarmListActivity : Activity() {
 
         // Add Alarm Button
         val addButton = Button(this).apply {
-            text = "+ Новый будильник"
+            text = getString(R.string.wear_add_new_alarm)
             WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
             setOnClickListener {
                 startActivity(Intent(this@WakeSyncAlarmListActivity, WakeSyncAlarmEditorActivity::class.java))
@@ -160,14 +160,14 @@ class WakeSyncAlarmListActivity : Activity() {
         runCatching {
             Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
                 if (nodes.isNotEmpty()) {
-                    statusText.text = "Синхронизировано"
+                    statusText.text = getString(R.string.wear_synced)
                 }
                 nodes.forEach { node ->
                     Wearable.getMessageClient(this)
                         .sendMessage(node.id, PATH_REQUEST_SNAPSHOT, ByteArray(0))
                 }
             }.addOnFailureListener {
-                statusText.text = "Офлайн-режим"
+                statusText.text = getString(R.string.wear_offline_mode)
             }
         }
     }
@@ -192,7 +192,7 @@ class WakeSyncAlarmListActivity : Activity() {
         alarms.forEach { alarm ->
             val time = String.format(Locale.US, "%02d:%02d", alarm.hour, alarm.minute)
             val repeat = repeatLabel(alarm.repeatDays)
-            val sourceBadge = if (alarm.source == WearAlarmListStore.SOURCE_WATCH) "⌚ Часы" else "📱 Телефон"
+            val sourceBadge = if (alarm.source == WearAlarmListStore.SOURCE_WATCH) getString(R.string.wear_source_watch) else getString(R.string.wear_source_phone)
 
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -236,7 +236,7 @@ class WakeSyncAlarmListActivity : Activity() {
             card.addView(topRow)
 
             // Label & Days Row
-            val labelText = alarm.label.ifBlank { "Будильник" }
+            val labelText = alarm.label.ifBlank { getString(R.string.wear_default_label) }
             val subtitleView = TextView(this).apply {
                 this.text = "$labelText · $repeat"
                 textSize = 12f
@@ -286,11 +286,14 @@ class WakeSyncAlarmListActivity : Activity() {
     }
 
     private fun repeatLabel(days: Set<Int>): String = when {
-        days.size == 7 -> "Каждый день"
-        days == setOf(1, 2, 3, 4, 5) -> "Будни"
-        days == setOf(6, 7) -> "Выходные"
-        days.isEmpty() -> "Один раз"
-        else -> days.sorted().mapNotNull { DAY_NAMES[it] }.joinToString(" ")
+        days.size == 7 -> getString(R.string.wear_repeat_every_day)
+        days == setOf(1, 2, 3, 4, 5) -> getString(R.string.wear_repeat_weekdays)
+        days == setOf(6, 7) -> getString(R.string.wear_repeat_weekends)
+        days.isEmpty() -> getString(R.string.wear_repeat_once)
+        else -> days.sorted().mapNotNull { dayId ->
+            val resId = DAY_NAME_IDS[dayId]
+            if (resId != null) getString(resId) else null
+        }.joinToString(" ")
     }
 
     companion object {
@@ -298,8 +301,10 @@ class WakeSyncAlarmListActivity : Activity() {
         private const val SYNC_INTERVAL_MS = 2_000L
         private const val PULL_TO_SYNC_DISTANCE = 72f
         const val PATH_REQUEST_SNAPSHOT = "/wakesync/alarm/request_snapshot"
-        private val DAY_NAMES = mapOf(
-            1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт", 5 to "Пт", 6 to "Сб", 7 to "Вс"
+        private val DAY_NAME_IDS = mapOf(
+            1 to R.string.wear_day_mon, 2 to R.string.wear_day_tue, 3 to R.string.wear_day_wed,
+            4 to R.string.wear_day_thu, 5 to R.string.wear_day_fri, 6 to R.string.wear_day_sat,
+            7 to R.string.wear_day_sun
         )
     }
 }

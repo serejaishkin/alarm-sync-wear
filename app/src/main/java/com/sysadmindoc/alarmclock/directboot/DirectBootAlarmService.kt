@@ -203,7 +203,7 @@ class DirectBootAlarmService : Service() {
         try {
             wakeLock = pm?.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
-                "AlarmClockXtreme::DirectBootAlarmWakeLock"
+                "WakeSync::DirectBootAlarmWakeLock"
             )?.apply {
                 acquire(AUTO_STOP_MS)
             }

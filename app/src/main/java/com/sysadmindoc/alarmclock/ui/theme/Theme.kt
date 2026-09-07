@@ -179,7 +179,7 @@ fun WakeSyncTheme(
 }
 
 @Composable
-fun AlarmClockXtremeTheme(
+fun WakeSyncDefaultTheme(
     accentColorHex: String? = null,
     dynamicColor: Boolean = true,
     expressiveMode: Boolean = true,

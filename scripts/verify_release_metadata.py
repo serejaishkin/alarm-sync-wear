@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when tracked AlarmClockXtreme release declarations drift apart."""
+"""Fail when tracked WakeSync release declarations drift apart."""
 
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
 
     app_header = extract_one(
         app_gradle,
-        rf"^// AlarmClockXtreme v({VERSION_PATTERN})$",
+        rf"^// WakeSync v({VERSION_PATTERN})$",
         "app/build.gradle.kts header",
         re.MULTILINE,
     )
@@ -82,7 +82,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
     root_gradle = read_text(root, "build.gradle.kts")
     root_header = extract_one(
         root_gradle,
-        rf"^// AlarmClockXtreme v({VERSION_PATTERN})$",
+        rf"^// WakeSync v({VERSION_PATTERN})$",
         "build.gradle.kts header",
         re.MULTILINE,
     )
@@ -114,7 +114,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
     )
     expect("README.md version badge", badge_version, version_name)
     artifact_versions = re.findall(
-        rf"AlarmClockXtreme-v({VERSION_PATTERN})-play-release\.apk", readme
+        rf"WakeSync-v({VERSION_PATTERN})-play-release\.apk", readme
     )
     if not artifact_versions:
         errors.append("README.md: no Play release artifact filename found")

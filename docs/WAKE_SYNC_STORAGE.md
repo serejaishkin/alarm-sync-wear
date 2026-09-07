@@ -12,7 +12,7 @@ WakeSync uses a separate `alarm_sync_metadata` table:
 - `updatedAt` — timestamp used as a deterministic tie-breaker;
 - `updatedBy` — source device identifier.
 
-This avoids changing the existing Alarm primary key and keeps the AlarmClockXtreme scheduling code compatible.
+This avoids changing the existing Alarm primary key and keeps the WakeSync scheduling code compatible.
 
 ## Migration plan
 

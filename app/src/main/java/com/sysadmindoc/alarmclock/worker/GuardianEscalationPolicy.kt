@@ -54,7 +54,7 @@ internal object GuardianEscalationPolicy {
     }
 
     fun buildMessage(label: String): String =
-        "AlarmClockXtreme Guardian Alert: $label was not dismissed. Please check on the user."
+        "WakeSync Guardian Alert: $label was not dismissed. Please check on the user."
 
     /**
      * Keep only characters that are safe in tel:/smsto: targets. Returns null

@@ -96,8 +96,8 @@ class WearAlarmFeedbackService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
-            .setContentTitle("Будильник")
-            .setContentText(label.ifBlank { "Время вставать" })
+            .setContentTitle(getString(R.string.wear_notification_title))
+            .setContentText(label.ifBlank { getString(R.string.wear_notification_text_default) })
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setFullScreenIntent(fullScreenPendingIntent, true)
@@ -112,10 +112,10 @@ class WearAlarmFeedbackService : Service() {
         if (Build.VERSION.SDK_INT >= 26) {
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Будильник", NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationChannel(CHANNEL_ID, getString(R.string.wear_channel_name), NotificationManager.IMPORTANCE_HIGH).apply {
                     setSound(null, null)
                     enableVibration(false)
-                    description = "Служебное уведомление активного будильника"
+                    description = getString(R.string.wear_channel_description)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 }
             )

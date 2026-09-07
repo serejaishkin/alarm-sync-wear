@@ -5,11 +5,11 @@ SourceCode: https://github.com/serejaishkin/alarm-sync-wear
 IssueTracker: https://github.com/serejaishkin/alarm-sync-wear/issues
 Changelog: https://github.com/serejaishkin/alarm-sync-wear/blob/main/CHANGELOG.md
 
-AutoName: AlarmClockXtreme
+AutoName: WakeSync
 Summary: Feature-rich alarm clock with challenges, weather, and bedtime tools
 
 Description: |-
-  AlarmClockXtreme is a privacy-first, open-source alarm clock designed to
+  WakeSync is a privacy-first, open-source alarm clock designed to
   actually get you out of bed. Features include 30 dismiss challenges,
   exact alarms, weather and public-holiday context, calendar-assisted alarms,
   bedtime tools, timer, stopwatch, widgets, local statistics, and full

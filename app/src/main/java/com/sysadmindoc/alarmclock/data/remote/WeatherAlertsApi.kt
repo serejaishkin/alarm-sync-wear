@@ -27,7 +27,7 @@ interface WeatherAlertsApi {
         @Query("status") status: String = "actual",
         @Query("urgency") urgency: String = "Immediate,Expected",
         @Header("User-Agent") userAgent: String =
-            "AlarmClockXtreme (github.com/SysAdminDoc/AlarmClockXtreme)",
+            "WakeSync (github.com/serejaishkin/alarm-sync-wear)",
         @Header("Accept") accept: String = "application/geo+json",
     ): NwsAlertsResponse
 }

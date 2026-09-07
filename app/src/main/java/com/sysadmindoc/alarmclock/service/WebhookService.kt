@@ -260,8 +260,8 @@ class WebhookService @Inject constructor(
             timestampEpochSeconds = timestampEpochSeconds,
             body = body
         )?.let { headers ->
-            builder.header("X-ACX-Timestamp", headers.timestamp)
-            builder.header("X-ACX-Signature", headers.signature)
+            builder.header("X-WakeSync-Timestamp", headers.timestamp)
+            builder.header("X-WakeSync-Signature", headers.signature)
         }
     }
 

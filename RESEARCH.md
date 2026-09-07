@@ -1,9 +1,9 @@
-# Research — AlarmClockXtreme
+# Research — WakeSync
 Date: 2026-07-22 — replaces all prior research.
 
 ## Executive Summary
 
-AlarmClockXtreme (v1.15.30, versionCode 132) is a local-first Android alarm /
+WakeSync (v1.15.30, versionCode 132) is a local-first Android alarm /
 bedtime / timer / wake-readiness suite whose strongest shape is a native
 `setAlarmClock()` engine with Direct Boot fallback, 30+ dismiss challenges,
 mission chaining, encrypted backup, a Play/F-Droid split, and a strict
@@ -50,7 +50,7 @@ per-manufacturer autostart/battery deep-links with post-OTA re-checks.
   fixes, label-synced alarms, ring-only-when-headset. Learn its narrow recovery
   fixes; avoid backup-format changes that break older exports.
 - **you-apps/ClockYou:** clean, fast clock UX with multi-select, numpad entry,
-  timezone auto-adjust, Fossify import. Learn nothing net-new here — ACX already
+  timezone auto-adjust, Fossify import. Learn nothing net-new here — WakeSync already
   ships multi-select (`ui/alarmlist/AlarmListScreen.kt`), numpad, timezone policy,
   and Fossify import.
 - **vicolo-dev/chrono:** date-range/every-N-day recurrence, ringtone shuffle /
@@ -61,7 +61,7 @@ per-manufacturer autostart/battery deep-links with post-OTA re-checks.
   L-A10) and snooze-to-specific-time. Learn scheduled snooze.
 - **Alarmy / Sleep as Android / Turbo Alarm (commercial):** paywall physical-
   activity missions, smart-light sunrise/dismiss, meditation, Wear complication
-  control, sleep-stage smart-wake. Keep ACX's shipped equivalents free; avoid
+  control, sleep-stage smart-wake. Keep WakeSync's shipped equivalents free; avoid
   their subscription model and the accessibility complaints their gated missions
   attract.
 - **Google Clock / Pixel:** watch-sync + screen-brightening Sunrise Alarm are now
@@ -128,7 +128,7 @@ per-manufacturer autostart/battery deep-links with post-OTA re-checks.
   `service/AlarmAudioRouting.shouldForceBuiltInSpeaker` forces the built-in
   speaker so a headset can't swallow the alarm. Source: Media3 1.9.
 - **Ring-only-when-headphones-connected** — directly contradicts the above
-  reliability guarantee (ACX intentionally forces the speaker so alarms can't be
+  reliability guarantee (WakeSync intentionally forces the speaker so alarms can't be
   silently swallowed); niche silent-partner use case not worth reversing it.
   Source: BlackyHawky #631.
 - **Power-off guard / accessibility anti-uninstall lock** — coercive, Play-policy

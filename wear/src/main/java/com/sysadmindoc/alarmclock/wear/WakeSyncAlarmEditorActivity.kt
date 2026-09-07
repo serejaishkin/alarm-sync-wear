@@ -22,7 +22,7 @@ import java.util.UUID
 class WakeSyncAlarmEditorActivity : Activity() {
     private var hourValue = 7
     private var minuteValue = 0
-    private var labelValue = "Будильник"
+    private var labelValue = ""
     private val repeatDays = mutableSetOf<Int>()
     private var snoozeMinutes = 10
     private var vibrationEnabled = true
@@ -39,6 +39,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        labelValue = getString(R.string.wear_default_label)
         loadExisting()
         buildUi()
     }
@@ -48,7 +49,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
         val alarm = WearAlarmListStore.load(this).firstOrNull { it.syncId == id } ?: return
         hourValue = alarm.hour.coerceIn(0, 23)
         minuteValue = alarm.minute.coerceIn(0, 59)
-        labelValue = alarm.label.ifBlank { "Будильник" }
+        labelValue = alarm.label.ifBlank { getString(R.string.wear_default_label) }
         repeatDays.clear()
         repeatDays.addAll(alarm.repeatDays)
         snoozeMinutes = alarm.snoozeDurationMinutes.coerceIn(1, 60)
@@ -82,7 +83,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
 
         // Title
         content.addView(TextView(this).apply {
-            text = if (syncId == null) "Новый будильник" else "Редактирование"
+            text = if (syncId == null) getString(R.string.wear_new_alarm_title) else getString(R.string.wear_editing_title)
             gravity = Gravity.CENTER
             WearUi.styleHeader(this@WakeSyncAlarmEditorActivity, this)
             setPadding(0, 0, 0, 12)
@@ -112,22 +113,22 @@ class WakeSyncAlarmEditorActivity : Activity() {
             setPadding(0, 8, 0, 0)
         }
 
-        adjustRow.addView(createStepButton("Часы -") {
+        adjustRow.addView(createStepButton(getString(R.string.wear_hours_minus)) {
             hourValue = if (hourValue <= 0) 23 else hourValue - 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 4 })
 
-        adjustRow.addView(createStepButton("Часы +") {
+        adjustRow.addView(createStepButton(getString(R.string.wear_hours_plus)) {
             hourValue = if (hourValue >= 23) 0 else hourValue + 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 8 })
 
-        adjustRow.addView(createStepButton("Мин -") {
+        adjustRow.addView(createStepButton(getString(R.string.wear_minutes_minus)) {
             minuteValue = if (minuteValue <= 0) 59 else minuteValue - 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 4 })
 
-        adjustRow.addView(createStepButton("Мин +") {
+        adjustRow.addView(createStepButton(getString(R.string.wear_minutes_plus)) {
             minuteValue = if (minuteValue >= 59) 0 else minuteValue + 1
             updateTimeText()
         }, LinearLayout.LayoutParams(0, -2, 1f))
@@ -137,7 +138,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
 
         // 2. Quick Label Selector
         content.addView(TextView(this).apply {
-            text = "Метка"
+            text = getString(R.string.wear_label)
             WearUi.styleSectionLabel(this@WakeSyncAlarmEditorActivity, this)
             setPadding(4, 0, 0, 4)
         })
@@ -155,7 +156,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        listOf("Утро", "Работа", "Подъём").forEach { chip ->
+        listOf(getString(R.string.wear_preset_morning), getString(R.string.wear_preset_work), getString(R.string.wear_preset_wake_up)).forEach { chip ->
             labelRow1.addView(createChipButton(chip) {
                 labelValue = chip
                 labelDisplay.text = labelValue
@@ -167,7 +168,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        listOf("Спорт", "Лекарства", "Событие").forEach { chip ->
+        listOf(getString(R.string.wear_preset_sport), getString(R.string.wear_preset_medicine), getString(R.string.wear_preset_event)).forEach { chip ->
             labelRow2.addView(createChipButton(chip) {
                 labelValue = chip
                 labelDisplay.text = labelValue
@@ -177,7 +178,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
 
         // 3. Repeat Days (Пн-Вс)
         content.addView(TextView(this).apply {
-            text = "Повтор дней"
+            text = getString(R.string.wear_repeat_days)
             WearUi.styleSectionLabel(this@WakeSyncAlarmEditorActivity, this)
             setPadding(4, 0, 0, 6)
         })
@@ -192,8 +193,10 @@ class WakeSyncAlarmEditorActivity : Activity() {
         }
 
         val dayLabels = listOf(
-            1 to "Пн", 2 to "Вт", 3 to "Ср", 4 to "Чт",
-            5 to "Пт", 6 to "Сб", 7 to "Вс"
+            1 to getString(R.string.wear_day_mon), 2 to getString(R.string.wear_day_tue),
+            3 to getString(R.string.wear_day_wed), 4 to getString(R.string.wear_day_thu),
+            5 to getString(R.string.wear_day_fri), 6 to getString(R.string.wear_day_sat),
+            7 to getString(R.string.wear_day_sun)
         )
         dayButtons.clear()
 
@@ -216,19 +219,19 @@ class WakeSyncAlarmEditorActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        presetsRow.addView(createChipButton("Будни") {
+        presetsRow.addView(createChipButton(getString(R.string.wear_preset_weekdays)) {
             repeatDays.clear()
             repeatDays.addAll(listOf(1, 2, 3, 4, 5))
             refreshDayButtons()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 4 })
 
-        presetsRow.addView(createChipButton("Все") {
+        presetsRow.addView(createChipButton(getString(R.string.wear_preset_all)) {
             repeatDays.clear()
             repeatDays.addAll(listOf(1, 2, 3, 4, 5, 6, 7))
             refreshDayButtons()
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 4 })
 
-        presetsRow.addView(createChipButton("Сброс") {
+        presetsRow.addView(createChipButton(getString(R.string.wear_preset_reset)) {
             repeatDays.clear()
             refreshDayButtons()
         }, LinearLayout.LayoutParams(0, -2, 1f))
@@ -245,13 +248,13 @@ class WakeSyncAlarmEditorActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         snoozeHeader.addView(TextView(this).apply {
-            text = "Отсрочка"
+            text = getString(R.string.wear_snooze)
             textSize = 12f
             setTextColor(WearUi.color(this@WakeSyncAlarmEditorActivity, R.color.text_secondary))
         }, LinearLayout.LayoutParams(0, -2, 1f))
 
         snoozeDisplay = TextView(this).apply {
-            text = "$snoozeMinutes мин"
+            text = getString(R.string.wear_value_min, snoozeMinutes)
             textSize = 13f
             setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD))
             setTextColor(WearUi.color(this@WakeSyncAlarmEditorActivity, R.color.text_primary))
@@ -264,14 +267,14 @@ class WakeSyncAlarmEditorActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(0, 6, 0, 0)
         }
-        snoozeAdjustRow.addView(createStepButton("- 5 мин") {
+        snoozeAdjustRow.addView(createStepButton(getString(R.string.wear_snooze_minus_5)) {
             snoozeMinutes = (snoozeMinutes - 5).coerceIn(5, 60)
-            snoozeDisplay.text = "$snoozeMinutes мин"
+            snoozeDisplay.text = getString(R.string.wear_value_min, snoozeMinutes)
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 6 })
 
-        snoozeAdjustRow.addView(createStepButton("+ 5 мин") {
+        snoozeAdjustRow.addView(createStepButton(getString(R.string.wear_snooze_plus_5)) {
             snoozeMinutes = (snoozeMinutes + 5).coerceIn(5, 60)
-            snoozeDisplay.text = "$snoozeMinutes мин"
+            snoozeDisplay.text = getString(R.string.wear_value_min, snoozeMinutes)
         }, LinearLayout.LayoutParams(0, -2, 1f))
         snoozeCard.addView(snoozeAdjustRow)
         content.addView(snoozeCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 10 })
@@ -299,7 +302,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         volumeHeader.addView(TextView(this).apply {
-            text = "Громкость"
+            text = getString(R.string.wear_volume)
             textSize = 12f
             setTextColor(WearUi.color(this@WakeSyncAlarmEditorActivity, R.color.text_secondary))
         }, LinearLayout.LayoutParams(0, -2, 1f))
@@ -332,7 +335,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
 
         // 6. Save Button
         val saveButton = Button(this).apply {
-            text = "Сохранить"
+            text = getString(R.string.wear_save)
             WearUi.styleActionButton(this@WakeSyncAlarmEditorActivity, this, R.color.dismiss_green)
             setOnClickListener { saveAlarm() }
         }
@@ -348,7 +351,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
     }
 
     private fun updateVibrationButtonText() {
-        vibrationButton.text = if (vibrationEnabled) "Вибрация: ВКЛ" else "Вибрация: ВЫКЛ"
+        vibrationButton.text = if (vibrationEnabled) getString(R.string.wear_vibration_on) else getString(R.string.wear_vibration_off)
         val colorRes = if (vibrationEnabled) R.color.dismiss_green else R.color.text_muted
         WearUi.styleActionButton(this, vibrationButton, colorRes)
     }
@@ -423,7 +426,7 @@ class WakeSyncAlarmEditorActivity : Activity() {
         WakeSyncPeerController.sendAlarmMutation(this, entry, operation)
         Toast.makeText(
             this,
-            if (existing == null) "Будильник сохранён" else "Будильник обновлён",
+            if (existing == null) getString(R.string.wear_alarm_saved) else getString(R.string.wear_alarm_updated),
             Toast.LENGTH_SHORT
         ).show()
         finish()

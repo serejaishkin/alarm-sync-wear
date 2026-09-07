@@ -335,7 +335,7 @@ object SupportDiagnosticsFormatter {
     ): String {
         val nextTrigger = nextTriggerTime?.takeIf { it > 0L }?.let(::formatEpochMillis) ?: "none"
         return buildString {
-            appendLine("AlarmClockXtreme support diagnostics")
+            appendLine("WakeSync support diagnostics")
             appendLine("Generated: ${generatedAt}")
             appendLine()
             appendLine("App")

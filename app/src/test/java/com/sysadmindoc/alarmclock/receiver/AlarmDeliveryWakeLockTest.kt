@@ -20,7 +20,7 @@ class AlarmDeliveryWakeLockTest {
         every {
             powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
-                "AlarmClockXtreme::AlarmDeliveryWakeLock"
+                "WakeSync::AlarmDeliveryWakeLock"
             )
         } returns wakeLock
         every { wakeLock.setReferenceCounted(false) } just runs

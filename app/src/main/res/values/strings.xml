@@ -813,7 +813,7 @@
     <string name="settings_license">License</string>
     <string name="settings_license_value">Apache License 2.0</string>
     <string name="settings_source">Source</string>
-    <string name="settings_source_value" translatable="false">github.com/SysAdminDoc/AlarmClockXtreme</string>
+    <string name="settings_source_value" translatable="false">github.com/serejaishkin/alarm-sync-wear</string>
 
     <!-- Settings readiness, diagnostics, pause, and vacation -->
     <string name="settings_diagnostics">Alarm diagnostics</string>
@@ -873,7 +873,7 @@
     <string name="settings_on_call_mode_description">Use this with a rotating shift pattern when an on-call alarm must break total-silence Do Not Disturb.</string>
     <string name="settings_on_call_mode_toggle_description">Temporarily changes total silence to Alarms-only while this device is ringing, then restores your previous DND choice.</string>
     <string name="settings_on_call_access_needed">DND access needed</string>
-    <string name="settings_on_call_access_description">Grant notification policy access so ACX can move total silence to Alarms-only only for the on-call ring.</string>
+    <string name="settings_on_call_access_description">Grant notification policy access so WakeSync can move total silence to Alarms-only only for the on-call ring.</string>
     <string name="settings_standby_bucket">App Standby bucket</string>
     <string name="settings_guardian_escalation">Guardian Angel escalation</string>
     <string name="settings_standby_unknown">Standby bucket unknown on this device.</string>
@@ -975,7 +975,7 @@
     <string name="settings_hue_legacy_description">Off by default. Enable only for an older bridge that cannot use encrypted API v2.</string>
     <string name="settings_hue_cert_pinned">Bridge certificate pinned</string>
     <string name="settings_forget">Forget</string>
-    <string name="settings_hue_network_description">Android 17+ requires local network access before ACX can reach this Hue bridge.</string>
+    <string name="settings_hue_network_description">Android 17+ requires local network access before WakeSync can reach this Hue bridge.</string>
     <string name="settings_hue_test_description">Run a quick bridge check once the IP and API key are in place.</string>
     <string name="settings_hue_forget_title">Forget Hue certificate?</string>
     <string name="settings_hue_forget_message">Only continue after verifying the bridge was replaced or its certificate changed. The next successful encrypted connection will trust and save a new certificate.</string>
@@ -1267,4 +1267,29 @@
     <string name="notif_channel_bedtime_countdown_desc">Shows the final-hour countdown before the bedtime reminder</string>
     <string name="notif_channel_snooze_countdown">Snooze Countdown</string>
     <string name="notif_channel_snooze_countdown_desc">Shows the time until a snoozed alarm rings again</string>
+    <string name="wakesync_alarms_title">Alarms</string>
+    <string name="wakesync_your_alarms">Your alarms</string>
+    <string name="wakesync_next_alarm">Next alarm</string>
+    <string name="wakesync_today">Today</string>
+    <string name="wakesync_tomorrow">Tomorrow</string>
+    <string name="wakesync_no_next_alarm">No alarm scheduled</string>
+    <string name="wakesync_tap_to_create">Tap to create an alarm</string>
+    <string name="wakesync_no_alarms">No alarms yet</string>
+    <string name="wakesync_create_alarm">Create alarm</string>
+    <string name="wakesync_add_alarm">Add alarm</string>
+    <string name="wakesync_personalization">Personalization</string>
+    <string name="wakesync_sleep_mode">Sleep mode</string>
+    <string name="wakesync_sleep_mode_subtitle">Bedtime, sleep schedule and night settings</string>
+    <string name="wakesync_more">More</string>
+    <string name="wakesync_edit">Edit</string>
+    <string name="wakesync_duplicate">Duplicate</string>
+    <string name="wakesync_delete">Delete</string>
+    <string name="wakesync_sync_active">Wear OS Sync Active</string>
+    <string name="wakesync_synced_badge">Synced to Watch</string>
+    <string name="wakesync_device_pair">Phone ⇄ Watch</string>
+
+    <string name="nav_alarms">Alarms</string>
+    <string name="nav_timer">Timer</string>
+    <string name="nav_settings">Settings</string>
+
 </resources>

@@ -6,7 +6,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 
 /**
- * Google Routes API v2 transit endpoint. ACX only calls this when the user
+ * Google Routes API v2 transit endpoint. WakeSync only calls this when the user
  * supplies their own API key; commute-aware alarms otherwise use the no-key
  * weather fallback.
  */

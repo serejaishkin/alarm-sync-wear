@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to AlarmClockXtreme will be documented in this file.
+All notable changes to WakeSync will be documented in this file.
 
 ## [Unreleased]
 
@@ -50,7 +50,7 @@ All notable changes to AlarmClockXtreme will be documented in this file.
   alarm receiver-to-foreground-service handoffs, covering OEM Doze delays without
   extending receiver work or holding a long-lived delivery lock.
 - Audited the Android 16 Pixel “missed alarm — unknown reason” report against
-  the current QPR notes. ACX now promotes the alarm foreground service
+  the current QPR notes. WakeSync now promotes the alarm foreground service
   synchronously, bridges cold-start delivery with a bounded wake lock, and has a
   post-fire watchdog; Pixel/QPR device confirmation remains external.
 - Revalidated partial wake-lock use against Play's excessive-wake-lock metric:
@@ -610,8 +610,8 @@ plus the core alarm and firing paths.
 
 ### Added
 
-- Added optional webhook HMAC signing with `X-ACX-Timestamp` and
-  `X-ACX-Signature` headers, recent delivery status in Settings, and backup
+- Added optional webhook HMAC signing with `X-WakeSync-Timestamp` and
+  `X-WakeSync-Signature` headers, recent delivery status in Settings, and backup
   v14 round-trip/export-warning coverage for the signing secret.
 - Added backup import preview with compatibility, alarm counts, private-value
   disclosure, and append/replace/import-disabled restore choices before any
@@ -865,7 +865,7 @@ plus the core alarm and firing paths.
 - yt-dlp engine minimum safe version gate added (`2026.06.09`). The
   bundled yt-dlp binary in youtubedl-android 0.18.1 predates fixes for
   CVE-2026-50574, CVE-2026-50023, CVE-2026-50019, and CVE-2026-26331.
-  ACX mitigates all four CVEs at the application level (`--get-url` only,
+  WakeSync mitigates all four CVEs at the application level (`--get-url` only,
   no file-write/aria2c/netrc/curl paths), but the engine version is now
   flagged in support diagnostics and users are encouraged to update.
 - Backup settings drift test updated for `bedtimeStayUpLateUntilMillis`
@@ -895,7 +895,7 @@ plus the core alarm and firing paths.
   for ALARM_FIRED, ALARM_SNOOZED, ALARM_DISMISSED, ALARM_MISSED enable
   local automation via Tasker, Home Assistant Companion, and MacroDroid
   without network overhead.
-- Google Assistant alarm intent provider: ACX now handles SET_ALARM,
+- Google Assistant alarm intent provider: WakeSync now handles SET_ALARM,
   DISMISS_ALARM, SNOOZE_ALARM, SET_TIMER, and SHOW_ALARMS intents so
   voice commands route to the app when set as default clock.
 
@@ -1354,7 +1354,7 @@ backup format v11 (DB v15).
 - Upgraded Play-flavor NewPipe Extractor from `v0.24.8` to `v0.26.3` so the
   in-app YouTube alarm-sound search stays on the current parser line with the
   latest 0.26.x YouTube integrity handling.
-- Documented why the yt-dlp `--netrc-cmd` CVE path is not reachable from ACX's
+- Documented why the yt-dlp `--netrc-cmd` CVE path is not reachable from WakeSync's
   fixed downloader option allow-list and tightened YouTube URL validation
   against whitespace option suffixes.
 - Added a manual Play-flavor yt-dlp engine update action to the YouTube alarm
@@ -1437,7 +1437,7 @@ backup format v11 (DB v15).
 - Alarm edit now warns when NFC, barcode, Wi-Fi, or photo-match challenges
   are selected without the required reference data, and surfaces the Wi-Fi SSID
   field directly in the challenge section instead of only in Advanced.
-- Assessed yt-dlp GHSA-69qj-pvh9-c5wg (`--exec` command injection): ACX is
+- Assessed yt-dlp GHSA-69qj-pvh9-c5wg (`--exec` command injection): WakeSync is
   not affected because it only uses `--get-url` with a fixed option allow-list.
 - Assessed Android 17 background-audio exemption: all AlarmService audio paths
   use USAGE_ALARM exclusively and are exempt; no code changes needed for the
@@ -2218,7 +2218,7 @@ permissions.
   install command, and Wear module version synced.
 - No new permissions: `TelephonyCallback.CallStateListener` and the
   legacy `PhoneStateListener.onCallStateChanged` only need
-  `READ_PHONE_STATE` to read the incoming phone number, which ACX never
+  `READ_PHONE_STATE` to read the incoming phone number, which WakeSync never
   reads.
 
 ## [1.11.1] - 2026-05-16
@@ -3538,7 +3538,7 @@ testability, deprecation cleanup, and one small honesty UX fix.
 - `testPlayDebugUnitTest` — all tests green, 15 new unit tests added
   (9 for MissedAlarmReplayPolicy + 6 for ProximityCoverDetector)
 - `assemblePlayRelease` — green; signed APK in
-  `releases/AlarmClockXtreme-1.5.2-play-release.apk`
+  `releases/WakeSync-1.5.2-play-release.apk`
 
 ## [1.5.1] - 2026-04-18
 
@@ -4245,7 +4245,7 @@ Android, BlackyHawky Clock, Fossify Clock, Google Clock, Turbo Alarm)
 <summary>Original roadmap snapshot</summary>
 
 ```markdown
-# AlarmClockXtreme Roadmap
+# WakeSync Roadmap
 
 Living feature backlog. Blocked items live in
 [Roadmap_Blocked.md](Roadmap_Blocked.md). Completed work lives in git history
@@ -4435,7 +4435,7 @@ Items that need scoping or platform readiness before they earn a tier.
 | Item | Blocker / scoping question |
 |------|---------------------------|
 | Android Auto in-car alarm pop-up handler | Wait for Android Auto 16.8 stable release + AAOS API documentation. Currently leaked only via beta teardowns. ([autoevolution](https://www.autoevolution.com/news/android-auto-is-getting-the-feature-users-first-asked-for-10-years-ago-269408.html)) |
-| iOS-26 AlarmKit UX pattern adoption (full-screen snooze/stop visuals, App-Intent secondary action) | Study-only — App Intents are iOS-only; port the platform-neutral visual + interaction patterns to ACX firing screen. ([Apple AlarmKit](https://developer.apple.com/documentation/AlarmKit)) |
+| iOS-26 AlarmKit UX pattern adoption (full-screen snooze/stop visuals, App-Intent secondary action) | Study-only — App Intents are iOS-only; port the platform-neutral visual + interaction patterns to WakeSync firing screen. ([Apple AlarmKit](https://developer.apple.com/documentation/AlarmKit)) |
 | Tasker / MacroDroid plugin (true plugin, not just webhook) | Adds API surface to maintain; webhook covers most users. ([Tasker plugin intro](https://tasker.joaoapps.com/plugins-intro.html)) |
 | Wear OS standalone app (L-W4) | Build-time, signing, separate Play track; revisit after X1 (complication) proves demand. |
 | Cloud LLM sleep-coach | Out of bounds — privacy stance forbids. Local LLM (L-S9) only. |
@@ -4463,14 +4463,14 @@ Items that need scoping or platform readiness before they earn a tier.
 
 ### Platform compatibility
 
-- **`USE_EXACT_ALARM` (install-time grant) instead of `SCHEDULE_EXACT_ALARM` (runtime).** ACX is alarm-clock-category — verify manifest each release. ([FossifyOrg/Calendar #217](https://github.com/FossifyOrg/Calendar/issues/217))
+- **`USE_EXACT_ALARM` (install-time grant) instead of `SCHEDULE_EXACT_ALARM` (runtime).** WakeSync is alarm-clock-category — verify manifest each release. ([FossifyOrg/Calendar #217](https://github.com/FossifyOrg/Calendar/issues/217))
 - **Try-catch every `AlarmManager.set*` call.** `setInexactAllowWhileIdle` can still throw if the device's exact-alarm fallback path engages. ([flutter_local_notifications #2248](https://github.com/MaikuB/flutter_local_notifications/issues/2248))
 - **Android 15 short-type FGS auto-timeout (3 min cap).** Stay on `mediaPlayback` type, do NOT migrate to `shortService`. ([Android 15 behavior changes](https://developer.android.com/about/versions/15/behavior-changes-15))
 - **Doze defers even `setAlarmClock()` 1-2 min on Redmi/Samsung.** Pair with a 10-15 s `PARTIAL_WAKE_LOCK` in `onReceive`; keep within ANR ceiling. ([Optimize for Doze and App Standby](https://developer.android.com/training/monitoring-device-state/doze-standby))
 - **`setAlarmClock()` always shows status-bar icon.** Already mitigated with a settings toggle that falls back to `setExactAndAllowWhileIdle` (with disclaimer); keep the toggle in the UI.
 - **`READ_CALENDAR` runtime denial.** `CalendarAutoAlarmWorker` must early-return on denial. Verify each release.
 - **`Configuration.Provider` + manifest initializer removal.** WorkManager + Hilt regression vector; CI check exists, keep it.
-- **Android 16 "missed alarm — unknown reason" notification regression on Pixel.** Track the QPR fix and confirm ACX's foreground-service start path is not the cause. ([Android Police Pixel alarm bug](https://www.androidpolice.com/pixel-alarm-bug-is-back/))
+- **Android 16 "missed alarm — unknown reason" notification regression on Pixel.** Track the QPR fix and confirm WakeSync's foreground-service start path is not the cause. ([Android Police Pixel alarm bug](https://www.androidpolice.com/pixel-alarm-bug-is-back/))
 - **Play wake-lock policy (March 2026).** N4 covers the audit; keep the wake-lock acquisition window inside the 2 h / 24 h non-exempt budget. ([9to5Google March 2026](https://9to5google.com/2026/03/05/google-starts-calling-out-android-apps-that-drain-your-battery-before-you-download-them/))
 
 ### Security / privacy
@@ -4543,7 +4543,7 @@ Items that need scoping or platform readiness before they earn a tier.
 
 ### Commercial reference
 
-- **Alarmy** — https://alar.my/en/blog/alarmy-wake-up-mission — Multiple Mission feature is parity for our Mission Chain. Photo, Math, Shake, Barcode/QR, Memory, Typing, Steps, Squats (premium). Wake-Up Check feature is paywalled — ACX matches free via existing F5 / N1.
+- **Alarmy** — https://alar.my/en/blog/alarmy-wake-up-mission — Multiple Mission feature is parity for our Mission Chain. Photo, Math, Shake, Barcode/QR, Memory, Typing, Steps, Squats (premium). Wake-Up Check feature is paywalled — WakeSync matches free via existing F5 / N1.
 - **Sleep as Android** — https://sleep.urbandroid.org/documentation/release-notes/ — 2025 additions: Google Home API (BETA), AI Sleep Assistant (BETA), HRV gain cards, dashboard redesign, wake-up-check automation, Lullabies addon. AI sound detection: https://sleep.urbandroid.org/new-sleep-sound-detection/
 - **Sleep Cycle** — https://sleepcycle.com/sleep-talk/smart-alarm-now-available-in-the-sleep-cycle-sdk — 2026 SDK release; phone mic + accelerometer detects sleep stages and fires alarm in lightest phase within wake window. Algorithm reference for smart-wake logic.
 - **Rise** — https://www.risescience.com/ — sleep-debt accumulator + composite score reference for X4 / X5.
@@ -4725,7 +4725,7 @@ and Roadmap_Blocked item. Full evidence in RESEARCH.md.
   Why: the Media3 ring path has no stall/timeout detection, so a stalled ring
   relies only on the delayed backup-sound escalation to recover.
   Evidence: Media3 1.9 `StuckPlayerException` + stalled-ready timeouts
-  (developer.android.com/jetpack/androidx/releases/media3); ACX on Media3 1.10.1.
+  (developer.android.com/jetpack/androidx/releases/media3); WakeSync on Media3 1.10.1.
   Touches: `service/AlarmService.kt` audio path, `service/AlarmAudioRouting.kt`.
   Acceptance: a stalled/failed player is detected within a bounded window and
   escalates immediately (built-in speaker + max volume, then legacy fallback)
@@ -4743,7 +4743,7 @@ and Roadmap_Blocked item. Full evidence in RESEARCH.md.
   Complexity: M.
 
 - [ ] P2 — Extend Live Updates (ProgressStyle) to the snooze countdown
-  Why: ACX already uses Android 16 `Notification.ProgressStyle` for the bedtime
+  Why: WakeSync already uses Android 16 `Notification.ProgressStyle` for the bedtime
   countdown only; the snooze interval is an ideal second start-to-end journey.
   Evidence: developer.android.com/about/versions/16/features/progress-centric-notifications.
   Touches: snooze notification path in `service/AlarmService.kt`, notification builders.
@@ -4752,7 +4752,7 @@ and Roadmap_Blocked item. Full evidence in RESEARCH.md.
   Complexity: M.
 
 - [ ] P2 — OEM reliability doctor (per-manufacturer deep-links + post-OTA re-check)
-  Why: OEM Doze/autostart kills are the #1 real-world missed-alarm cause; ACX
+  Why: OEM Doze/autostart kills are the #1 real-world missed-alarm cause; WakeSync
   surfaces wake-readiness but not per-OEM autostart/battery deep-links or a
   re-prompt after an OTA silently resets permissions.
   Evidence: dontkillmyapp.com; github.com/WrichikBasu/ShakeAlarmClock/discussions/61.

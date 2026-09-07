@@ -46,7 +46,7 @@ object BedtimeZenRuleManager {
     private const val PREFS_NAME = "bedtime_zen_rule_state"
     private const val KEY_RULE_ID = "rule_id"
     private const val KEY_LAST_CONDITION_ID = "last_condition_id"
-    private const val RULE_NAME = "AlarmClockXtreme Bedtime DND"
+    private const val RULE_NAME = "WakeSync Bedtime DND"
     private const val CONDITION_PATH = "bedtime"
     private const val PARAM_START = "start"
     private const val PARAM_END = "end"

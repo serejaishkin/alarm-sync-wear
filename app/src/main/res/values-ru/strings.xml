@@ -696,6 +696,7 @@
     <string name="settings_readiness_fullscreen">полноэкранный доступ</string>
     <string name="settings_readiness_lan">доступ к LAN</string>
     <string name="settings_readiness_standby">фоновая активность</string>
+    <string name="settings_readiness_standby_bucket">категория ожидания</string>
     <string name="settings_readiness_ready">Точные будильники, уведомления и %1$s готовы</string>
     <string name="settings_readiness_review">Проверить %1$s</string>
     <string name="settings_recently">недавно</string>
@@ -750,7 +751,7 @@
     <string name="settings_allow_local_network">Разрешить локальную сеть</string>
     <string name="settings_on_call_mode_description">Используйте это со сменным графиком, когда будильник дежурства должен прерывать полную тишину «Не беспокоить».</string>
     <string name="settings_on_call_mode_toggle_description">Временно меняет полную тишину на «Только будильники», пока это устройство звонит, затем восстанавливает ваш предыдущий выбор DND.</string>
-    <string name="settings_on_call_access_description">Предоставьте доступ к политике уведомлений, чтобы ACX мог переключать полную тишину на «Только будильники» только для звонка дежурства.</string>
+    <string name="settings_on_call_access_description">Предоставьте доступ к политике уведомлений, чтобы WakeSync мог переключать полную тишину на «Только будильники» только для звонка дежурства.</string>
     <string name="settings_guardian_escalation">Эскалация Guardian Angel</string>
     <string name="settings_standby_unknown">Ковёр ожидания неизвестен на этом устройстве.</string>
     <string name="settings_standby_active">Активный — будильники планируются без дросселирования.</string>
@@ -798,7 +799,7 @@
     <string name="settings_hue_legacy">Разрешить устаревший API Hue v1 по HTTP</string>
     <string name="settings_hue_legacy_description">По умолчанию выключено. Включайте только для старого моста, который не может использовать зашифрованный API v2.</string>
     <string name="settings_hue_cert_pinned">Сертификат моста закреплён</string>
-    <string name="settings_hue_network_description">Android 17+ требует доступа к локальной сети, прежде чем ACX сможет достичь этот мост Hue.</string>
+    <string name="settings_hue_network_description">Android 17+ требует доступа к локальной сети, прежде чем WakeSync сможет достичь этот мост Hue.</string>
     <string name="settings_hue_test_description">Запустите быструю проверку моста, когда IP и ключ API на месте.</string>
     <string name="settings_hue_forget_title">Забыть сертификат Hue?</string>
     <string name="settings_hue_forget_message">Продолжайте только после проверки того, что мост был заменён или его сертификат изменился. Следующее успешное зашифрованное соединение будет доверять и сохранять новый сертификат.</string>
@@ -897,4 +898,356 @@
     <string name="notif_channel_bedtime_countdown_desc">Показывает последний час до напоминания о сне</string>
     <string name="notif_channel_snooze_countdown">Обратный отсчёт отсрочки</string>
     <string name="notif_channel_snooze_countdown_desc">Показывает время до повторного срабатывания отложенного будильника</string>
+
+    <!-- direct_boot -->
+    <string name="direct_boot_alarm_message">Устройство всё ещё заблокировано после перезагрузки. Остановите этот запасной будильник, затем разблокируйте для полного управления.</string>
+
+    <!-- firing challenge summaries: titles, support, status -->
+    <string name="firing_challenge_none_title">Будильник готов</string>
+    <string name="firing_challenge_none_support">Для этого будильника дополнительное задание не требуется.</string>
+    <string name="firing_challenge_none_status">Проведите или нажмите «Отключить», когда будете готовы.</string>
+    <string name="firing_challenge_math_title">Решите последнюю задачу</string>
+    <string name="firing_challenge_math_support">Быстрая проверка перед тем, как можно будет отключить будильник.</string>
+    <string name="firing_challenge_math_status">Решите задачу ниже, чтобы разблокировать отключение.</string>
+    <string name="firing_challenge_shake_title">Встряхните телефон, чтобы полностью проснуться</string>
+    <string name="firing_challenge_shake_support">Физическое движение помогает выключить автопилот сонливости.</string>
+    <string name="firing_challenge_shake_status">Продолжайте трясти, пока не наберёте нужное количество.</string>
+    <string name="firing_challenge_sequence_title">Завершите числовую последовательность</string>
+    <string name="firing_challenge_sequence_support">Нажимайте по порядку, не теряя место.</string>
+    <string name="firing_challenge_sequence_status">Нажимайте числа по возрастанию.</string>
+    <string name="firing_challenge_memory_title">Повторите последовательность</string>
+    <string name="firing_challenge_memory_support">Посмотрите на плитки, затем повторите их точно.</string>
+    <string name="firing_challenge_memory_status">Сначала запомните, затем повторите последовательность.</string>
+    <string name="firing_challenge_typing_title">Введите фразу пробуждения</string>
+    <string name="firing_challenge_typing_support">Ввод фразы подтверждает, что вы достаточно бодрствуете.</string>
+    <string name="firing_challenge_typing_status">Введите полную фразу точно как показано.</string>
+    <string name="firing_challenge_voice_title">Произнесите фразу пробуждения</string>
+    <string name="firing_challenge_voice_support">Произнесение фразы добавляет голосовую проверку пробуждения.</string>
+    <string name="firing_challenge_voice_status">Произнесите показанную фразу или используйте ввод текста.</string>
+    <string name="firing_challenge_handwriting_title">Нарисуйте слово пробуждения</string>
+    <string name="firing_challenge_handwriting_support">Написание слова активирует мозг и руки для пробуждения.</string>
+    <string name="firing_challenge_handwriting_status">Нарисуйте показанное слово или используйте ввод текста.</string>
+    <string name="firing_challenge_walk_title">Пройдитесь</string>
+    <string name="firing_challenge_walk_support">Несколько шагов создают достаточно движения для правильного пробуждения.</string>
+    <string name="firing_challenge_walk_status">Пройдите нужное количество шагов, чтобы доказать, что вы проснулись.</string>
+    <string name="firing_challenge_nfc_title">Приложите зарегистрированную NFC-метку</string>
+    <string name="firing_challenge_nfc_support">Используйте метку, которую вы сохранили для этого будильника.</string>
+    <string name="firing_challenge_nfc_status">Приложите сохранённую NFC-метку для продолжения.</string>
+    <string name="firing_challenge_barcode_title">Сканируйте зарегистрированный код</string>
+    <string name="firing_challenge_barcode_support">Сканируйте код, привязанный к этому утреннему ритуалу.</string>
+    <string name="firing_challenge_barcode_status">Сканируйте сохранённый штрихкод или QR-код.</string>
+    <string name="firing_challenge_photo_title">Совпадите с эталонным фото</string>
+    <string name="firing_challenge_photo_support">Сделайте свежее фото, максимально похожее на сохранённый образец.</string>
+    <string name="firing_challenge_photo_status">Сделайте совпадающее фото для завершения шага.</string>
+    <string name="firing_challenge_squat_title">Выполните проверку运动</string>
+    <string name="firing_challenge_squat_support">Короткое физическое задание помогает реально начать двигаться.</string>
+    <string name="firing_challenge_squat_status">Выполните нужное количество приседаний.</string>
+    <string name="firing_challenge_pushup_title">Сделайте отжимания</string>
+    <string name="firing_challenge_pushup_support">Отжимания заставляют верхнюю часть тела работать, снимая сонливость.</string>
+    <string name="firing_challenge_pushup_status">Выполните нужное количество отжиманий с телефоном на полу.</string>
+    <string name="firing_challenge_plank_title">Держите планку</string>
+    <string name="firing_challenge_plank_support">Удержание позиции доказывает, что вы проснулись и контролируете ситуацию.</string>
+    <string name="firing_challenge_plank_status">Держите телефон горизонтально в позиции планки нужное время.</string>
+    <string name="firing_challenge_maze_title">Выйдите из лабиринта</string>
+    <string name="firing_challenge_maze_support">Сосредоточьтесь и дойдите до выхода.</string>
+    <string name="firing_challenge_maze_status">Найдите выход, не задевая стены.</string>
+    <string name="firing_challenge_wifi_title">Подключитесь к нужной сети</string>
+    <string name="firing_challenge_wifi_support">Будильник отключится, как только вы подключитесь к нужной сети.</string>
+    <string name="firing_challenge_wifi_status">Подключитесь к необходимой сети Wi-Fi.</string>
+    <string name="firing_challenge_sheep_title">Считайте овец</string>
+    <string name="firing_challenge_sheep_support">Лёгкое задание на внимание — нажимайте только на овец.</string>
+    <string name="firing_challenge_sheep_status">Нажимайте на всех овец; избегайте коз.</string>
+    <string name="firing_challenge_simon_title">Повторите последовательность</string>
+    <string name="firing_challenge_simon_support">Посмотрите на четырёхцветную последовательность, затем повторите её по порядку.</string>
+    <string name="firing_challenge_simon_status">Дождитесь воспроизведения, затем нажимайте на плитки по порядку.</string>
+    <string name="firing_challenge_date_title">Введите дату наоборот</string>
+    <string name="firing_challenge_date_support">Чтение + ввод — когнитивный барьер, который сложно преодолеть полусонным.</string>
+    <string name="firing_challenge_date_status">Введите сегодняшнюю дату в обратном порядке точно.</string>
+    <string name="firing_challenge_stroop_title">Нажмите цвет чернил</string>
+    <string name="firing_challenge_stroop_support">Классический тест Струпа — выберите цвет, а не слово.</string>
+    <string name="firing_challenge_stroop_status">Нажмите цвет, которым написано слово.</string>
+    <string name="firing_challenge_rps_title">Выиграйте в камень-ножницы-бумага</string>
+    <string name="firing_challenge_rps_support">Игра из 5 раундов против компьютера — первый до 3 побед.</string>
+    <string name="firing_challenge_rps_status">Выиграйте 3 раунда, чтобы отключить будильник.</string>
+    <string name="firing_challenge_emoji_title">Найдите пары эмодзи</string>
+    <string name="firing_challenge_emoji_support">Запомните 8 пар, пока они открыты, затем найдите все.</string>
+    <string name="firing_challenge_emoji_status">Переворачивайте пары совпадающих эмодзи, пока не найдёте все.</string>
+    <string name="firing_challenge_speed_title">Печатайте на скорость</string>
+    <string name="firing_challenge_speed_support">Замедленные от сонливости пальцы — докажите, что можете печатать быстро.</string>
+    <string name="firing_challenge_speed_status">Введите фразу быстро и точно для продолжения.</string>
+    <string name="firing_challenge_wordle_title">Решите Wordle</string>
+    <string name="firing_challenge_wordle_support">Найдите спрятанное 5-буквенное слово за 6 попыток.</string>
+    <string name="firing_challenge_wordle_status">Введите 5-буквенное слово и используйте подсказки по цвету.</string>
+    <string name="firing_challenge_pvt_title">Отреагируйте на стимул</string>
+    <string name="firing_challenge_pvt_support">Быстро нажимайте на mục tiêu, как только он появится — в среднем менее 500 мс.</string>
+    <string name="firing_challenge_pvt_status">Нажимайте на зелёный квадрат как можно быстрее.</string>
+    <string name="firing_challenge_difference_title">Найдите отличие</string>
+    <string name="firing_challenge_difference_support">Сравните обе сетки и нажмите на единственную изменившуюся плитку.</string>
+    <string name="firing_challenge_difference_status">Нажмите на изменившуюся плитку в правой сетке.</string>
+    <string name="firing_challenge_chess_title">Найдите мат в один ход</string>
+    <string name="firing_challenge_chess_support">Выберите ход для мата из небольшой позиции.</string>
+    <string name="firing_challenge_chess_status">Выберите ход для мата в один.</string>
+    <string name="firing_challenge_rsvp_title">Чтение на скорость</string>
+    <string name="firing_challenge_rsvp_support">Прочитайте быстрый поток слов, затем определите увиденное слово.</string>
+    <string name="firing_challenge_rsvp_status">Следите за словами, затем выберите запомненное слово.</string>
+
+    <!-- alarm editor: photo, background, location, discard -->
+    <string name="alarm_edit_photo_none_captured">Эталонное фото не сделано.</string>
+    <string name="alarm_edit_photo_saved">Эталонное фото сохранено.</string>
+    <string name="alarm_edit_photo_save_failed">Не удалось сохранить эталонное фото.</string>
+    <string name="alarm_edit_camera_permission_required">Для съёмки эталонного фото требуется разрешение на камеру.</string>
+    <string name="alarm_edit_background_none_selected">Фоновое изображение не выбрано.</string>
+    <string name="alarm_edit_background_selected">Фоновое изображение выбрано.</string>
+    <string name="alarm_edit_location_saved">Текущее место сохранено для отключения по местоположению.</string>
+    <string name="alarm_edit_location_fix_failed">Не удалось определить местоположение. Включите геолокацию и повторите попытку.</string>
+    <string name="alarm_edit_location_permission_required">Для сохранения блокировки по местоположению требуется разрешение.</string>
+    <string name="alarm_edit_location_radius_hint">Отключение заблокировано, пока телефон не покинет сохранённую область радиусом %1$d м. Отсрочка доступна всегда.</string>
+    <string name="alarm_edit_location_save_first">Сохраните место, где вы находитесь, перед включением этой блокировки.</string>
+    <string name="alarm_edit_location_optional_hint">Необязательный режим «Против сонливости»: отключение разблокируется только после подтверждения местоположением, что вы покинули сохранённую область.</string>
+
+    <!-- alarm editor: discard dialog -->
+    <string name="alarm_edit_discard_title">Отменить несохранённые изменения?</string>
+    <string name="alarm_edit_discard_message">Изменения будильника не сохранены. Продолжите редактирование или отмените их.</string>
+    <string name="alarm_edit_discard_action">Отменить изменения</string>
+    <string name="alarm_edit_keep_editing">Продолжить редактирование</string>
+
+    <!-- alarm editor: subtitles and status -->
+    <string name="alarm_edit_existing_subtitle">Настройте время, звук и поведение при пробуждении.</string>
+    <string name="alarm_edit_new_subtitle">Создайте осознанный будильник с первого срабатывания.</string>
+    <string name="alarm_edit_existing_status">Редактирование существующего будильника</string>
+    <string name="alarm_edit_new_status">Новый будильник</string>
+    <string name="alarm_edit_preview_title">Предварительный просмотр</string>
+    <string name="alarm_edit_preview_description">Нажмите на время или дни ниже, чтобы настроить расписание.</string>
+
+    <!-- alarm editor: accessibility -->
+    <string name="alarm_edit_cancel_accessibility">Отменить редактирование будильника</string>
+    <string name="alarm_edit_back_overview_accessibility">Назад к обзору будильника</string>
+
+    <!-- alarm editor: saving -->
+    <string name="alarm_edit_saving">Сохранение будильника…</string>
+    <string name="alarm_edit_save_changes">Сохранить изменения</string>
+    <string name="alarm_edit_create">Создать будильник</string>
+
+    <!-- alarm editor: common values -->
+    <string name="alarm_edit_adjust_time_hint">Нажмите на время для точной настройки.</string>
+    <string name="alarm_edit_rings_in">Зазвонит через %1$s</string>
+    <string name="alarm_edit_default">По умолчанию</string>
+    <string name="alarm_edit_none">Нет</string>
+    <string name="alarm_edit_off">Выкл.</string>
+    <string name="alarm_edit_disabled">Отключено</string>
+    <string name="alarm_edit_silent">Без звука</string>
+    <string name="alarm_edit_custom">Свой</string>
+    <string name="alarm_edit_choose">Выбрать</string>
+    <string name="alarm_edit_replace">Заменить</string>
+    <string name="alarm_edit_apply">Применить</string>
+    <string name="alarm_edit_add">Добавить</string>
+    <string name="alarm_edit_expand">Развернуть</string>
+    <string name="alarm_edit_collapse">Свернуть</string>
+    <string name="alarm_edit_muted">Приглушён</string>
+    <string name="alarm_edit_percent">%1$d%%</string>
+    <string name="alarm_edit_vacation_skip_date">%1$s %2$s (пропуск в отпуске)</string>
+    <string name="alarm_edit_fire_date">%1$s %2$s</string>
+
+    <!-- alarm editor: schedule summaries -->
+    <string name="alarm_edit_schedule_specific">%1$s • Задана конкретная дата</string>
+    <string name="alarm_edit_schedule_smart">%1$s • Умное окно %2$d мин</string>
+    <string name="alarm_edit_schedule_fixed">%1$s • Фиксированное время</string>
+    <string name="alarm_edit_schedule_zone">%1$s • %2$s</string>
+    <string name="alarm_edit_schedule_device_zone">%1$s • По часовому поясу устройства</string>
+
+    <!-- alarm editor: sound & vibration -->
+    <string name="alarm_edit_alarm_group">Группа будильника</string>
+    <string name="alarm_edit_group_none">Без группы</string>
+    <string name="alarm_edit_group_work">Работа</string>
+    <string name="alarm_edit_group_school">Учёба</string>
+    <string name="alarm_edit_group_gym">Спортзал</string>
+    <string name="alarm_edit_group_medication">Лекарства</string>
+    <string name="alarm_edit_group_personal">Личное</string>
+    <string name="alarm_edit_group_custom">Своя…</string>
+    <string name="alarm_edit_group_custom_name">Название своей группы</string>
+    <string name="alarm_edit_partner_mode">Не будить партнёра</string>
+    <string name="alarm_edit_partner_mode_hint">Устанавливает только тактильную вибрацию: звук будильника отключён, плавное нарастание выключено, включена мягкая повторяющаяся вибрация.</string>
+    <string name="alarm_edit_haptic_profile_active">Активен режим только тактильной вибрации</string>
+    <string name="alarm_edit_alarm_sound">Звук будильника</string>
+    <string name="alarm_edit_override_volume">Переопределить системную громкость</string>
+    <string name="alarm_edit_gradual_volume">Постепенно увеличивать громкость</string>
+    <string name="alarm_edit_off_full_volume">Выкл. (полная громкость сразу)</string>
+    <string name="alarm_edit_vibration_pattern">Рисунок вибрации</string>
+    <string name="alarm_edit_gentle">Мягкая</string>
+    <string name="alarm_edit_strong">Сильная</string>
+    <string name="alarm_edit_heartbeat">Сердцебиение</string>
+    <string name="alarm_edit_haptic_envelope_hint">Android 16 использует плавную тактильную обёртку; на старых устройствах используется тот же рисунок от мягкого к сильному.</string>
+    <string name="alarm_edit_label_placeholder">Название будильника</string>
+    <string name="alarm_edit_hue_hint">Требуется IP моста Hue и API-ключ, настроенные в разделе Настройки → Philips Hue.</string>
+    <string name="alarm_edit_backup_sound_hint">Увеличивает громкость до максимума, если нет взаимодействия в течение задержки.</string>
+    <string name="alarm_edit_flashlight_warning">Внимание: быстрые вспышки могут вызвать судороги или дискомфорт. Уменьшите движение и мигание в настройках отключает этот эффект.</string>
+    <string name="alarm_edit_sunrise_hint">Переходит экран от тёмно-красного к тёплому жёлтому, имитируя рассвет.</string>
+    <string name="alarm_edit_radio_hint">Воспроизводит интернет-радио как звук будильника и откатывается к стандартной мелодии при ошибке.</string>
+    <string name="alarm_edit_guardian_call_granted">Разрешение прямого звонка предоставлено.</string>
+    <string name="alarm_edit_guardian_call_dialer">Запасной вариант открывает наборщик, так как разрешение CALL_PHONE не предоставлено.</string>
+    <string name="alarm_edit_guardian_inactive">Guardian Angel отключён для этого будильника.</string>
+    <string name="alarm_edit_guardian_direct_sms">Автоматически отправляет экстренную SMS, затем открывает вариант звонка, если будильник не отключён. %1$s</string>
+    <string name="alarm_edit_guardian_needs_sms">F-Droid может отправлять автоматические SMS после разрешения SEND_SMS. До этого момента открывается редактор SMS. %1$s</string>
+    <string name="alarm_edit_guardian_composer">Открывает редактор SMS с экстренным сообщением, если будильник не отключён, затем откатывается к звонку или наборщику. %1$s</string>
+
+    <!-- alarm editor: fixed zone hint -->
+    <string name="alarm_edit_fixed_zone_hint">Будильник остаётся на %1$s:%2$s в этом часовом поясе во время поездок.</string>
+    <string name="alarm_edit_unknown_zone">Неизвестный часовой пояс; при сохранении будет использован часовой пояс устройства.</string>
+
+    <!-- alarm editor: shift patterns -->
+    <string name="alarm_edit_shift_hint">Дневные, ночные и рабочие смены звонят; выходные пропускаются. Выбор дней недели всё ещё сужает рисунок.</string>
+    <string name="alarm_edit_shift_ddnno_description">2 дневные смены, 2 ночные, 1 выходной.</string>
+    <string name="alarm_edit_shift_four_description">4 рабочих дня, затем 4 выходных.</string>
+    <string name="alarm_edit_shift_panama_description">2 рабочих, 2 выходных, 3 рабочих, затем 2 выходных, 2 рабочих, 3 выходных.</string>
+    <string name="alarm_edit_shift_dupont_description">4 ночных, 3 выходных, 3 дневных, 1 выходной, 3 ночных, 3 выходных, 4 дневных, 7 выходных.</string>
+    <string name="alarm_edit_shift_pitman_description">2 рабочих, 2 выходных, 3 рабочих, 2 выходных, 2 рабочих, 3 выходных.</string>
+    <string name="alarm_edit_shift_default_description">Свой сменный график.</string>
+
+    <!-- alarm editor: weather early -->
+    <string name="alarm_edit_weather_early_hint">Срабатывает раньше, если прогнозируется снег, ледяной дождь или гололёд. Используются кэшированные данные о погоде.</string>
+
+    <!-- alarm editor: early dismiss -->
+    <string name="alarm_edit_early_dismiss_hint">Позволяет намеренно пропустить предстоящий будильник из уведомления до начала звонка.</string>
+
+    <!-- alarm editor: wifi dismiss -->
+    <string name="alarm_edit_wifi_dismiss_ssid">Wi-Fi для отключения (подключитесь к этой сети для отключения)</string>
+
+    <!-- alarm editor: hardware -->
+    <string name="alarm_edit_hardware_hint">Кнопки громкости, камеры или гарнитуры во время будильника запускают выбранное действие. NONE оставляет обычное управление громкостью.</string>
+
+    <!-- alarm editor: hold to dismiss -->
+    <string name="alarm_edit_hold_to_dismiss_hint">Если включено, экран срабатывания требует удержания кнопки отключения настроенное время. Смахивание заменяется видимой подсказкой удержания.</string>
+
+    <!-- alarm editor: dismiss song end -->
+    <string name="alarm_edit_dismiss_song_end_hint">Отключает повтор и автоматически выключает будильник, когда выбранная мелодия или трек заканчивается. Интернет-радио игнорирует эту настройку.</string>
+
+    <!-- alarm editor: ringtone pool -->
+    <string name="alarm_edit_ringtone_pool_hint">Когда набор не пуст, каждый раз выбирается случайная мелодия и заменяет单一設定. Нажмите на значок для удаления.</string>
+    <string name="alarm_edit_ringtone_uri_placeholder" translatable="false">content://… or file://…</string>
+
+    <!-- alarm editor: solar hint -->
+    <string name="alarm_edit_solar_hint">Когда смещение не нулевое, будильник срабатывает относительно выбранного восхода или заката в последнем известном местоположении.</string>
+
+    <!-- alarm editor: spotify uri -->
+    <string name="alarm_edit_spotify_uri">Spotify URI (например, spotify:track:…)</string>
+
+    <!-- alarm editor: challenge unknown -->
+    <string name="alarm_edit_challenge_unknown">%1$s</string>
+
+    <!-- alarm editor: challenge descriptions -->
+    <string name="alarm_edit_challenge_math_easy_description">Решите простую задачу, чтобы отключить будильник.</string>
+    <string name="alarm_edit_challenge_math_medium_description">Решите задачу с двумя действиями, прежде чем будильник остановится.</string>
+    <string name="alarm_edit_challenge_math_hard_description">Используйте большие числа и больше сосредоточенности для более сильного пробуждения.</string>
+    <string name="alarm_edit_challenge_shake_description">Многократно тряхните телефон, чтобы доказать, что вы действительно двигаетесь.</string>
+    <string name="alarm_edit_challenge_sequence_description">Нажимайте числа по возрастанию, не пропуская шаг.</string>
+    <string name="alarm_edit_challenge_memory_description">Запомните и восстановите короткую визуальную последовательность.</string>
+    <string name="alarm_edit_challenge_typing_description">Точно введите фразу пробуждения перед отключением.</string>
+    <string name="alarm_edit_challenge_voice_description">Произнесите фразу пробуждения с распознаванием речи Android, с запасным вариантом ввода текста.</string>
+    <string name="alarm_edit_challenge_handwriting_description">Нарисуйте слово пробуждения с распознаванием почерка на устройстве и запасным вариантом ввода.</string>
+    <string name="alarm_edit_challenge_walk_description">Пройдите заданное количество шагов, чтобы полностью встать.</string>
+    <string name="alarm_edit_challenge_nfc_description">Сканируйте конкретную NFC-метку, расположенную вдали от кровати.</string>
+    <string name="alarm_edit_challenge_barcode_description">Сканируйте сохранённый штрихкод для завершения задания.</string>
+    <string name="alarm_edit_challenge_photo_description">Совпадите с эталонным фото, чтобы вам пришлось переместиться в нужное место.</string>
+    <string name="alarm_edit_challenge_squat_description">Выполните быструю серию приседаний, держа телефон.</string>
+    <string name="alarm_edit_challenge_pushup_description">Делайте отжимания над телефоном, положенным экраном вниз на пол.</string>
+    <string name="alarm_edit_challenge_plank_description">Держите телефон горизонтально в позиции планки 30 секунд.</string>
+    <string name="alarm_edit_challenge_wifi_description">Подключитесь к конкретной сети Wi-Fi, прежде чем будильник остановится.</string>
+    <string name="alarm_edit_challenge_maze_description">Решите простой лабиринт, чтобы предотвратить случайные нажатия в半睡半醒状态.</string>
+    <string name="alarm_edit_challenge_sheep_description">Нажимайте только на овец для завершения задания.</string>
+    <string name="alarm_edit_challenge_simon_description">Посмотрите на цветовую последовательность, затем повторите её по порядку.</string>
+    <string name="alarm_edit_challenge_date_description">Введите показанную дату в обратном порядке точно.</string>
+    <string name="alarm_edit_challenge_stroop_description">Выберите цвет чернил, игнорируя слово.</string>
+    <string name="alarm_edit_challenge_rps_description">Выиграйте 3 раунда камень-ножницы-бумага у компьютера для отключения.</string>
+    <string name="alarm_edit_challenge_emoji_description">Запомните 8 пар на сетке 4×4, затем найдите все в закрытом состоянии.</string>
+    <string name="alarm_edit_challenge_speed_description">Введите короткую фразу со скоростью 15+ слов в минуту с не более чем 2 ошибками.</string>
+    <string name="alarm_edit_challenge_wordle_description">Угадайте спрятанное 5-буквенное слово за 6 попыток.</string>
+    <string name="alarm_edit_challenge_pvt_description">5 раз быстро нажмите на цель. Среднее время менее 500 мс для отключения.</string>
+    <string name="alarm_edit_challenge_difference_description">Сравните две цветные сетки и нажмите единственную изменившуюся плитку.</string>
+    <string name="alarm_edit_challenge_chess_description">Выберите ход для мата в один из небольшой шахматной позиции.</string>
+    <string name="alarm_edit_challenge_rsvp_description">Прочитайте быстрый поток слов, затем определите появившееся слово.</string>
+    <string name="alarm_edit_challenge_default_description">Для отключения требуется выполнение этого задания, прежде чем будильник остановится.</string>
+
+    <!-- alarm editor: NFC/barcode/wifi missing -->
+    <string name="alarm_edit_nfc_missing">NFC-метка не зарегистрирована. Это задание будет пропущено при срабатывании, пока не будет задан ID метки.</string>
+    <string name="alarm_edit_barcode_missing">Штрихкод или QR-код не зарегистрирован. Это задание будет пропущено при срабатывании, пока не будет задано значение.</string>
+    <string name="alarm_edit_wifi_missing">Сеть Wi-Fi не указана. Задайте SSID, к которому будильник потребует подключения.</string>
+
+    <!-- settings: misc -->
+    <string name="settings_about_description">Краткая справка о том, что работает на этом устройстве.</string>
+    <string name="settings_clear_commute_title">Очистить историю дороги?</string>
+    <string name="settings_clear_commute_message">Автобудильники календаря будут использовать актуальные оценки Routes или вашу базовую настройку, пока не будет достаточно новых локальных данных.</string>
+    <string name="settings_clear_diagnostics_hint">Очистка диагностики удаляет только строки событий. Статистика будильников и журналы сбоев хранятся отдельно.</string>
+    <string name="settings_clear_history">Очистить историю</string>
+    <string name="settings_commute_aware_description">Для первых встреч с местом проведения добавляет запас на дорогу и погоду до времени из календаря.</string>
+    <string name="settings_commute_fallback">Оффлайн-запасной вариант дороги</string>
+    <string name="settings_commute_fallback_description">После трёх успешных оценок маршрута ошибки могут использовать консервативную 45-дневную историю на устройстве и запас на погоду.</string>
+    <string name="settings_commute_history">История изученной дороги</string>
+    <string name="settings_commute_history_description">Хранит только хэшированные ключи маршрутов и до 8 последних длительностей для каждого маршрута на этом устройстве; местоположения исключены из пакетов поддержки.</string>
+    <string name="settings_crash_log_subject">Журнал сбоя WakeSync</string>
+    <string name="settings_dashboard_overview_description">Видимость и автоматизация календаря</string>
+    <string name="settings_export_ready">Экспорт готов</string>
+    <string name="settings_first_meeting_disabled_description">Создайте один многоразовый будильник до первой встречи завтра.</string>
+    <string name="settings_first_meeting_enabled_description">Сохраняет один будильник календаря, смещённый на время первой встречи завтра.</string>
+    <string name="settings_incident_retention">Эта история отделена от статистики и ограничена 100 новейшими строками или 30 днями.</string>
+    <string name="settings_meeting_lead_description">За какое время до первой встречи срабатывает будильник календаря.</string>
+    <string name="settings_normal_commute_description">Оценки маршрутов выше этой базовой линии смещают автобудильник раньше.</string>
+    <string name="settings_packaging_diagnostics">Упаковка локальных журналов сбоев и обезличенной диагностики…</string>
+    <string name="settings_packaging_export">Упаковка локального диагностического экспорта</string>
+    <string name="settings_packaging_support_bundle">Упаковка пакета поддержки</string>
+    <string name="settings_radar_description">Встраивает анимированный радар осадков Windy.com под карточкой погоды.</string>
+    <string name="settings_routes_api_key">API-ключ Google Routes</string>
+    <string name="settings_routes_api_placeholder">Необязательно для оценки транспорта</string>
+    <string name="settings_show_news_description">Публичные RSS-ленты — Google News, BBC, NPR, Hacker News.</string>
+    <string name="settings_show_timer_description">Таймеры обратного отсчёта с несколькими полосами.</string>
+    <string name="settings_show_today_description">Ежедневный обзор — условия, почасовой, УФ, восход/закат и радар.</string>
+    <string name="settings_show_world_description">Отслеживание часовых поясов городов, которые важны для вас.</string>
+    <string name="settings_support_bundle_ready">Пакет поддержки готов</string>
+    <string name="settings_support_bundle_subject">Пакет поддержки WakeSync</string>
+    <string name="settings_support_export_failed">Ошибка экспорта поддержки</string>
+    <string name="settings_use_lead_time">Использовать запас времени</string>
+    <string name="settings_use_meeting_lead">Использовать запас до встречи</string>
+    <string name="settings_utilities_description">Быстрый доступ к дополнительным инструментам приложения.</string>
+    <string name="settings_weather_buffer_description">Добавляется, когда прогноз на день мероприятия включает снег, гололёд, штормы или сильные осадки.</string>
+
+    <!-- settings: fossify import errors -->
+    <string name="settings_fossify_import_failed_changed">Не удалось импортировать будильники Fossify. Файл изменился после предварительного просмотра — выберите его снова.</string>
+    <string name="settings_fossify_import_failed_generic">Не удалось импортировать будильники Fossify. Проверьте файл и повторите попытку.</string>
+    <string name="settings_fossify_import_failed_no_alarms">Не удалось импортировать будильники Fossify. В файле нет действительных будильников.</string>
+    <string name="settings_fossify_import_failed_not_export">Не удалось импортировать будильники Fossify. Файл не похож на экспорт Fossify Clock.</string>
+    <string name="settings_fossify_import_failed_unreadable">Не удалось импортировать будильники Fossify. Проверьте доступность файла и повторите попытку.</string>
+    <string name="settings_fossify_preview_not_export">Не удалось отобразить файл. Он не похож на экспорт Fossify Clock — выберите файл JSON, экспортированный Fossify Clock.</string>
+    <string name="settings_fossify_preview_unreadable">Не удалось отобразить файл. Проверьте, что он доступен на этом устройстве, и повторите попытку.</string>
+
+    <!-- settings: translatable=false (copy as-is) -->
+    <string name="settings_source_value" translatable="false">github.com/serejaishkin/alarm-sync-wear</string>
+    <string name="settings_unknown_code" translatable="false">UNKNOWN</string>
+    <string name="settings_none_code" translatable="false">NONE</string>
+
+    <!-- alarm editor: translatable=false (copy as-is) -->
+    <string name="alarm_edit_chain_placeholder" translatable="false">MATH_EASY,SHAKE,TYPING</string>
+    <string name="wakesync_alarms_title">Будильники</string>
+    <string name="wakesync_your_alarms">Ваши будильники</string>
+    <string name="wakesync_next_alarm">Следующий будильник</string>
+    <string name="wakesync_today">Сегодня</string>
+    <string name="wakesync_tomorrow">Завтра</string>
+    <string name="wakesync_no_next_alarm">Нет запланированных будильников</string>
+    <string name="wakesync_tap_to_create">Нажмите, чтобы создать будильник</string>
+    <string name="wakesync_no_alarms">Пока нет будильников</string>
+    <string name="wakesync_create_alarm">Создать будильник</string>
+    <string name="wakesync_add_alarm">Добавить будильник</string>
+    <string name="wakesync_personalization">Персонализация</string>
+    <string name="wakesync_sleep_mode">Режим сна</string>
+    <string name="wakesync_sleep_mode_subtitle">Время сна, расписание и ночные настройки</string>
+    <string name="wakesync_more">Ещё</string>
+    <string name="wakesync_edit">Изменить</string>
+    <string name="wakesync_duplicate">Дублировать</string>
+    <string name="wakesync_delete">Удалить</string>
+    <string name="wakesync_sync_active">Синхронизация с часами активна</string>
+    <string name="wakesync_synced_badge">Синхронизирован с часами</string>
+    <string name="wakesync_device_pair">Телефон ⇄ Часы</string>
+
+    <string name="nav_alarms">Будильники</string>
+    <string name="nav_timer">Таймер</string>
+    <string name="nav_settings">Настройки</string>
+
 </resources>

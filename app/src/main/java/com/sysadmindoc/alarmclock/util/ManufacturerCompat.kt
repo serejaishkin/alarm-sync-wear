@@ -113,7 +113,7 @@ object ManufacturerCompat {
                     "Open Settings > Battery",
                     "Tap 'Background usage limits'",
                     "Tap 'Never sleeping apps'",
-                    "Add AlarmClockXtreme to the list"
+                    "Add WakeSync to the list"
                 ),
                 dontKillMyAppUrl = "https://dontkillmyapp.com/samsung",
                 settingsIntents = listOf(
@@ -129,7 +129,7 @@ object ManufacturerCompat {
                 title = "Enable Autostart on Xiaomi",
                 steps = listOf(
                     "Open Settings > Apps > Manage apps",
-                    "Find AlarmClockXtreme and tap it",
+                    "Find WakeSync and tap it",
                     "Enable 'Autostart'",
                     "Set Battery saver to 'No restrictions'"
                 ),
@@ -150,7 +150,7 @@ object ManufacturerCompat {
                 title = "Disable battery optimization on OnePlus",
                 steps = listOf(
                     "Open Settings > Battery > Battery optimization",
-                    "Find AlarmClockXtreme",
+                    "Find WakeSync",
                     "Select 'Don't optimize'"
                 ),
                 dontKillMyAppUrl = "https://dontkillmyapp.com/oneplus",
@@ -170,7 +170,7 @@ object ManufacturerCompat {
                 title = "Allow background activity on Huawei",
                 steps = listOf(
                     "Open Settings > Battery > App launch",
-                    "Find AlarmClockXtreme",
+                    "Find WakeSync",
                     "Disable 'Manage automatically'",
                     "Enable all three toggles manually"
                 ),
@@ -181,7 +181,7 @@ object ManufacturerCompat {
                 title = "Allow background activity on ColorOS",
                 steps = listOf(
                     "Open Settings > Battery > App battery management",
-                    "Find AlarmClockXtreme",
+                    "Find WakeSync",
                     "Enable 'Allow background activity' and 'Allow auto-launch'",
                     "Set Battery optimization to 'Don't optimize'"
                 ),
@@ -193,8 +193,8 @@ object ManufacturerCompat {
                 title = "Allow background activity on Vivo",
                 steps = listOf(
                     "Open Settings > Battery > Background power consumption",
-                    "Find AlarmClockXtreme and allow high background power",
-                    "Open Settings > Apps > Auto-start and enable AlarmClockXtreme"
+                    "Find WakeSync and allow high background power",
+                    "Open Settings > Apps > Auto-start and enable WakeSync"
                 ),
                 dontKillMyAppUrl = "https://dontkillmyapp.com/vivo",
                 settingsIntents = listOf(

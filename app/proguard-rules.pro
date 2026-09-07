@@ -1,4 +1,4 @@
-# AlarmClockXtreme v1.5.2 ProGuard / R8 Rules
+# WakeSync v1.5.2 ProGuard / R8 Rules
 # Validated for: Hilt, Moshi (codegen-only), Retrofit, Room, Glance, Compose
 
 # ===== Room =====
