@@ -1,5 +1,7 @@
 # WakeSync
 
+[English](README.md) | [Русский](README.ru.md)
+
 ![Version](https://img.shields.io/badge/version-1.15.33-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 ![Platform](https://img.shields.io/badge/platform-Android%208.0+-3DDC84?logo=android&logoColor=white)
@@ -32,6 +34,10 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 - Dark blue theme ported from phone to Wear OS UI (list, editor, firing screen)
 - New bell icon replacing old clock face (adaptive + monochrome + legacy PNGs)
 - Cold-start jank fix — sync provenance reads moved off main thread
+- Full RU/EN localization for the wear module — user-facing strings moved from hardcoded text into resource files
+- One-off "snooze until" clock-time picker, persisted as the alarm's next trigger with exact-alarm and inexact fallback
+- Ongoing snooze countdown notification with Android 16 `ProgressStyle` live updates and a chronometer fallback on older versions
+- Media3 stall hardening for local tones and internet radio — bounded READY watchdog forces speaker/max-volume routing, records the failure, and falls back to the legacy player
 
 ### In Progress
 - Diagnosing Data Layer delivery failures (transport logging added, awaiting user logcat)
@@ -41,7 +47,6 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 - BLE transport fallback for devices without Google Play Services
 - Full phone → watch snapshot reconciliation on reconnect
 - Watch → phone: proper tombstone cleanup after echo-DELETE
-- Localization — replace hardcoded Russian strings in wear module with resource strings
 - Wear OS Compose migration (current UI is programmatic Views)
 - F-Droid flavor: stub-less direct sync path (currently no-op)
 - Signed release builds, CI/CD, Play Store / F-Droid submission
