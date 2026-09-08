@@ -1,0 +1,327 @@
+package com.wakesync.app.data.support
+
+import android.Manifest
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.app.usage.UsageStatsManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import com.wakesync.app.BuildConfig
+import com.wakesync.app.data.readiness.TestAlarmProofStore
+import com.wakesync.app.data.local.CommuteHistoryStore
+import com.wakesync.app.data.repository.AlarmEventRepository
+import com.wakesync.app.data.repository.AlarmIncidentRepository
+import com.wakesync.app.data.repository.AlarmRepository
+import com.wakesync.app.data.repository.ActigraphyRepository
+import com.wakesync.app.util.CrashLogger
+import com.wakesync.app.util.LocalNetworkPermission
+import com.wakesync.app.worker.GuardianEscalationPolicy
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.io.FileOutputStream
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import javax.inject.Inject
+import javax.inject.Singleton
+
+data class SupportExportFile(
+    val uri: Uri,
+    val fileName: String,
+    val mimeType: String = "application/zip"
+)
+
+internal data class CrashLogExportEntry(
+    val fileName: String,
+    val text: String
+)
+
+internal object CrashLogExportFormatter {
+    fun format(entries: List<CrashLogExportEntry>): String {
+        if (entries.isEmpty()) return "No local crash logs were present.\n"
+
+        return buildString {
+            entries.forEachIndexed { index, entry ->
+                if (index > 0) append('\n')
+                append("===== ").append(entry.fileName).append(" =====\n")
+                append(CrashLogScrubber.scrub(entry.text).trimEnd()).append('\n')
+            }
+        }
+    }
+}
+
+@Singleton
+class SupportExportManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val alarmRepository: AlarmRepository,
+    private val alarmEventRepository: AlarmEventRepository,
+    private val actigraphyRepository: ActigraphyRepository,
+    private val alarmIncidentRepository: AlarmIncidentRepository,
+    private val preferencesManager: com.wakesync.app.data.preferences.PreferencesManager,
+    private val commuteHistoryStore: CommuteHistoryStore
+) {
+    suspend fun createSupportExport(): SupportExportFile {
+        val generatedAt = Instant.now()
+        val exportDir = File(context.cacheDir, EXPORT_DIR_NAME).apply { mkdirs() }
+        exportDir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith(FILE_PREFIX) && it.extension == "zip" }
+            ?.forEach { runCatching { it.delete() } }
+
+        val fileName = "$FILE_PREFIX-${FILE_TIMESTAMP.format(generatedAt)}.zip"
+        val zipFile = File(exportDir, fileName)
+        val alarms = alarmRepository.getAll().map(SupportAlarmDiagnostic::from)
+        val enabledCount = alarms.count { it.enabled }
+        val nextTrigger = alarms
+            .filter { it.enabled && it.nextTriggerTime > 0L }
+            .minOfOrNull { it.nextTriggerTime }
+        val stats = alarmEventRepository.getStats()
+        val smartWakeSessions = actigraphyRepository.getRecent(limit = 10)
+        val latestSmartWakeSession = smartWakeSessions.firstOrNull()
+        val incidents = alarmIncidentRepository.getRecent(limit = MAX_INCIDENTS)
+        val latestIncident = incidents.firstOrNull()
+        val crashLogs = CrashLogger.getLogFiles(context).take(MAX_CRASH_LOGS)
+        val guardianReadiness = GuardianEscalationPolicy.readiness(
+            flavor = BuildConfig.FLAVOR,
+            enabledAlarmCount = alarms.count { it.enabled && it.guardianEnabled },
+            hasSendSmsPermission = hasPermission(Manifest.permission.SEND_SMS),
+            hasCallPhonePermission = hasPermission(Manifest.permission.CALL_PHONE)
+        )
+
+        val notificationPermission = hasNotificationPermission()
+        val exactAlarms = canScheduleExactAlarms()
+        val fsiAllowed = canUseFullScreenIntent()
+        val localNetworkAllowed = localNetworkPermissionGranted()
+        val batteryIgnored = isIgnoringBatteryOptimizations()
+        val standbyBucket = appStandbyBucketLabel()
+        val testAlarmProof = TestAlarmProofStore.lastProof(context)
+        val sdkInt = Build.VERSION.SDK_INT
+        val appSettings = preferencesManager.getCachedSettings()
+        val commuteHistorySummary = commuteHistoryStore.summary()
+
+        val includedFiles = mutableListOf(
+            "support_manifest.json",
+            "readiness.json",
+            "smart_wake_summary.json",
+            "diagnostics.txt",
+            "alarms_redacted.csv",
+            "incident_timeline.csv"
+        )
+        if (crashLogs.isNotEmpty()) {
+            crashLogs.forEach { includedFiles.add("crash_logs/${it.name}") }
+        }
+
+        ZipOutputStream(FileOutputStream(zipFile)).use { zip ->
+            zip.writeTextEntry(
+                "support_manifest.json",
+                SupportDiagnosticsFormatter.manifestJson(
+                    generatedAt = generatedAt,
+                    appVersion = BuildConfig.VERSION_NAME,
+                    versionCode = BuildConfig.VERSION_CODE,
+                    flavor = BuildConfig.FLAVOR,
+                    buildType = BuildConfig.BUILD_TYPE,
+                    includedFiles = includedFiles,
+                    maxIncidentRows = MAX_INCIDENTS,
+                    maxCrashLogs = MAX_CRASH_LOGS,
+                    crashLogsScrubbed = true
+                )
+            )
+            zip.writeTextEntry(
+                "readiness.json",
+                SupportDiagnosticsFormatter.readinessJson(
+                    notificationPermissionGranted = notificationPermission,
+                    exactAlarmsAllowed = exactAlarms,
+                    fullScreenIntentAllowed = fsiAllowed,
+                    localNetworkPermissionGranted = localNetworkAllowed,
+                    ignoringBatteryOptimizations = batteryIgnored,
+                    appStandbyBucket = standbyBucket,
+                    sdkInt = sdkInt,
+                    guardianReadiness = guardianReadiness,
+                    testAlarmProof = testAlarmProof
+                )
+            )
+            zip.writeTextEntry(
+                "smart_wake_summary.json",
+                SupportDiagnosticsFormatter.smartWakeSummaryJson(smartWakeSessions)
+            )
+            zip.writeTextEntry(
+                "diagnostics.txt",
+                SupportDiagnosticsFormatter.diagnosticsText(
+                    generatedAt = generatedAt,
+                    appVersion = BuildConfig.VERSION_NAME,
+                    versionCode = BuildConfig.VERSION_CODE,
+                    flavor = BuildConfig.FLAVOR,
+                    buildType = BuildConfig.BUILD_TYPE,
+                    packageName = context.packageName,
+                    deviceManufacturer = Build.MANUFACTURER,
+                    deviceModel = Build.MODEL,
+                    androidRelease = Build.VERSION.RELEASE,
+                    sdkInt = sdkInt,
+                    notificationPermissionGranted = notificationPermission,
+                    exactAlarmsAllowed = exactAlarms,
+                    fullScreenIntentAllowed = fsiAllowed,
+                    localNetworkPermissionGranted = localNetworkAllowed,
+                    ignoringBatteryOptimizations = batteryIgnored,
+                    appStandbyBucket = standbyBucket,
+                    guardianReadiness = guardianReadiness,
+                    testAlarmProof = testAlarmProof,
+                    totalAlarms = alarms.size,
+                    enabledAlarms = enabledCount,
+                    nextTriggerTime = nextTrigger,
+                    crashLogCount = crashLogs.size,
+                    smartWakeSessionCount = smartWakeSessions.size,
+                    smartWakeFiredEarlyCount = smartWakeSessions.count { it.firedEarly },
+                    smartWakeLastDecisionReason = latestSmartWakeSession?.decisionReason,
+                    smartWakeLastObservedMinutes = latestSmartWakeSession?.observedMinutesBeforeDecision,
+                    smartWakeMode = latestSmartWakeSession?.smartWakeMode,
+                    recentIncidentCount = incidents.size,
+                    latestIncidentType = latestIncident?.type,
+                    latestIncidentStatus = latestIncident?.status,
+                    latestIncidentReason = latestIncident?.reasonCode,
+                    stats = stats,
+                    ytEngineBundledVersion = appSettings.ytEngineBundledVersion,
+                    ytEngineActiveVersion = appSettings.ytEngineActiveVersion,
+                    ytEngineLastUpdateMs = appSettings.ytEngineLastUpdateMs,
+                    ytEngineLastUpdateStatus = appSettings.ytEngineLastUpdateStatus,
+                    ytEngineLastUpdateSource = appSettings.ytEngineLastUpdateSource,
+                    ytEngineLastFailureReason = appSettings.ytEngineLastFailureReason,
+                    showWeatherOnDashboard = appSettings.showWeatherOnDashboard,
+                    holidayAutoSkipEnabled = appSettings.holidayAutoSkipEnabled,
+                    showRadarEmbed = appSettings.showRadarEmbed,
+                    showNewsTab = appSettings.showNewsTab,
+                    webhookEnabled = appSettings.webhookEnabled,
+                    hueBridgeConfigured = appSettings.hueBridgeIp.isNotBlank(),
+                    healthConnectEnabled = appSettings.healthConnectEnabled,
+                    learnedCommuteRouteCount = commuteHistorySummary.routeCount,
+                    learnedCommuteSampleCount = commuteHistorySummary.sampleCount
+                )
+            )
+            zip.writeTextEntry("alarms_redacted.csv", SupportDiagnosticsFormatter.alarmCsv(alarms))
+            zip.writeTextEntry("incident_timeline.csv", SupportDiagnosticsFormatter.alarmIncidentCsv(incidents))
+            if (crashLogs.isEmpty()) {
+                zip.writeTextEntry("crash_logs/README.txt", "No local crash logs were present.\n")
+            } else {
+                crashLogs.forEach { file ->
+                    val rawText = runCatching { file.readText() }
+                        .getOrElse { "Unable to read crash log: ${it.message}\n" }
+                    zip.writeTextEntry(
+                        name = "crash_logs/${file.name}",
+                        text = CrashLogScrubber.scrub(rawText)
+                    )
+                }
+            }
+        }
+
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            zipFile
+        )
+        return SupportExportFile(uri = uri, fileName = fileName)
+    }
+
+    suspend fun createCrashLogExport(): SupportExportFile {
+        val generatedAt = Instant.now()
+        val exportDir = File(context.cacheDir, EXPORT_DIR_NAME).apply { mkdirs() }
+        exportDir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith(CRASH_LOG_FILE_PREFIX) }
+            ?.forEach { runCatching { it.delete() } }
+
+        val fileName = "$CRASH_LOG_FILE_PREFIX-${FILE_TIMESTAMP.format(generatedAt)}.txt"
+        val entries = CrashLogger.getLogFiles(context)
+            .take(MAX_CRASH_LOGS)
+            .map { file ->
+                CrashLogExportEntry(
+                    fileName = file.name,
+                    text = runCatching { file.readText() }
+                        .getOrElse { "Unable to read crash log: ${it.message}\n" }
+                )
+            }
+        val exportFile = File(exportDir, fileName).apply {
+            writeText(CrashLogExportFormatter.format(entries))
+        }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            exportFile
+        )
+        return SupportExportFile(uri = uri, fileName = fileName, mimeType = "text/plain")
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasPermission(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            true
+        }
+    }
+
+    private fun hasPermission(name: String): Boolean =
+        ContextCompat.checkSelfPermission(context, name) == PackageManager.PERMISSION_GRANTED
+
+    private fun canScheduleExactAlarms(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() == true
+        } else {
+            true
+        }
+    }
+
+    private fun canUseFullScreenIntent(): Boolean? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return null
+        return runCatching {
+            context.getSystemService(NotificationManager::class.java)
+                ?.canUseFullScreenIntent()
+        }.getOrNull()
+    }
+
+    private fun localNetworkPermissionGranted(): Boolean? {
+        if (!LocalNetworkPermission.isRuntimeRequired()) return null
+        return LocalNetworkPermission.isGranted(context)
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        return powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+    }
+
+    private fun appStandbyBucketLabel(): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return "unavailable"
+        val bucket = runCatching {
+            (context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager)
+                ?.appStandbyBucket
+        }.getOrNull() ?: return "unknown"
+        val label = when (bucket) {
+            UsageStatsManager.STANDBY_BUCKET_ACTIVE -> "ACTIVE"
+            UsageStatsManager.STANDBY_BUCKET_WORKING_SET -> "WORKING_SET"
+            UsageStatsManager.STANDBY_BUCKET_FREQUENT -> "FREQUENT"
+            UsageStatsManager.STANDBY_BUCKET_RARE -> "RARE"
+            UsageStatsManager.STANDBY_BUCKET_RESTRICTED -> "RESTRICTED"
+            else -> "UNKNOWN"
+        }
+        return "$label ($bucket)"
+    }
+
+    private fun ZipOutputStream.writeTextEntry(name: String, text: String) {
+        putNextEntry(ZipEntry(name))
+        write(text.toByteArray(Charsets.UTF_8))
+        closeEntry()
+    }
+
+    private companion object {
+        const val EXPORT_DIR_NAME = "support_exports"
+        const val FILE_PREFIX = "wakesync-support"
+        const val CRASH_LOG_FILE_PREFIX = "wakesync-crash-logs"
+        const val MAX_CRASH_LOGS = 10
+        const val MAX_INCIDENTS = 25
+        val FILE_TIMESTAMP: DateTimeFormatter = DateTimeFormatter
+            .ofPattern("yyyyMMdd-HHmmss", Locale.US)
+            .withZone(java.time.ZoneOffset.UTC)
+    }
+}

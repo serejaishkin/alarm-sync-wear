@@ -27,20 +27,20 @@ class ReleaseMetadataVerificationTest(unittest.TestCase):
                 'EXPECTED_VERSION_CODE = "42"\n'
                 'EXPECTED_VERSION_NAME = "1.2.3"\n'
             ),
-            "metadata/com.sysadmindoc.alarmclock.yml": self.metadata(),
+            "metadata/com.wakesync.app.yml": self.metadata(),
             "metadata/en-US/fdroid.yml": self.metadata(),
-            "app/src/main/java/com/sysadmindoc/alarmclock/data/local/AlarmDatabase.kt": (
+            "app/src/main/java/com/wakesync/app/data/local/AlarmDatabase.kt": (
                 "@Database(entities = [], version = 7, exportSchema = true)\n"
                 "@TypeConverters\n"
             ),
-            "app/src/androidTest/java/com/sysadmindoc/alarmclock/data/local/AlarmDatabaseMigrationTest.kt": (
+            "app/src/androidTest/java/com/wakesync/app/data/local/AlarmDatabaseMigrationTest.kt": (
                 "LATEST_SCHEMA_VERSION = 7\n"
             ),
-            "app/src/main/java/com/sysadmindoc/alarmclock/data/backup/BackupManager.kt": (
+            "app/src/main/java/com/wakesync/app/data/backup/BackupManager.kt": (
                 "data class BackupData(\n    val version: Int = 5\n)\n"
                 "const val MAX_SUPPORTED_BACKUP_VERSION = 5\n"
             ),
-            "app/schemas/com.sysadmindoc.alarmclock.data.local.AlarmDatabase/7.json": "{}\n",
+            "app/schemas/com.wakesync.app.data.local.AlarmDatabase/7.json": "{}\n",
         }
         for relative, content in files.items():
             path = root / relative
@@ -83,19 +83,19 @@ class ReleaseMetadataVerificationTest(unittest.TestCase):
                 "verify_api37_release.py",
             ),
             (
-                "metadata/com.sysadmindoc.alarmclock.yml",
+                "metadata/com.wakesync.app.yml",
                 "CurrentVersionCode: 42",
                 "CurrentVersionCode: 41",
                 "CurrentVersionCode",
             ),
             (
-                "app/src/androidTest/java/com/sysadmindoc/alarmclock/data/local/AlarmDatabaseMigrationTest.kt",
+                "app/src/androidTest/java/com/wakesync/app/data/local/AlarmDatabaseMigrationTest.kt",
                 "LATEST_SCHEMA_VERSION = 7",
                 "LATEST_SCHEMA_VERSION = 6",
                 "LATEST_SCHEMA_VERSION",
             ),
             (
-                "app/src/main/java/com/sysadmindoc/alarmclock/data/backup/BackupManager.kt",
+                "app/src/main/java/com/wakesync/app/data/backup/BackupManager.kt",
                 "MAX_SUPPORTED_BACKUP_VERSION = 5",
                 "MAX_SUPPORTED_BACKUP_VERSION = 4",
                 "MAX_SUPPORTED_BACKUP_VERSION",
@@ -111,7 +111,7 @@ class ReleaseMetadataVerificationTest(unittest.TestCase):
 
     def test_missing_current_room_schema_fails(self):
         root = self.make_fixture()
-        schema = root / "app/schemas/com.sysadmindoc.alarmclock.data.local.AlarmDatabase/7.json"
+        schema = root / "app/schemas/com.wakesync.app.data.local.AlarmDatabase/7.json"
         schema.unlink()
         older = schema.with_name("6.json")
         older.write_text("{}\n", encoding="utf-8")

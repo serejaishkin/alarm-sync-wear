@@ -30,10 +30,10 @@
             </intent-filter>
         </service>
         <receiver android:name=".sync.PhoneLocalAlarmTriggerReceiver" android:exported="false">
-            <intent-filter><action android:name="com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_FIRED" /></intent-filter>
+            <intent-filter><action android:name="com.wakesync.app.WAKESYNC_LOCAL_FIRED" /></intent-filter>
         </receiver>
         <receiver android:name=".sync.PhoneLocalAlarmActionReceiver" android:exported="false">
-            <intent-filter><action android:name="com.sysadmindoc.alarmclock.WAKESYNC_LOCAL_ACTION" /></intent-filter>
+            <intent-filter><action android:name="com.wakesync.app.WAKESYNC_LOCAL_ACTION" /></intent-filter>
         </receiver>
         <receiver
             android:name=".sync.WakeSyncPeriodicReceiver"
@@ -43,7 +43,7 @@
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="com.sysadmindoc.alarmclock.WAKESYNC_PERIODIC_SYNC" />
+                <action android:name="com.wakesync.app.WAKESYNC_PERIODIC_SYNC" />
             </intent-filter>
         </receiver>
         <provider

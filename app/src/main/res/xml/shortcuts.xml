@@ -8,8 +8,8 @@
         android:shortcutLongLabel="@string/shortcut_new_alarm_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.sysadmindoc.alarmclock"
-            android:targetClass="com.sysadmindoc.alarmclock.MainActivity"
+            android:targetPackage="com.wakesync.app"
+            android:targetClass="com.wakesync.app.MainActivity"
             android:data="acx://navigate/alarm_edit/0" />
     </shortcut>
     <shortcut
@@ -20,8 +20,8 @@
         android:shortcutLongLabel="@string/shortcut_timer_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.sysadmindoc.alarmclock"
-            android:targetClass="com.sysadmindoc.alarmclock.MainActivity"
+            android:targetPackage="com.wakesync.app"
+            android:targetClass="com.wakesync.app.MainActivity"
             android:data="acx://navigate/timer" />
     </shortcut>
     <shortcut
@@ -32,8 +32,8 @@
         android:shortcutLongLabel="@string/shortcut_bedtime_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.sysadmindoc.alarmclock"
-            android:targetClass="com.sysadmindoc.alarmclock.MainActivity"
+            android:targetPackage="com.wakesync.app"
+            android:targetClass="com.wakesync.app.MainActivity"
             android:data="acx://navigate/bedtime" />
     </shortcut>
 </shortcuts>

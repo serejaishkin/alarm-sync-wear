@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sysadmindoc.alarmclock.wear"
+    namespace = "com.wakesync.app.wear"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.sysadmindoc.alarmclock"
+        applicationId = "com.wakesync.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 135

@@ -2,9 +2,9 @@
 # Validated for: Hilt, Moshi (codegen-only), Retrofit, Room, Glance, Compose
 
 # ===== Room =====
--keep class com.sysadmindoc.alarmclock.data.model.** { *; }
--keep class com.sysadmindoc.alarmclock.data.local.entity.** { *; }
--keep class com.sysadmindoc.alarmclock.data.local.AlarmDatabase { *; }
+-keep class com.wakesync.app.data.model.** { *; }
+-keep class com.wakesync.app.data.local.entity.** { *; }
+-keep class com.wakesync.app.data.local.AlarmDatabase { *; }
 
 # ===== Hilt / Dagger =====
 -keep class dagger.hilt.** { *; }
@@ -13,19 +13,19 @@
 -keepnames @dagger.hilt.android.lifecycle.HiltViewModel class *
 
 # ===== BroadcastReceivers & Services (manifest-referenced) =====
--keep class com.sysadmindoc.alarmclock.receiver.** { *; }
--keep class com.sysadmindoc.alarmclock.service.** { *; }
+-keep class com.wakesync.app.receiver.** { *; }
+-keep class com.wakesync.app.service.** { *; }
 
 # ===== Direct Boot fallback path =====
 # These classes are the minimal pre-unlock alarm path. Keep them explicitly so
 # release shrinking cannot break Direct Boot if manifest wiring is refactored.
--keep class com.sysadmindoc.alarmclock.directboot.** { *; }
+-keep class com.wakesync.app.directboot.** { *; }
 
 # ===== Moshi (codegen only - no reflection adapter) =====
--keep class com.sysadmindoc.alarmclock.data.remote.** { *; }
--keep class com.sysadmindoc.alarmclock.data.backup.AlarmBackup { *; }
--keep class com.sysadmindoc.alarmclock.data.backup.BackupData { *; }
--keep class com.sysadmindoc.alarmclock.data.backup.SettingsBackup { *; }
+-keep class com.wakesync.app.data.remote.** { *; }
+-keep class com.wakesync.app.data.backup.AlarmBackup { *; }
+-keep class com.wakesync.app.data.backup.BackupData { *; }
+-keep class com.wakesync.app.data.backup.SettingsBackup { *; }
 # Keep generated JsonAdapter classes
 -keep class **JsonAdapter { *; }
 -keepclassmembers class * {
@@ -61,19 +61,19 @@
 -dontwarn androidx.compose.**
 
 # ===== Glance Widget =====
--keep class com.sysadmindoc.alarmclock.widget.** { *; }
+-keep class com.wakesync.app.widget.** { *; }
 -keep class androidx.glance.** { *; }
 
 # ===== Application class =====
--keep class com.sysadmindoc.alarmclock.AlarmClockApp { *; }
+-keep class com.wakesync.app.AlarmClockApp { *; }
 
 # ===== Preferences DataStore =====
--keep class com.sysadmindoc.alarmclock.data.preferences.** { *; }
+-keep class com.wakesync.app.data.preferences.** { *; }
 
 # ===== Challenge types — enum names are persisted in Room (challengeType /
 #       challengeChain columns) and restored via ChallengeType.valueOf().
 #       R8 must not rename these constants or valueOf() will silently fail. =====
--keep enum com.sysadmindoc.alarmclock.ui.alarmfiring.challenges.ChallengeType { *; }
+-keep enum com.wakesync.app.ui.alarmfiring.challenges.ChallengeType { *; }
 
 # ===== Workers =====
 -keep @androidx.hilt.work.HiltWorker class * { *; }

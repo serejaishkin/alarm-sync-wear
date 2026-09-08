@@ -1,0 +1,54 @@
+package com.wakesync.app.data.repository
+
+import com.wakesync.app.data.actigraphy.ActigraphySessionSummary
+import com.wakesync.app.data.actigraphy.SmartWakeDecisionEngine
+import com.wakesync.app.data.local.ActigraphySessionDao
+import com.wakesync.app.data.local.entity.ActigraphySession
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class ActigraphyRepository @Inject constructor(
+    private val dao: ActigraphySessionDao
+) {
+    fun observeRecent(limit: Int = 10): Flow<List<ActigraphySession>> = dao.observeRecent(limit)
+
+    suspend fun getRecent(limit: Int = 10): List<ActigraphySession> = dao.getRecent(limit)
+
+    suspend fun record(
+        alarmId: Long,
+        startedAt: Long,
+        endedAt: Long,
+        targetTime: Long,
+        firedEarly: Boolean,
+        summary: ActigraphySessionSummary,
+        decisionReason: String = "UNKNOWN",
+        observedMinutesBeforeDecision: Int = summary.totalMinutes,
+        smartWakeMode: String = SmartWakeDecisionEngine.MODE_CONSERVATIVE
+    ): Long {
+        val session = ActigraphySession(
+            alarmId = alarmId,
+            startedAt = startedAt,
+            endedAt = endedAt,
+            targetTime = targetTime,
+            totalMinutes = summary.totalMinutes,
+            awakeMinutes = summary.awakeMinutes,
+            lightMinutes = summary.lightMinutes,
+            deepMinutes = summary.deepMinutes,
+            averageSleepIndex = summary.averageSleepIndex,
+            firedEarly = firedEarly,
+            algorithm = summary.algorithm,
+            decisionReason = decisionReason,
+            observedMinutesBeforeDecision = observedMinutesBeforeDecision,
+            smartWakeMode = smartWakeMode
+        )
+        val id = dao.insert(session)
+        dao.deleteOlderThan(System.currentTimeMillis() - RETENTION_MS)
+        return id
+    }
+
+    private companion object {
+        const val RETENTION_MS = 30L * 24L * 60L * 60L * 1000L
+    }
+}

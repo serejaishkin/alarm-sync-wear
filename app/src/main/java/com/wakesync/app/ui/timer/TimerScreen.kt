@@ -1,0 +1,460 @@
+package com.wakesync.app.ui.timer
+
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.TimerOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wakesync.app.ui.components.AlarmClockHeroHeader
+import com.wakesync.app.ui.components.AppFilterChip
+import com.wakesync.app.ui.components.AppSectionTitle
+import com.wakesync.app.ui.components.AppStatusChip
+import com.wakesync.app.ui.components.AppSurfaceCard
+import com.wakesync.app.ui.theme.AccentRed
+import com.wakesync.app.ui.theme.ClockTimeLarge
+import com.wakesync.app.ui.theme.ClockTimeDisplay
+import com.wakesync.app.ui.theme.SnoozeYellow
+import com.wakesync.app.ui.theme.SurfaceCard
+import com.wakesync.app.ui.theme.SurfaceDark
+import com.wakesync.app.ui.theme.SurfaceMedium
+import com.wakesync.app.ui.theme.TextMuted
+import com.wakesync.app.ui.theme.TextPrimary
+import com.wakesync.app.ui.theme.LocalMotionEnabled
+import com.wakesync.app.ui.theme.TextSecondary
+
+@Composable
+fun TimerScreen(
+    onOpenStopwatch: () -> Unit = {},
+    viewModel: TimerViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Notification Restart, Assistant SET_TIMER, and notification dismissals
+    // write the persisted store directly while this ViewModel stays alive;
+    // resync whenever the screen returns to the foreground.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_START) {
+                viewModel.resyncFromStore()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // v1.7.5: switched to verticalScroll so the build-a-timer card is
+    // always visible. The previous weight(1f)-on-AppSurfaceCard layout
+    // depended on the Card honoring the weight allocation, but Card wraps
+    // content and ignored it — so on devices with no active timers, only
+    // the hero rendered and the bottom of the screen was empty.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SurfaceDark)
+            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+    ) {
+        AlarmClockHeroHeader(
+            title = "Timer",
+            subtitle = if (state.activeTimers.isEmpty()) {
+                ""
+            } else {
+                "${state.activeTimers.size} timer${if (state.activeTimers.size == 1) "" else "s"} active"
+            },
+            actions = {
+                TextButton(onClick = onOpenStopwatch) {
+                    Text("Stopwatch")
+                }
+            }
+        )
+
+        if (state.activeTimers.isNotEmpty()) {
+            // v1.7.5: LazyColumn → forEach because the parent Column is now
+            // verticalScroll-able. Active-timer counts are tiny (typically
+            // <10) so the laziness gain is negligible vs the layout
+            // simplicity gain.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AppSectionTitle(
+                    title = "Active timers"
+                )
+                state.activeTimers.forEach { timer ->
+                    ActiveTimerCard(
+                        timer = timer,
+                        onPause = { viewModel.pause(timer.id) },
+                        onResume = { viewModel.resume(timer.id) },
+                        onStop = { viewModel.stop(timer.id) },
+                        onDismiss = { viewModel.dismissFinished(timer.id) }
+                    )
+                }
+            }
+        }
+
+        TimerInputView(
+            state = state,
+            viewModel = viewModel,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Breathing room above the floating bottom-nav.
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun ActiveTimerCard(
+    timer: TimerInstance,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onStop: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isFinished = timer.state == TimerState.FINISHED
+    val pulseAlpha = if (LocalMotionEnabled.current) {
+        rememberInfiniteTransition(label = "timer-finished").animateFloat(
+            initialValue = 0.52f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(720, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "timer-pulse"
+        ).value
+    } else {
+        1f
+    }
+
+    AppSurfaceCard(highlighted = isFinished) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TimerProgressRing(timer = timer, pulseAlpha = pulseAlpha)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        timer.label.ifBlank { "Timer" },
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = if (isFinished) "Time’s up" else String.format(
+                            "%02d:%02d:%02d",
+                            timer.displayHours,
+                            timer.displayMinutes,
+                            timer.displaySeconds
+                        ),
+                        color = if (isFinished) AccentRed else TextPrimary,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    if (timer.state == TimerState.PAUSED) {
+                        AppStatusChip(label = "Paused", icon = Icons.Default.Pause, color = SnoozeYellow)
+                    }
+                }
+            }
+
+            if (isFinished) {
+                Button(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
+                ) {
+                    Text("Dismiss")
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onStop) {
+                        Icon(Icons.Default.Stop, "Stop timer", tint = AccentRed)
+                    }
+                    IconButton(onClick = { if (timer.state == TimerState.RUNNING) onPause() else onResume() }) {
+                        Icon(
+                            if (timer.state == TimerState.RUNNING) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (timer.state == TimerState.RUNNING) "Pause timer" else "Resume timer",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimerProgressRing(timer: TimerInstance, pulseAlpha: Float) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = timer.progress,
+        animationSpec = tween(100),
+        label = "timer-progress"
+    )
+    val accent = MaterialTheme.colorScheme.primary
+
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(54.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 4.dp.toPx()
+            val radius = (size.minDimension - strokeWidth) / 2
+            val topLeft = Offset(
+                (size.width - radius * 2) / 2,
+                (size.height - radius * 2) / 2
+            )
+            drawArc(
+                color = SurfaceCard,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = Size(radius * 2, radius * 2),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+            if (timer.state != TimerState.FINISHED) {
+                drawArc(
+                    color = accent,
+                    startAngle = -90f,
+                    sweepAngle = animatedProgress * 360f,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = Size(radius * 2, radius * 2),
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                )
+            }
+        }
+
+        Icon(
+            imageVector = if (timer.state == TimerState.FINISHED) Icons.Default.TimerOff else Icons.Default.Timer,
+            contentDescription = null,
+            tint = if (timer.state == TimerState.FINISHED) AccentRed.copy(alpha = pulseAlpha) else TextMuted
+        )
+    }
+}
+
+@Composable
+private fun TimerInputView(state: TimerUiState, viewModel: TimerViewModel, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            text = String.format(
+                "%02d:%02d:%02d",
+                state.inputHours,
+                state.inputMinutes,
+                state.inputSeconds
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            style = ClockTimeLarge,
+            color = TextPrimary,
+            textAlign = TextAlign.Center
+        )
+
+        if (state.inputDigits.isNotBlank()) {
+            TextButton(onClick = viewModel::clearInput) {
+                Text("Clear entry", color = TextMuted)
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            defaultPresets.forEach { preset ->
+                AppFilterChip(
+                    label = preset.label,
+                    selected = false,
+                    onClick = { viewModel.selectPreset(preset) },
+                )
+            }
+        }
+
+        NumPad(
+            onDigit = viewModel::appendDigit,
+            onDoubleZero = viewModel::appendDoubleZero,
+            onDelete = viewModel::deleteDigit
+        )
+
+        Button(
+            onClick = viewModel::start,
+            enabled = state.canStart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                disabledContentColor = TextMuted
+            )
+        ) {
+            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.size(8.dp))
+            Text("Start", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun TimeUnit(value: Int, unit: String) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(
+            text = String.format("%02d", value),
+            style = ClockTimeDisplay,
+            color = TextPrimary
+        )
+        Text(
+            text = unit,
+            fontSize = 18.sp,
+            color = TextSecondary,
+            modifier = Modifier.padding(bottom = 10.dp, start = 4.dp, end = 10.dp)
+        )
+    }
+}
+
+@Composable
+private fun NumPad(
+    onDigit: (Int) -> Unit,
+    onDoubleZero: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val keys = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, -2, 0, -1)
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        keys.chunked(3).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                row.forEach { key ->
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val pressed by interactionSource.collectIsPressedAsState()
+                    val keyLabel = when (key) {
+                        -1 -> "Delete digit"
+                        -2 -> "Add double zero"
+                        else -> "Enter $key"
+                    }
+                    val pressScale by animateFloatAsState(
+                        targetValue = if (pressed) 0.97f else 1f,
+                        animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing),
+                        label = "key-press-scale"
+                    )
+                    val accent = when (key) {
+                        -1 -> AccentRed
+                        -2 -> MaterialTheme.colorScheme.primary
+                        else -> TextPrimary
+                    }
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1.55f)
+                            .semantics { contentDescription = keyLabel }
+                            .graphicsLayer {
+                                scaleX = pressScale
+                                scaleY = pressScale
+                            }
+                            .clickable(
+                                role = Role.Button,
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) {
+                                when (key) {
+                                    -1 -> onDelete()
+                                    -2 -> onDoubleZero()
+                                    else -> onDigit(key)
+                                }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (key < 0) SurfaceCard else SurfaceMedium
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    color = if (key < 0) accent.copy(alpha = 0.08f) else androidx.compose.ui.graphics.Color.Transparent,
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when (key) {
+                                -1 -> Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = null, tint = accent)
+                                -2 -> Text("00", color = accent, fontSize = 22.sp, fontWeight = FontWeight.Medium)
+                                else -> Text(key.toString(), color = TextPrimary, fontSize = 24.sp, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

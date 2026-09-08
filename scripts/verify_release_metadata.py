@@ -11,7 +11,7 @@ from pathlib import Path
 
 VERSION_PATTERN = r"[0-9]+\.[0-9]+\.[0-9]+"
 SCHEMA_DIRECTORY = Path(
-    "app/schemas/com.sysadmindoc.alarmclock.data.local.AlarmDatabase"
+    "app/schemas/com.wakesync.app.data.local.AlarmDatabase"
 )
 
 
@@ -151,7 +151,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
     expect("scripts/verify_api37_release.py versionCode", verifier_code, version_code)
 
     for relative in (
-        "metadata/com.sysadmindoc.alarmclock.yml",
+        "metadata/com.wakesync.app.yml",
         "metadata/en-US/fdroid.yml",
     ):
         metadata = read_text(root, relative)
@@ -189,7 +189,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
 
     database_source = read_text(
         root,
-        "app/src/main/java/com/sysadmindoc/alarmclock/data/local/AlarmDatabase.kt",
+        "app/src/main/java/com/wakesync/app/data/local/AlarmDatabase.kt",
     )
     database_block = extract_one(
         database_source,
@@ -206,7 +206,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
     )
     migration_test = read_text(
         root,
-        "app/src/androidTest/java/com/sysadmindoc/alarmclock/data/local/AlarmDatabaseMigrationTest.kt",
+        "app/src/androidTest/java/com/wakesync/app/data/local/AlarmDatabaseMigrationTest.kt",
     )
     tested_database_version = int(
         extract_one(
@@ -233,7 +233,7 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
 
     backup_source = read_text(
         root,
-        "app/src/main/java/com/sysadmindoc/alarmclock/data/backup/BackupManager.kt",
+        "app/src/main/java/com/wakesync/app/data/backup/BackupManager.kt",
     )
     backup_version = int(
         extract_one(

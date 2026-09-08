@@ -12,11 +12,11 @@ plugins {
 }
 
 android {
-    namespace = "com.sysadmindoc.alarmclock"
+    namespace = "com.wakesync.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.sysadmindoc.alarmclock"
+        applicationId = "com.wakesync.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 135
@@ -193,9 +193,9 @@ val verifyRoomSchemaExports by tasks.registering {
 }
 
 val primaryComposeScreenFiles = listOf(
-    file("src/main/java/com/sysadmindoc/alarmclock/ui/alarmfiring/AlarmFiringScreen.kt"),
-    file("src/main/java/com/sysadmindoc/alarmclock/ui/alarmedit/AlarmEditScreen.kt"),
-    file("src/main/java/com/sysadmindoc/alarmclock/ui/settings/SettingsScreen.kt")
+    file("src/main/java/com/wakesync/app/ui/alarmfiring/AlarmFiringScreen.kt"),
+    file("src/main/java/com/wakesync/app/ui/alarmedit/AlarmEditScreen.kt"),
+    file("src/main/java/com/wakesync/app/ui/settings/SettingsScreen.kt")
 )
 
 val verifyLocalizedPrimaryScreens by tasks.registering {

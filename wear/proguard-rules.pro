@@ -1,12 +1,12 @@
 # Wear service entry points and the tiny shared model/cache are runtime-facing:
 # the system and Play Services bind these classes by manifest component name,
 # and the tile/complication callbacks are invoked through library dispatch.
--keep class com.sysadmindoc.alarmclock.wear.NextAlarmTileService { *; }
--keep class com.sysadmindoc.alarmclock.wear.NextAlarmComplicationDataSourceService { *; }
--keep class com.sysadmindoc.alarmclock.wear.WearAlarmDataListenerService { *; }
--keep class com.sysadmindoc.alarmclock.wear.WearAlarmData { *; }
--keep class com.sysadmindoc.alarmclock.wear.WearAlarmSnapshot { *; }
--keep class com.sysadmindoc.alarmclock.wear.WearAlarmStore { *; }
+-keep class com.wakesync.app.wear.NextAlarmTileService { *; }
+-keep class com.wakesync.app.wear.NextAlarmComplicationDataSourceService { *; }
+-keep class com.wakesync.app.wear.WearAlarmDataListenerService { *; }
+-keep class com.wakesync.app.wear.WearAlarmData { *; }
+-keep class com.wakesync.app.wear.WearAlarmSnapshot { *; }
+-keep class com.wakesync.app.wear.WearAlarmStore { *; }
 
 # Wear Tiles / ProtoLayout / complication APIs are service-provider frameworks.
 # Keep callback types stable under R8 full mode so release APKs behave like

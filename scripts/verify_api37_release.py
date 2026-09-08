@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-PACKAGE = "com.sysadmindoc.alarmclock"
+PACKAGE = "com.wakesync.app"
 EXPECTED_VERSION_CODE = "135"
 EXPECTED_VERSION_NAME = "1.15.33"
 DEFAULT_APKS = (

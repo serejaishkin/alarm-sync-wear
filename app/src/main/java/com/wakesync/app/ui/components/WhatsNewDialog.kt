@@ -1,0 +1,139 @@
+package com.wakesync.app.ui.components
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.wakesync.app.ui.theme.SurfaceCard
+import com.wakesync.app.ui.theme.SurfaceDark
+import com.wakesync.app.ui.theme.SurfaceMedium
+import com.wakesync.app.ui.theme.TextMuted
+import com.wakesync.app.ui.theme.TextPrimary
+import com.wakesync.app.ui.theme.TextSecondary
+
+/**
+ * v1.5.0: Shown once per app version via [WhatsNewTracker]. A concise, not
+ * exhaustive, list of changes — the README / CHANGELOG still carries the
+ * full diff. Purpose is to surface new features users can tap into.
+ */
+@Composable
+fun WhatsNewDialog(
+    version: String,
+    highlights: List<String>,
+    onOpenRoadmap: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Continue")
+            }
+        },
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                AppStatusChip(
+                    label = "Updated to v$version",
+                    icon = Icons.Default.AutoAwesome,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "What’s new",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "A quick tour of the biggest additions in this release.",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                TextButton(onClick = onOpenRoadmap) {
+                    Text("What's next", color = MaterialTheme.colorScheme.primary)
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Review later", color = TextMuted)
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                highlights.forEachIndexed { index, line ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = SurfaceCard.copy(alpha = 0.82f),
+                        border = BorderStroke(1.dp, TextMuted.copy(alpha = 0.14f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${index + 1}",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Text(
+                                text = line,
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        containerColor = SurfaceMedium,
+        shape = RoundedCornerShape(12.dp)
+    )
+}
