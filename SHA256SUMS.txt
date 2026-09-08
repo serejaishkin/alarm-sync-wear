@@ -1,0 +1,4 @@
+a8ef2dca52cdfb64dca05e5b44e2976664e15797b947a1967144b8d979df337c  *app-fdroid-release.apk
+70a435dd5dc141f76aeedde4679692b1cf141970b6b62bafdd40e40fd4fedbfc  *app-play-release.apk
+8cf5c76a036fb4b36ead8059eea6f9729ac6da8e45810daa0f6f123ff0248e70  *app-play-release.aab
+5ddb23a8da825bd56aa7e375b7fdd5289532c297e387693d5daa5b2a2d5de23d  *wear-release.apk
