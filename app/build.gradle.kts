@@ -2,7 +2,7 @@ import java.util.Properties
 import java.io.FileInputStream
 import org.gradle.api.GradleException
 
-// WakeSync v1.15.33
+// WakeSync v1.15.34
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -19,8 +19,8 @@ android {
         applicationId = "com.wakesync.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 135
-        versionName = "1.15.33"
+        versionCode = 136
+        versionName = "1.15.34"
         buildConfigField("boolean", "USE_MEDIA3_ALARM_PLAYER", "true")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
