@@ -2,7 +2,7 @@
 
 [English](README.md) | [Русский](README.ru.md)
 
-![Version](https://img.shields.io/badge/version-1.15.33-blue)
+![Version](https://img.shields.io/badge/version-1.15.34-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 ![Platform](https://img.shields.io/badge/platform-Android%208.0+-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)
@@ -19,7 +19,7 @@
 **Последний подписанный APK** - [страница Releases](https://github.com/serejaishkin/alarm-sync-wear/releases/latest)
 
 ```
-adb install WakeSync-v1.15.33-play-release.apk
+adb install WakeSync-v1.15.34-play-release.apk
 ```
 
 Версия для Google Play (Play flavor) включает загрузчик будильников с YouTube (yt-dlp + NewPipe Extractor), мост Wear OS Data Layer, тайл/компликацию следующего будильника на часах, опциональную интеграцию Health Connect READ_SLEEP и распознавание рукописного ввода ML Kit Digital Ink. Версия для F-Droid исключает проприетарные компоненты, связанные с распространением через Play.
@@ -273,7 +273,7 @@ cd alarm-sync-wear
 Проверка сертификата sideload-APK:
 
 ```bash
-apksigner verify --print-certs WakeSync-v1.15.33-play-release.apk
+apksigner verify --print-certs WakeSync-v1.15.34-play-release.apk
 ```
 
 Сравните `certificate SHA-256 digest` с отпечатком, опубликованным в `APK-CERT-FINGERPRINTS.txt` релиза.

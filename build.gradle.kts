@@ -1,7 +1,7 @@
 import java.io.File
 import java.util.Properties
 
-// WakeSync v1.15.33
+// WakeSync v1.15.34
 // Top-level build file
 plugins {
     id("com.android.application") version "8.11.1" apply false
