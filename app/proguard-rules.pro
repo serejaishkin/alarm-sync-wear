@@ -75,6 +75,14 @@
 #       R8 must not rename these constants or valueOf() will silently fail. =====
 -keep enum com.wakesync.app.ui.alarmfiring.challenges.ChallengeType { *; }
 
+# ===== Sync enums — Moshi's EnumJsonAdapter resolves constants reflectively via
+#       Class.getField(name) when AlarmSyncPayloadJsonAdapter initializes, and
+#       AlarmSyncCoordinator restores AlarmSyncSource with valueOf() from
+#       persisted names. Renamed constants crash the sync flow (Missing field
+#       in ... / NoSuchFieldException: CREATE) in release builds. =====
+-keep enum com.wakesync.app.sync.AlarmSyncOperation { *; }
+-keep enum com.wakesync.app.sync.AlarmSyncSource { *; }
+
 # ===== Workers =====
 -keep @androidx.hilt.work.HiltWorker class * { *; }
 
