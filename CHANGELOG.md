@@ -2,7 +2,7 @@
 
 All notable changes to WakeSync will be documented in this file.
 
-## [1.15.34] - 2026-09-08
+## [Unreleased]
 
 ### Internal
 

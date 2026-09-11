@@ -14,8 +14,8 @@ android {
         applicationId = "com.wakesync.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 136
-        versionName = "1.15.34"
+        versionCode = 135
+        versionName = "1.15.33"
     }
 
     signingConfigs {
