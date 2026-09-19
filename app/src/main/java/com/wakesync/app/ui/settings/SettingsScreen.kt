@@ -223,10 +223,8 @@ fun SettingsScreen(
     var showDefaultSnoozeMenu by remember { mutableStateOf(false) }
     var showGradualVolumeMenu by remember { mutableStateOf(false) }
     var showAutoSilenceMenu by remember { mutableStateOf(false) }
-    var showTemperatureMenu by remember { mutableStateOf(false) }
     var showCalendarLeadMenu by remember { mutableStateOf(false) }
     var showCommuteBaselineMenu by remember { mutableStateOf(false) }
-    var showCommuteWeatherMenu by remember { mutableStateOf(false) }
     var showClearCommuteHistoryDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
@@ -489,12 +487,6 @@ fun SettingsScreen(
                 description = stringResource(R.string.settings_dashboard_description)
             ) {
                 SettingsToggle(
-                    label = stringResource(R.string.show_weather),
-                    checked = state.settings.showWeatherOnDashboard,
-                    supportingText = stringResource(R.string.settings_show_weather_description),
-                    onToggle = viewModel::toggleShowWeather
-                )
-                SettingsToggle(
                     label = stringResource(R.string.show_calendar),
                     checked = state.settings.showCalendarOnDashboard,
                     supportingText = stringResource(R.string.settings_show_calendar_description),
@@ -574,84 +566,12 @@ fun SettingsScreen(
                     }
                 }
                 SettingsActionRow(
-                    label = stringResource(R.string.settings_weather_buffer),
-                    value = stringResource(R.string.settings_minutes_short, state.settings.calendarCommuteWeatherExtraMinutes),
-                    supportingText = stringResource(R.string.settings_weather_buffer_description),
-                    onClick = { showCommuteWeatherMenu = true },
-                    enabled = state.settings.calendarCommuteAwareEnabled
-                )
-                DropdownMenu(
-                    expanded = showCommuteWeatherMenu,
-                    onDismissRequest = { showCommuteWeatherMenu = false }
-                ) {
-                    listOf(0, 10, 15, 20, 30, 45, 60).forEach { minutes ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    if (minutes == 0) stringResource(R.string.settings_no_weather_buffer)
-                                    else pluralStringResource(R.plurals.settings_minutes, minutes, minutes)
-                                )
-                            },
-                            onClick = {
-                                viewModel.updateCalendarCommuteWeatherExtraMinutes(minutes)
-                                showCommuteWeatherMenu = false
-                            }
-                        )
-                    }
-                }
-                BufferedSettingsTextField(
-                    value = state.settings.googleRoutesApiKey,
-                    onCommit = viewModel::updateGoogleRoutesApiKey,
-                    label = { Text(stringResource(R.string.settings_routes_api_key)) },
-                    placeholder = { Text(stringResource(R.string.settings_routes_api_placeholder)) },
-                    enabled = state.settings.calendarCommuteAwareEnabled,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation()
-                )
-                if (state.settings.calendarCommuteAwareEnabled && state.settings.googleRoutesApiKey.isBlank()) {
-                    AppInlineNotice(
-                        title = stringResource(R.string.settings_commute_fallback),
-                        message = stringResource(R.string.settings_commute_fallback_description),
-                        icon = Icons.Default.Cloud,
-                        color = AccentBlue
-                    )
-                }
-                SettingsActionRow(
                     label = stringResource(R.string.settings_commute_history),
                     value = stringResource(R.string.settings_clear),
                     supportingText = stringResource(R.string.settings_commute_history_description),
                     onClick = { showClearCommuteHistoryDialog = true },
                     enabled = state.settings.calendarCommuteAwareEnabled
                 )
-                SettingsActionRow(
-                    label = stringResource(R.string.temperature_unit),
-                    value = stringResource(
-                        if (state.settings.temperatureUnit == "celsius") R.string.settings_celsius
-                        else R.string.settings_fahrenheit
-                    ),
-                    supportingText = stringResource(R.string.settings_temperature_description),
-                    onClick = { showTemperatureMenu = true }
-                )
-                DropdownMenu(
-                    expanded = showTemperatureMenu,
-                    onDismissRequest = { showTemperatureMenu = false }
-                ) {
-                    listOf(
-                        "fahrenheit" to stringResource(R.string.settings_fahrenheit),
-                        "celsius" to stringResource(R.string.settings_celsius)
-                    ).forEach { (unit, label) ->
-                        DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = {
-                                if (unit != state.settings.temperatureUnit) {
-                                    viewModel.toggleTemperatureUnit()
-                                }
-                                showTemperatureMenu = false
-                            }
-                        )
-                    }
-                }
 
                 if (showClearCommuteHistoryDialog) {
                     AlertDialog(
@@ -696,18 +616,6 @@ fun SettingsScreen(
                     checked = state.settings.showWorldClockTab,
                     supportingText = stringResource(R.string.settings_show_world_description),
                     onToggle = viewModel::toggleShowWorldClockTab
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_show_news_tab),
-                    checked = state.settings.showNewsTab,
-                    supportingText = stringResource(R.string.settings_show_news_description),
-                    onToggle = viewModel::toggleShowNewsTab
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_radar_tab),
-                    checked = state.settings.showRadarEmbed,
-                    supportingText = stringResource(R.string.settings_radar_description),
-                    onToggle = viewModel::toggleShowRadarEmbed
                 )
             }
             }

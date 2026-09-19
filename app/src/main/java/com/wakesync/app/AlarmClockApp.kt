@@ -16,12 +16,10 @@ import com.wakesync.app.data.preferences.PreferencesManager
 import com.wakesync.app.receiver.MissedAlarmUnlockReceiver
 import com.wakesync.app.service.AlarmService
 import com.wakesync.app.service.NextAlarmNotifier
-import com.wakesync.app.service.YouTubeDownloadInitializer
 import com.wakesync.app.util.ReliabilityDoctor
 import com.wakesync.app.wear.WearNextAlarmBridge
 import com.wakesync.app.worker.AlarmHealthWorker
 import com.wakesync.app.worker.CalendarAutoAlarmWorker
-import com.wakesync.app.worker.HolidaySyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,11 +40,6 @@ class AlarmClockApp : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
 
-    /**
-     * Flavor-bound: real on play (unpacks yt-dlp binaries), no-op on f-droid.
-     * Run off the main thread so process startup isn't blocked.
-     */
-    @Inject lateinit var youTubeDownloadInitializer: YouTubeDownloadInitializer
     @Inject lateinit var preferencesManager: PreferencesManager
     @Inject lateinit var wearNextAlarmBridge: WearNextAlarmBridge
 
@@ -70,7 +63,6 @@ class AlarmClockApp : Application(), Configuration.Provider {
         fun nextAlarmCalculator(): com.wakesync.app.domain.NextAlarmCalculator
         fun alarmEventRepository(): com.wakesync.app.data.repository.AlarmEventRepository
         fun alarmIncidentRepository(): com.wakesync.app.data.repository.AlarmIncidentRepository
-        fun webhookService(): com.wakesync.app.service.WebhookService
         fun preferencesManager(): PreferencesManager
         fun syncCoordinator(): com.wakesync.app.sync.AlarmSyncCoordinator
     }
@@ -99,14 +91,6 @@ class AlarmClockApp : Application(), Configuration.Provider {
         com.wakesync.app.util.CrashLogger.install(this)
         AlarmService.createNotificationChannels(this)
         registerMissedAlarmReplayReceiver()
-
-        // F13: Schedule weekly holiday sync
-        val holidaySync = PeriodicWorkRequestBuilder<HolidaySyncWorker>(7, TimeUnit.DAYS).build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "holiday_sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            holidaySync
-        )
 
         // Proactive alarm-health check: detect when battery optimization or
         // permissions are re-enabled after Android updates and warn the user
@@ -141,19 +125,6 @@ class AlarmClockApp : Application(), Configuration.Provider {
         // Start alarm sync with Wear OS — observes Room alarms and sends
         // mutations to the watch via the Data Layer transport.
         entryPoint.syncCoordinator().start()
-
-        // v1.7.0: Unpack yt-dlp binaries off the main thread so the YouTube
-        // download path is ready by the time the user opens the ringtone
-        // picker. No-op on the f-droid flavor.
-        appScope.launch {
-            try {
-                youTubeDownloadInitializer.initialize()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                // Init failure must NOT crash the app — the downloader checks
-                // isAvailable() before letting the UI start a download.
-            }
-        }
 
         // Seed default alarm on first launch
         val prefs = getSharedPreferences("app_prefs", 0)

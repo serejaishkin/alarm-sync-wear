@@ -15,7 +15,6 @@ import com.wakesync.app.data.preferences.isPaused
 import com.wakesync.app.data.local.entity.AlarmIncidentEvent
 import com.wakesync.app.data.repository.AlarmIncidentRepository
 import com.wakesync.app.data.repository.AlarmRepository
-import com.wakesync.app.data.repository.HolidayRepository
 import com.wakesync.app.directboot.DirectBootAlarmCache
 import com.wakesync.app.receiver.AlarmReceiver
 import com.wakesync.app.service.BedtimeZenRuleManager
@@ -38,9 +37,7 @@ class AlarmScheduler @Inject constructor(
     private val repository: AlarmRepository,
     private val calculator: NextAlarmCalculator,
     private val preferencesManager: com.wakesync.app.data.preferences.PreferencesManager,
-    private val holidayRepository: HolidayRepository,
-    private val alarmIncidentRepository: AlarmIncidentRepository,
-    private val weatherRepository: com.wakesync.app.data.repository.WeatherRepository
+    private val alarmIncidentRepository: AlarmIncidentRepository
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -48,9 +45,6 @@ class AlarmScheduler @Inject constructor(
         const val EXTRA_ALARM_ID = "alarm_id"
         const val EXTRA_ALARM_FIRE_ID = "alarm_fire_id"
         const val EXTRA_SCHEDULED_AT = "scheduled_at"
-
-        private val SNOW_ICE_CODES = setOf(56, 57, 66, 67, 71, 73, 75, 77, 85, 86)
-        fun isSnowOrIceCode(code: Int): Boolean = code in SNOW_ICE_CODES
     }
 
     /**
@@ -126,91 +120,6 @@ class AlarmScheduler @Inject constructor(
             calculateFrom = calculator::calculate
         )
         triggerTime = vacationAdjustment.triggerTime
-
-        // F13: Holiday auto-skip. Dates are resolved in the alarm's scheduling
-        // zone: a fixed-zone alarm whose local fire time is across midnight
-        // from the device zone would otherwise check the wrong calendar day.
-        if (sanitizedAlarm.skipOnHolidays && settings.holidayAutoSkipEnabled) {
-            val holidayZone = sanitizedAlarm.schedulingZone(ZoneId.systemDefault())
-            if (!sanitizedAlarm.isRecurringSchedule) {
-                // One-shot alarm: if the day is a holiday, don't fire at all.
-                // Store 0, not the suppressed future trigger — a stored future
-                // trigger survives reboot/app-update reschedules (which re-arm
-                // any valid-looking nextTriggerTime without holiday checks)
-                // and the alarm would fire on the holiday after a reboot.
-                val triggerDate = Instant.ofEpochMilli(triggerTime)
-                    .atZone(holidayZone).toLocalDate()
-                if (holidayRepository.isHoliday(triggerDate)) {
-                    cancelScheduledEntries(sanitizedAlarm.id)
-                    repository.updateNextTrigger(sanitizedAlarm.id, 0)
-                    requestWidgetUpdateIfNeeded(requestWidgetUpdate)
-                    return
-                }
-            } else {
-                var advanced = advanceTriggerPastHolidays(sanitizedAlarm, triggerTime, holidayZone)
-                if (advanced != null && advanced != triggerTime) {
-                    // Holiday advancement can push the occurrence inside the
-                    // vacation window; re-apply vacation, then clear holidays
-                    // once more from the vacation-adjusted date.
-                    val revacationed = VacationAlarmPolicy.adjustTrigger(
-                        alarm = sanitizedAlarm,
-                        initialTriggerTime = advanced,
-                        settings = settings,
-                        calculateFrom = calculator::calculate
-                    ).triggerTime
-                    if (revacationed != advanced) {
-                        advanced = advanceTriggerPastHolidays(
-                            sanitizedAlarm, revacationed, holidayZone
-                        )
-                    }
-                }
-                if (advanced == null) {
-                    // All candidates were holidays (corrupt data or an unusually
-                    // long public-holiday run): suppress this occurrence rather
-                    // than fire on a holiday. The alarm stays enabled; it
-                    // reschedules once holiday data refreshes or the user re-saves.
-                    cancelScheduledEntries(sanitizedAlarm.id)
-                    repository.updateNextTrigger(sanitizedAlarm.id, 0)
-                    requestWidgetUpdateIfNeeded(requestWidgetUpdate)
-                    return
-                }
-                triggerTime = advanced
-            }
-        }
-
-        if (sanitizedAlarm.weatherEarlyMinutes > 0 && triggerTime > 0) {
-            val weatherSettings = preferencesManager.getCurrentSettings()
-            val lat = weatherSettings.lastKnownLatitude
-            val lng = weatherSettings.lastKnownLongitude
-            val haveLocation = lat != 0.0 || lng != 0.0
-            // Only trust cached weather that was fetched for the current location.
-            var weather = weatherRepository.getCachedWeather(
-                latitude = lat.takeIf { haveLocation },
-                longitude = lng.takeIf { haveLocation }
-            )
-            if (weather == null && haveLocation) {
-                weather = weatherRepository.getWeather(lat, lng, weatherSettings.temperatureUnit)
-                    .getOrNull()
-                    ?.response
-            }
-            if (weather != null) {
-                val triggerDate = java.time.Instant.ofEpochMilli(triggerTime)
-                    .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                val dayIndex = weather.daily?.time?.indexOfFirst { it == triggerDate.toString() } ?: -1
-                if (dayIndex >= 0) {
-                    val code = weather.daily?.weatherCode?.getOrNull(dayIndex)
-                    if (code != null && isSnowOrIceCode(code)) {
-                        // Saving an alarm inside its weather-lead window must
-                        // not produce a past trigger — setAlarmClock() fires a
-                        // past time immediately. Keep at least a minute out.
-                        triggerTime = maxOf(
-                            triggerTime - sanitizedAlarm.weatherEarlyMinutes * 60_000L,
-                            System.currentTimeMillis() + 60_000L
-                        )
-                    }
-                }
-            }
-        }
 
         repository.updateNextTrigger(sanitizedAlarm.id, triggerTime)
         if (exactAlarmsAllowed) {

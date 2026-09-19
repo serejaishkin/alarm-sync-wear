@@ -43,7 +43,6 @@ import com.wakesync.app.integration.hue.HueBridgeClient
 import com.wakesync.app.integration.hue.HueConnectionResult
 import com.wakesync.app.integration.hue.HuePinResult
 import com.wakesync.app.integration.hue.HueTrustStore
-import com.wakesync.app.service.WebhookService
 import com.wakesync.app.util.LocalNetworkPermission
 import com.wakesync.app.util.ManufacturerCompat
 import com.wakesync.app.worker.CalendarAutoAlarmWorker
@@ -71,9 +70,6 @@ data class SettingsUiState(
     val androidVersion: String = "",
     val deviceModel: String = "",
     val appVersion: String = "",
-    // Webhook test result
-    val webhookTestResult: String? = null,
-    val isWebhookTesting: Boolean = false,
     // Hue test result
     val hueTestResult: String? = null,
     val isHueTesting: Boolean = false,
@@ -156,7 +152,6 @@ class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val alarmScheduler: AlarmScheduler,
     private val backupManager: BackupManager,
-    private val webhookService: WebhookService,
     private val healthConnectSleepRepository: HealthConnectSleepRepository,
     private val supportExportManager: SupportExportManager,
     private val alarmRepository: AlarmRepository,
@@ -173,7 +168,6 @@ class SettingsViewModel @Inject constructor(
             needsGuidance = ManufacturerCompat.needsBatteryGuidance()
         )
     )
-    private val _webhookTestState = MutableStateFlow(IntegrationTestState())
     private val _hueTestState = MutableStateFlow(IntegrationTestState())
     private val _wakeReadinessState = MutableStateFlow(WakeReadinessState.from(application))
     private val _healthConnectSleepState = MutableStateFlow(HealthConnectSleepSummary())
@@ -199,10 +193,9 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         preferencesManager.settings,
         _batteryState,
-        _webhookTestState,
         _hueTestState,
         auxiliaryState
-    ) { settings, battery, webhookState, hueState, auxiliary ->
+    ) { settings, battery, hueState, auxiliary ->
         val wakeReadiness = auxiliary.wakeReadiness
         val guidance = ManufacturerCompat.getGuidance()
         SettingsUiState(
@@ -216,8 +209,6 @@ class SettingsViewModel @Inject constructor(
             androidVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
             deviceModel = "${Build.MANUFACTURER} ${Build.MODEL}",
             appVersion = BuildConfig.VERSION_NAME,
-            webhookTestResult = webhookState.message,
-            isWebhookTesting = webhookState.isRunning,
             hueTestResult = hueState.message,
             isHueTesting = hueState.isRunning,
             hasNotificationPermission = wakeReadiness.hasNotificationPermission,
@@ -378,8 +369,6 @@ class SettingsViewModel @Inject constructor(
     // v1.8.0
     fun toggleShowNewsTab(enabled: Boolean) =
         updateSettings { it.copy(showNewsTab = enabled) }
-    fun toggleShowRadarEmbed(enabled: Boolean) =
-        updateSettings { it.copy(showRadarEmbed = enabled) }
 
     fun toggle24Hour(enabled: Boolean) = updateSettings { it.copy(is24HourFormat = enabled) }
     fun togglePhoneSpeakers(enabled: Boolean) = updateSettings { it.copy(usePhoneSpeakers = enabled) }
@@ -390,7 +379,6 @@ class SettingsViewModel @Inject constructor(
         updateSettings { it.copy(hideAlarmLabelsOnPublicSurfaces = enabled) }
     fun updateDefaultSnooze(minutes: Int) = updateSettings { it.copy(defaultSnoozeDuration = minutes) }
     fun updateDefaultGradualVolume(seconds: Int) = updateSettings { it.copy(defaultGradualVolume = seconds) }
-    fun toggleShowWeather(enabled: Boolean) = updateSettings { it.copy(showWeatherOnDashboard = enabled) }
     fun toggleShowCalendar(enabled: Boolean) = updateSettings { it.copy(showCalendarOnDashboard = enabled) }
     fun togglePostDismissSummary(enabled: Boolean) =
         updateSettings { it.copy(postDismissSummaryEnabled = enabled) }
@@ -406,64 +394,12 @@ class SettingsViewModel @Inject constructor(
     fun updateCalendarCommuteBaselineMinutes(minutes: Int) = updateCalendarAutoAlarmSettings {
         it.copy(calendarCommuteBaselineMinutes = minutes.coerceIn(0, 240))
     }
-    fun updateCalendarCommuteWeatherExtraMinutes(minutes: Int) = updateCalendarAutoAlarmSettings {
-        it.copy(calendarCommuteWeatherExtraMinutes = minutes.coerceIn(0, 120))
-    }
     fun clearLearnedCommuteHistory() {
         viewModelScope.launch(Dispatchers.IO) { commuteHistoryStore.clear() }
     }
-    fun updateGoogleRoutesApiKey(key: String) = updateCalendarAutoAlarmSettings {
-        it.copy(googleRoutesApiKey = key.trim())
-    }
     fun updateAutoSilence(minutes: Int) = updateSettings { it.copy(autoSilenceMinutes = minutes) }
-    fun toggleTemperatureUnit() = updateSettings {
-        it.copy(temperatureUnit = if (it.temperatureUnit == "fahrenheit") "celsius" else "fahrenheit")
-    }
     // F2
     fun toggleFlipToSnooze(enabled: Boolean) = updateSettings { it.copy(flipToSnoozeEnabled = enabled) }
-    // F11: Webhooks
-    fun toggleWebhook(enabled: Boolean) = updateSettings { it.copy(webhookEnabled = enabled) }
-    fun updateWebhookUrl(url: String) = updateSettings { it.copy(webhookUrl = url) }
-    fun toggleWebhookLabelSharing(enabled: Boolean) = updateSettings { it.copy(webhookIncludeLabel = enabled) }
-    fun updateWebhookSigningSecret(secret: String) = updateSettings {
-        it.copy(webhookSigningSecret = secret.trim())
-    }
-    fun testWebhook() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _webhookTestState.value = IntegrationTestState(
-                message = "Checking webhook endpoint...",
-                isRunning = true
-            )
-            val settings = preferencesManager.getCurrentSettings()
-            val url = settings.webhookUrl
-            val result = when {
-                url.isBlank() -> "Webhook failed — add an HTTPS URL first"
-                !webhookService.isAllowedUrl(url) && url.trim().startsWith("http://", ignoreCase = true) ->
-                    "Webhook failed — use HTTPS; cleartext HTTP is blocked"
-                !webhookService.isAllowedUrl(url) -> "Webhook failed — enter a valid HTTPS URL"
-                LocalNetworkPermission.requiresPermissionForUrl(url) &&
-                    !LocalNetworkPermission.isGranted(getApplication()) ->
-                    "Webhook failed — allow local network access first"
-                webhookService.test(
-                    url = url,
-                    includeLabel = settings.webhookIncludeLabel,
-                    signingSecret = settings.webhookSigningSecret
-                ) -> "Webhook OK"
-                else -> "Webhook failed — endpoint did not return 2xx"
-            }
-            _webhookTestState.value = IntegrationTestState(message = result, isRunning = false)
-            kotlinx.coroutines.delay(4000)
-            if (_webhookTestState.value.message == result) {
-                _webhookTestState.value = IntegrationTestState()
-            }
-        }
-    }
-    // F13: Holidays
-    fun toggleHolidayAutoSkip(enabled: Boolean) =
-        updateSettingsAndReschedule { it.copy(holidayAutoSkipEnabled = enabled) }
-    fun updateHolidayCountryCode(code: String) = updateSettingsAndReschedule {
-        it.copy(holidayCountryCode = code.trim().uppercase(Locale.US))
-    }
     // F15: Hue
     fun updateHueBridgeIp(ip: String) = updateSettings { it.copy(hueBridgeIp = ip.trim()) }
     fun updateHueApiKey(key: String) = updateSettings { it.copy(hueApiKey = key.trim()) }

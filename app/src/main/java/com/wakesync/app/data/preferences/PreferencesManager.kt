@@ -24,13 +24,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import java.io.IOException
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "alarm_settings")
-
-const val DEFAULT_NEWS_FEED_URL = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
 
 data class AppSettings(
     val is24HourFormat: Boolean = false,
@@ -49,18 +46,15 @@ data class AppSettings(
     val vacationStartMillis: Long = 0,
     val vacationEndMillis: Long = 0,
     // Dashboard
-    val showWeatherOnDashboard: Boolean = true,
     val showCalendarOnDashboard: Boolean = true,
     val postDismissSummaryEnabled: Boolean = false,
+    // Solar-alarm relies on the last known coordinates (updated by the now-
+    // removed weather/geocoding network features; keeps working with the
+    // final cached values until the user moves without re-running an update).
     val lastKnownLatitude: Double = 0.0,
     val lastKnownLongitude: Double = 0.0,
     // Auto-silence
     val autoSilenceMinutes: Int = 10, // 0 = never, 5/10/15/30
-    // Temperature unit
-    val temperatureUnit: String = "fahrenheit", // "fahrenheit" or "celsius"
-    // Manual location for weather
-    val locationName: String = "", // e.g. "Dallas, Texas, United States"
-    val useManualLocation: Boolean = false,
     // Bedtime
     val bedtimeEnabled: Boolean = false,
     val bedtimeHour: Int = 23,
@@ -84,18 +78,6 @@ data class AppSettings(
     val bedtimeStayUpLateUntilMillis: Long = 0,
     // F2: Flip-to-snooze (global toggle)
     val flipToSnoozeEnabled: Boolean = false,
-    // F11: Webhook integrations
-    val webhookEnabled: Boolean = false,
-    val webhookUrl: String = "",
-    val webhookIncludeLabel: Boolean = true,
-    val webhookSigningSecret: String = "",
-    val webhookLastDeliveryStatus: String = "",
-    val webhookLastDeliveryAtMillis: Long = 0,
-    // Rolling newline-delimited delivery log (newest first), capped for the UI.
-    val webhookDeliveryLog: String = "",
-    // F13: Public holiday auto-skip
-    val holidayAutoSkipEnabled: Boolean = false,
-    val holidayCountryCode: String = "",  // ISO 3166-1 alpha-2 (e.g. "US", "GB")
     // F15: Philips Hue
     val hueBridgeIp: String = "",
     val hueApiKey: String = "",
@@ -111,8 +93,6 @@ data class AppSettings(
     val calendarAutoAlarmMinutesBefore: Int = 60,
     val calendarCommuteAwareEnabled: Boolean = false,
     val calendarCommuteBaselineMinutes: Int = 0,
-    val calendarCommuteWeatherExtraMinutes: Int = 15,
-    val googleRoutesApiKey: String = "",
     // v1.2.0: Guardian defaults
     val guardianContactName: String = "",
     val guardianContactPhone: String = "",
@@ -146,14 +126,6 @@ data class AppSettings(
     val showDashboardTab: Boolean = true,
     val showTimerTab: Boolean = true,
     val showWorldClockTab: Boolean = true,
-    // v1.8.0: Show News tab (RSS feed reader, Google News default).
-    val showNewsTab: Boolean = true,
-    // v1.8.0: Show the Windy radar embed at the bottom of the Weather tab.
-    val showRadarEmbed: Boolean = true,
-    // v1.8.0: News feed source URL. Defaults to Google News top stories,
-    // but power users can paste any RSS/Atom URL — Rome handles all three
-    // major feed flavors.
-    val newsFeedUrl: String = DEFAULT_NEWS_FEED_URL,
     // v1.11.6 (roadmap N6): "Pause all alarms" single-tap suspend. Distinct
     // from vacation mode — vacation requires a start+end date and only
     // touches repeating alarms; this hard-suspends every alarm (one-shots
@@ -175,14 +147,7 @@ data class AppSettings(
     val challengeBypassEnabled: Boolean = false,
     val challengeBypassDelaySeconds: Int = 30,
     val challengeAudioDuckingEnabled: Boolean = false,
-    val challengeAudioDuckPercent: Int = 35,
-    // v1.14.19: YouTube engine provenance (Play flavor only; F-Droid ignores).
-    val ytEngineBundledVersion: String = "",
-    val ytEngineActiveVersion: String = "",
-    val ytEngineLastUpdateMs: Long = 0,
-    val ytEngineLastUpdateStatus: String = "",
-    val ytEngineLastUpdateSource: String = "",
-    val ytEngineLastFailureReason: String = ""
+    val challengeAudioDuckPercent: Int = 35
 )
 
 private fun AppSettings.sanitized(): AppSettings {
@@ -193,13 +158,6 @@ private fun AppSettings.sanitized(): AppSettings {
     val normalizedAccent = accentColor.trim().takeIf {
         it.startsWith("#") && runCatching { Color.parseColor(it) }.isSuccess
     } ?: "#5B9EF4"
-    val normalizedTemperatureUnit =
-        if (temperatureUnit.equals("celsius", ignoreCase = true)) "celsius" else "fahrenheit"
-    val normalizedHolidayCountryCode = holidayCountryCode
-        .trim()
-        .uppercase(Locale.US)
-        .filter(Char::isLetter)
-        .take(2)
     val normalizedCustomTypingPhrases = customTypingPhrases
         .lineSequence()
         .map { it.trim() }
@@ -210,11 +168,6 @@ private fun AppSettings.sanitized(): AppSettings {
         .map { it.trim() }
         .filter { it.isNotEmpty() }
         .joinToString("\n")
-    val normalizedLocationName = locationName.trim().take(120)
-    val normalizedGoogleRoutesApiKey = googleRoutesApiKey.trim().take(200)
-    val normalizedWebhookStatus = webhookLastDeliveryStatus.trim().take(160)
-    // Cap the rolling log so a runaway retry loop can't grow DataStore unbounded.
-    val normalizedWebhookLog = webhookDeliveryLog.lineSequence().take(20).joinToString("\n").take(2_000)
 
     val normalizedPauseUntil = pauseUntilMillis.coerceAtLeast(0)
     return copy(
@@ -224,12 +177,9 @@ private fun AppSettings.sanitized(): AppSettings {
         vacationModeEnabled = vacationModeEnabled && vacationWindowValid,
         vacationStartMillis = normalizedVacationStart,
         vacationEndMillis = normalizedVacationEnd,
+        autoSilenceMinutes = autoSilenceMinutes.coerceIn(0, 240),
         lastKnownLatitude = lastKnownLatitude.coerceIn(-90.0, 90.0),
         lastKnownLongitude = lastKnownLongitude.coerceIn(-180.0, 180.0),
-        autoSilenceMinutes = autoSilenceMinutes.coerceIn(0, 240),
-        temperatureUnit = normalizedTemperatureUnit,
-        locationName = normalizedLocationName,
-        useManualLocation = useManualLocation && normalizedLocationName.isNotBlank(),
         bedtimeHour = bedtimeHour.coerceIn(0, 23),
         bedtimeMinute = bedtimeMinute.coerceIn(0, 59),
         sleepGoalHours = sleepGoalHours.coerceIn(1, 16),
@@ -239,12 +189,6 @@ private fun AppSettings.sanitized(): AppSettings {
         jetLagTargetWakeMinutes = jetLagTargetWakeMinutes.coerceIn(0, 1_439),
         jetLagAdjustmentDays = jetLagAdjustmentDays.coerceIn(1, 14),
         jetLagDirection = JetLagDirection.fromKey(jetLagDirection).storageKey,
-        webhookUrl = webhookUrl.trim(),
-        webhookSigningSecret = webhookSigningSecret.trim().take(256),
-        webhookLastDeliveryStatus = normalizedWebhookStatus,
-        webhookLastDeliveryAtMillis = webhookLastDeliveryAtMillis.coerceAtLeast(0),
-        webhookDeliveryLog = normalizedWebhookLog,
-        holidayCountryCode = normalizedHolidayCountryCode,
         hueBridgeIp = hueBridgeIp.trim(),
         hueApiKey = hueApiKey.trim(),
         hueLightIds = hueLightIds.trim(),
@@ -252,8 +196,6 @@ private fun AppSettings.sanitized(): AppSettings {
         accentColor = normalizedAccent,
         calendarAutoAlarmMinutesBefore = calendarAutoAlarmMinutesBefore.coerceIn(0, 720),
         calendarCommuteBaselineMinutes = calendarCommuteBaselineMinutes.coerceIn(0, 240),
-        calendarCommuteWeatherExtraMinutes = calendarCommuteWeatherExtraMinutes.coerceIn(0, 120),
-        googleRoutesApiKey = normalizedGoogleRoutesApiKey,
         guardianContactName = guardianContactName.trim().take(80),
         guardianContactPhone = guardianContactPhone.trim().take(40),
         customTypingPhrases = normalizedCustomTypingPhrases,
@@ -268,8 +210,7 @@ private fun AppSettings.sanitized(): AppSettings {
             it in setOf("hybrid", "buttons", "swipe")
         } ?: "hybrid",
         challengeBypassDelaySeconds = challengeBypassDelaySeconds.coerceIn(10, 120),
-        challengeAudioDuckPercent = challengeAudioDuckPercent.coerceIn(10, 80),
-        ytEngineLastFailureReason = ytEngineLastFailureReason.take(200)
+        challengeAudioDuckPercent = challengeAudioDuckPercent.coerceIn(10, 80)
     )
 }
 
@@ -309,15 +250,11 @@ class PreferencesManager @Inject constructor(
         val VACATION_ENABLED = booleanPreferencesKey("vacation_enabled")
         val VACATION_START = longPreferencesKey("vacation_start")
         val VACATION_END = longPreferencesKey("vacation_end")
-        val SHOW_WEATHER = booleanPreferencesKey("show_weather")
         val SHOW_CALENDAR = booleanPreferencesKey("show_calendar")
         val POST_DISMISS_SUMMARY = booleanPreferencesKey("post_dismiss_summary")
         val LAST_LATITUDE = doublePreferencesKey("last_latitude")
         val LAST_LONGITUDE = doublePreferencesKey("last_longitude")
         val AUTO_SILENCE = intPreferencesKey("auto_silence_minutes")
-        val TEMPERATURE_UNIT = stringPreferencesKey("temperature_unit")
-        val LOCATION_NAME = stringPreferencesKey("location_name")
-        val USE_MANUAL_LOCATION = booleanPreferencesKey("use_manual_location")
         val BEDTIME_ENABLED = booleanPreferencesKey("bedtime_enabled")
         val BEDTIME_HOUR = intPreferencesKey("bedtime_hour")
         val BEDTIME_MINUTE = intPreferencesKey("bedtime_minute")
@@ -331,15 +268,6 @@ class PreferencesManager @Inject constructor(
         val BEDTIME_DND_ENABLED = booleanPreferencesKey("bedtime_dnd_enabled")
         val ON_CALL_MODE_ENABLED = booleanPreferencesKey("on_call_mode_enabled")
         val FLIP_TO_SNOOZE = booleanPreferencesKey("flip_to_snooze")
-        val WEBHOOK_ENABLED = booleanPreferencesKey("webhook_enabled")
-        val WEBHOOK_URL = stringPreferencesKey("webhook_url")
-        val WEBHOOK_INCLUDE_LABEL = booleanPreferencesKey("webhook_include_label")
-        val WEBHOOK_SIGNING_SECRET = stringPreferencesKey("webhook_signing_secret")
-        val WEBHOOK_LAST_DELIVERY_STATUS = stringPreferencesKey("webhook_last_delivery_status")
-        val WEBHOOK_LAST_DELIVERY_AT = longPreferencesKey("webhook_last_delivery_at")
-        val WEBHOOK_DELIVERY_LOG = stringPreferencesKey("webhook_delivery_log")
-        val HOLIDAY_AUTO_SKIP = booleanPreferencesKey("holiday_auto_skip")
-        val HOLIDAY_COUNTRY_CODE = stringPreferencesKey("holiday_country_code")
         val HUE_BRIDGE_IP = stringPreferencesKey("hue_bridge_ip")
         val HUE_API_KEY = stringPreferencesKey("hue_api_key")
         val HUE_LIGHT_IDS = stringPreferencesKey("hue_light_ids")
@@ -351,8 +279,6 @@ class PreferencesManager @Inject constructor(
         val CALENDAR_AUTO_ALARM_MINUTES = intPreferencesKey("calendar_auto_alarm_minutes")
         val CALENDAR_COMMUTE_AWARE = booleanPreferencesKey("calendar_commute_aware")
         val CALENDAR_COMMUTE_BASELINE_MINUTES = intPreferencesKey("calendar_commute_baseline_minutes")
-        val CALENDAR_COMMUTE_WEATHER_EXTRA_MINUTES = intPreferencesKey("calendar_commute_weather_extra_minutes")
-        val GOOGLE_ROUTES_API_KEY = stringPreferencesKey("google_routes_api_key")
         val GUARDIAN_CONTACT_NAME = stringPreferencesKey("guardian_contact_name")
         val GUARDIAN_CONTACT_PHONE = stringPreferencesKey("guardian_contact_phone")
         val CUSTOM_TYPING_PHRASES = stringPreferencesKey("custom_typing_phrases")
@@ -370,9 +296,6 @@ class PreferencesManager @Inject constructor(
         val SHOW_DASHBOARD_TAB = booleanPreferencesKey("show_dashboard_tab")
         val SHOW_TIMER_TAB = booleanPreferencesKey("show_timer_tab")
         val SHOW_WORLD_CLOCK_TAB = booleanPreferencesKey("show_world_clock_tab")
-        val SHOW_NEWS_TAB = booleanPreferencesKey("show_news_tab")
-        val SHOW_RADAR_EMBED = booleanPreferencesKey("show_radar_embed")
-        val NEWS_FEED_URL = stringPreferencesKey("news_feed_url")
         val PAUSE_UNTIL = longPreferencesKey("pause_until_millis")
         val BEDTIME_STAY_UP_LATE_UNTIL = longPreferencesKey("bedtime_stay_up_late_until_millis")
         val HEALTH_CONNECT_ENABLED = booleanPreferencesKey("health_connect_enabled")
@@ -383,12 +306,6 @@ class PreferencesManager @Inject constructor(
         val CHALLENGE_BYPASS_DELAY = intPreferencesKey("challenge_bypass_delay_seconds")
         val CHALLENGE_AUDIO_DUCKING_ENABLED = booleanPreferencesKey("challenge_audio_ducking_enabled")
         val CHALLENGE_AUDIO_DUCK_PERCENT = intPreferencesKey("challenge_audio_duck_percent")
-        val YT_ENGINE_BUNDLED_VERSION = stringPreferencesKey("yt_engine_bundled_version")
-        val YT_ENGINE_ACTIVE_VERSION = stringPreferencesKey("yt_engine_active_version")
-        val YT_ENGINE_LAST_UPDATE_MS = longPreferencesKey("yt_engine_last_update_ms")
-        val YT_ENGINE_LAST_UPDATE_STATUS = stringPreferencesKey("yt_engine_last_update_status")
-        val YT_ENGINE_LAST_UPDATE_SOURCE = stringPreferencesKey("yt_engine_last_update_source")
-        val YT_ENGINE_LAST_FAILURE_REASON = stringPreferencesKey("yt_engine_last_failure_reason")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data
@@ -458,15 +375,11 @@ class PreferencesManager @Inject constructor(
         vacationModeEnabled = this[Keys.VACATION_ENABLED] ?: false,
         vacationStartMillis = this[Keys.VACATION_START] ?: 0,
         vacationEndMillis = this[Keys.VACATION_END] ?: 0,
-        showWeatherOnDashboard = this[Keys.SHOW_WEATHER] ?: true,
         showCalendarOnDashboard = this[Keys.SHOW_CALENDAR] ?: true,
         postDismissSummaryEnabled = this[Keys.POST_DISMISS_SUMMARY] ?: false,
         lastKnownLatitude = this[Keys.LAST_LATITUDE] ?: 0.0,
         lastKnownLongitude = this[Keys.LAST_LONGITUDE] ?: 0.0,
         autoSilenceMinutes = this[Keys.AUTO_SILENCE] ?: 10,
-        temperatureUnit = this[Keys.TEMPERATURE_UNIT] ?: "fahrenheit",
-        locationName = this[Keys.LOCATION_NAME] ?: "",
-        useManualLocation = this[Keys.USE_MANUAL_LOCATION] ?: false,
         bedtimeEnabled = this[Keys.BEDTIME_ENABLED] ?: false,
         bedtimeHour = this[Keys.BEDTIME_HOUR] ?: 23,
         bedtimeMinute = this[Keys.BEDTIME_MINUTE] ?: 0,
@@ -481,15 +394,6 @@ class PreferencesManager @Inject constructor(
         onCallModeEnabled = this[Keys.ON_CALL_MODE_ENABLED] ?: false,
         bedtimeStayUpLateUntilMillis = this[Keys.BEDTIME_STAY_UP_LATE_UNTIL] ?: 0L,
         flipToSnoozeEnabled = this[Keys.FLIP_TO_SNOOZE] ?: false,
-        webhookEnabled = this[Keys.WEBHOOK_ENABLED] ?: false,
-        webhookUrl = this[Keys.WEBHOOK_URL] ?: "",
-        webhookIncludeLabel = this[Keys.WEBHOOK_INCLUDE_LABEL] ?: true,
-        webhookSigningSecret = this[Keys.WEBHOOK_SIGNING_SECRET] ?: "",
-        webhookLastDeliveryStatus = this[Keys.WEBHOOK_LAST_DELIVERY_STATUS] ?: "",
-        webhookLastDeliveryAtMillis = this[Keys.WEBHOOK_LAST_DELIVERY_AT] ?: 0L,
-        webhookDeliveryLog = this[Keys.WEBHOOK_DELIVERY_LOG] ?: "",
-        holidayAutoSkipEnabled = this[Keys.HOLIDAY_AUTO_SKIP] ?: false,
-        holidayCountryCode = this[Keys.HOLIDAY_COUNTRY_CODE] ?: "",
         hueBridgeIp = this[Keys.HUE_BRIDGE_IP] ?: "",
         hueApiKey = this[Keys.HUE_API_KEY] ?: "",
         hueLightIds = this[Keys.HUE_LIGHT_IDS] ?: "",
@@ -501,8 +405,6 @@ class PreferencesManager @Inject constructor(
         calendarAutoAlarmMinutesBefore = this[Keys.CALENDAR_AUTO_ALARM_MINUTES] ?: 60,
         calendarCommuteAwareEnabled = this[Keys.CALENDAR_COMMUTE_AWARE] ?: false,
         calendarCommuteBaselineMinutes = this[Keys.CALENDAR_COMMUTE_BASELINE_MINUTES] ?: 0,
-        calendarCommuteWeatherExtraMinutes = this[Keys.CALENDAR_COMMUTE_WEATHER_EXTRA_MINUTES] ?: 15,
-        googleRoutesApiKey = this[Keys.GOOGLE_ROUTES_API_KEY] ?: "",
         guardianContactName = this[Keys.GUARDIAN_CONTACT_NAME] ?: "",
         guardianContactPhone = this[Keys.GUARDIAN_CONTACT_PHONE] ?: "",
         customTypingPhrases = this[Keys.CUSTOM_TYPING_PHRASES] ?: "",
@@ -520,9 +422,6 @@ class PreferencesManager @Inject constructor(
         showDashboardTab = this[Keys.SHOW_DASHBOARD_TAB] ?: true,
         showTimerTab = this[Keys.SHOW_TIMER_TAB] ?: true,
         showWorldClockTab = this[Keys.SHOW_WORLD_CLOCK_TAB] ?: true,
-        showNewsTab = this[Keys.SHOW_NEWS_TAB] ?: true,
-        showRadarEmbed = this[Keys.SHOW_RADAR_EMBED] ?: true,
-        newsFeedUrl = this[Keys.NEWS_FEED_URL] ?: DEFAULT_NEWS_FEED_URL,
         pauseUntilMillis = this[Keys.PAUSE_UNTIL] ?: 0L,
         healthConnectEnabled = this[Keys.HEALTH_CONNECT_ENABLED] ?: false,
         cancellationLockMinutes = this[Keys.CANCELLATION_LOCK_MINUTES] ?: 0,
@@ -532,12 +431,6 @@ class PreferencesManager @Inject constructor(
         challengeBypassDelaySeconds = this[Keys.CHALLENGE_BYPASS_DELAY] ?: 30,
         challengeAudioDuckingEnabled = this[Keys.CHALLENGE_AUDIO_DUCKING_ENABLED] ?: false,
         challengeAudioDuckPercent = this[Keys.CHALLENGE_AUDIO_DUCK_PERCENT] ?: 35,
-        ytEngineBundledVersion = this[Keys.YT_ENGINE_BUNDLED_VERSION] ?: "",
-        ytEngineActiveVersion = this[Keys.YT_ENGINE_ACTIVE_VERSION] ?: "",
-        ytEngineLastUpdateMs = this[Keys.YT_ENGINE_LAST_UPDATE_MS] ?: 0L,
-        ytEngineLastUpdateStatus = this[Keys.YT_ENGINE_LAST_UPDATE_STATUS] ?: "",
-        ytEngineLastUpdateSource = this[Keys.YT_ENGINE_LAST_UPDATE_SOURCE] ?: "",
-        ytEngineLastFailureReason = this[Keys.YT_ENGINE_LAST_FAILURE_REASON] ?: "",
     )
 
     private fun MutablePreferences.applySettings(s: AppSettings) {
@@ -553,15 +446,11 @@ class PreferencesManager @Inject constructor(
         this[Keys.VACATION_ENABLED] = s.vacationModeEnabled
         this[Keys.VACATION_START] = s.vacationStartMillis
         this[Keys.VACATION_END] = s.vacationEndMillis
-        this[Keys.SHOW_WEATHER] = s.showWeatherOnDashboard
         this[Keys.SHOW_CALENDAR] = s.showCalendarOnDashboard
         this[Keys.POST_DISMISS_SUMMARY] = s.postDismissSummaryEnabled
         this[Keys.LAST_LATITUDE] = s.lastKnownLatitude
         this[Keys.LAST_LONGITUDE] = s.lastKnownLongitude
         this[Keys.AUTO_SILENCE] = s.autoSilenceMinutes
-        this[Keys.TEMPERATURE_UNIT] = s.temperatureUnit
-        this[Keys.LOCATION_NAME] = s.locationName
-        this[Keys.USE_MANUAL_LOCATION] = s.useManualLocation
         this[Keys.BEDTIME_ENABLED] = s.bedtimeEnabled
         this[Keys.BEDTIME_HOUR] = s.bedtimeHour
         this[Keys.BEDTIME_MINUTE] = s.bedtimeMinute
@@ -576,15 +465,6 @@ class PreferencesManager @Inject constructor(
         this[Keys.ON_CALL_MODE_ENABLED] = s.onCallModeEnabled
         this[Keys.BEDTIME_STAY_UP_LATE_UNTIL] = s.bedtimeStayUpLateUntilMillis
         this[Keys.FLIP_TO_SNOOZE] = s.flipToSnoozeEnabled
-        this[Keys.WEBHOOK_ENABLED] = s.webhookEnabled
-        this[Keys.WEBHOOK_URL] = s.webhookUrl
-        this[Keys.WEBHOOK_INCLUDE_LABEL] = s.webhookIncludeLabel
-        this[Keys.WEBHOOK_SIGNING_SECRET] = s.webhookSigningSecret
-        this[Keys.WEBHOOK_LAST_DELIVERY_STATUS] = s.webhookLastDeliveryStatus
-        this[Keys.WEBHOOK_LAST_DELIVERY_AT] = s.webhookLastDeliveryAtMillis
-        this[Keys.WEBHOOK_DELIVERY_LOG] = s.webhookDeliveryLog
-        this[Keys.HOLIDAY_AUTO_SKIP] = s.holidayAutoSkipEnabled
-        this[Keys.HOLIDAY_COUNTRY_CODE] = s.holidayCountryCode
         this[Keys.HUE_BRIDGE_IP] = s.hueBridgeIp
         this[Keys.HUE_API_KEY] = s.hueApiKey
         this[Keys.HUE_LIGHT_IDS] = s.hueLightIds
@@ -596,8 +476,6 @@ class PreferencesManager @Inject constructor(
         this[Keys.CALENDAR_AUTO_ALARM_MINUTES] = s.calendarAutoAlarmMinutesBefore
         this[Keys.CALENDAR_COMMUTE_AWARE] = s.calendarCommuteAwareEnabled
         this[Keys.CALENDAR_COMMUTE_BASELINE_MINUTES] = s.calendarCommuteBaselineMinutes
-        this[Keys.CALENDAR_COMMUTE_WEATHER_EXTRA_MINUTES] = s.calendarCommuteWeatherExtraMinutes
-        this[Keys.GOOGLE_ROUTES_API_KEY] = s.googleRoutesApiKey
         this[Keys.GUARDIAN_CONTACT_NAME] = s.guardianContactName
         this[Keys.GUARDIAN_CONTACT_PHONE] = s.guardianContactPhone
         this[Keys.CUSTOM_TYPING_PHRASES] = s.customTypingPhrases
@@ -615,9 +493,6 @@ class PreferencesManager @Inject constructor(
         this[Keys.SHOW_DASHBOARD_TAB] = s.showDashboardTab
         this[Keys.SHOW_TIMER_TAB] = s.showTimerTab
         this[Keys.SHOW_WORLD_CLOCK_TAB] = s.showWorldClockTab
-        this[Keys.SHOW_NEWS_TAB] = s.showNewsTab
-        this[Keys.SHOW_RADAR_EMBED] = s.showRadarEmbed
-        this[Keys.NEWS_FEED_URL] = s.newsFeedUrl
         this[Keys.PAUSE_UNTIL] = s.pauseUntilMillis
         this[Keys.HEALTH_CONNECT_ENABLED] = s.healthConnectEnabled
         this[Keys.CANCELLATION_LOCK_MINUTES] = s.cancellationLockMinutes
@@ -627,11 +502,5 @@ class PreferencesManager @Inject constructor(
         this[Keys.CHALLENGE_BYPASS_DELAY] = s.challengeBypassDelaySeconds
         this[Keys.CHALLENGE_AUDIO_DUCKING_ENABLED] = s.challengeAudioDuckingEnabled
         this[Keys.CHALLENGE_AUDIO_DUCK_PERCENT] = s.challengeAudioDuckPercent
-        this[Keys.YT_ENGINE_BUNDLED_VERSION] = s.ytEngineBundledVersion
-        this[Keys.YT_ENGINE_ACTIVE_VERSION] = s.ytEngineActiveVersion
-        this[Keys.YT_ENGINE_LAST_UPDATE_MS] = s.ytEngineLastUpdateMs
-        this[Keys.YT_ENGINE_LAST_UPDATE_STATUS] = s.ytEngineLastUpdateStatus
-        this[Keys.YT_ENGINE_LAST_UPDATE_SOURCE] = s.ytEngineLastUpdateSource
-        this[Keys.YT_ENGINE_LAST_FAILURE_REASON] = s.ytEngineLastFailureReason
     }
 }

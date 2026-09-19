@@ -46,7 +46,8 @@ data class Alarm(
     // F7: Smart alarm window (light-sleep detection)
     val smartAlarmEnabled: Boolean = false,
     val smartAlarmWindowMinutes: Int = 30,
-    // F13: Public holiday auto-skip
+    // Legacy column retained for Room schema compatibility with existing
+    // installs; the holiday auto-skip feature is removed.
     val skipOnHolidays: Boolean = false,
     // F2: NFC tag dismiss challenge
     val nfcTagId: String = "",
@@ -116,14 +117,16 @@ data class Alarm(
     // adds haptic intensity after a configurable window. 0 = vibrate as
     // soon as the alarm fires (preserves prior behaviour).
     val vibrationDelaySeconds: Int = 0,
+    // Legacy column retained for Room schema compatibility with existing
+    // installs; the weather early-fire feature is removed.
     val weatherEarlyMinutes: Int = 0,
     val requiredSquats: Int = 10,
-    // v1.15.1: Per-alarm dismiss action — fires a webhook, Hue scene, or
-    // broadcast on successful dismiss. Inspired by AlarmKit (iOS 26).
-    // "NONE" / "WEBHOOK" / "HUE_SCENE" / "BROADCAST"
+    // v1.15.1: Per-alarm dismiss action — fires a Hue scene or a broadcast on
+    // successful dismiss. Inspired by AlarmKit (iOS 26).
+    // "NONE" / "HUE_SCENE" / "BROADCAST"
     val dismissActionType: String = "NONE",
-    // Payload for the dismiss action: URL for webhook, scene name for Hue,
-    // or action string for broadcast. Empty when dismissActionType is NONE.
+    // Payload for the dismiss action: scene name for Hue, or action string
+    // for broadcast. Empty when dismissActionType is NONE.
     val dismissActionPayload: String = "",
     // v1.15.12: Optional per-alarm firing-screen image. Disabled by default
     // and ignored unless a persisted image URI is present.
@@ -333,7 +336,7 @@ data class Alarm(
             weatherEarlyMinutes = weatherEarlyMinutes.coerceIn(0, 60),
             requiredSquats = requiredSquats.coerceIn(1, 100),
             dismissActionType = when (dismissActionType.uppercase(Locale.US)) {
-                "WEBHOOK", "HUE_SCENE", "BROADCAST" -> dismissActionType.uppercase(Locale.US)
+                "HUE_SCENE", "BROADCAST" -> dismissActionType.uppercase(Locale.US)
                 else -> "NONE"
             },
             dismissActionPayload = dismissActionPayload.trim().take(MAX_URI_CHARS),
