@@ -49,7 +49,7 @@ class AlarmScheduler @Inject constructor(
 
     /**
      * Schedule an alarm using setAlarmClock() for maximum reliability.
-     * Checks vacation mode and holiday skip before scheduling.
+     * Checks vacation mode before scheduling.
      * Also starts SmartAlarmService window and enqueues HueSunriseWorker if enabled.
      *
      * @param notBeforeMillis Floor for the computed occurrence. Used after a
@@ -411,28 +411,6 @@ class AlarmScheduler @Inject constructor(
         }
         val nextAlarmTrigger = repository.getNextAlarm()?.nextTriggerTime
         BedtimeZenRuleManager.syncRule(context, settings, nextAlarmTrigger)
-    }
-
-    /**
-     * Walks a repeating alarm's trigger past consecutive holidays (max 30
-     * candidates, covering multi-week national holiday clusters). Returns null
-     * when every candidate was a holiday — the caller suppresses that occurrence.
-     */
-    private suspend fun advanceTriggerPastHolidays(
-        alarm: Alarm,
-        startTrigger: Long,
-        zone: ZoneId
-    ): Long? {
-        var trigger = startTrigger
-        var attempts = 0
-        while (attempts < 30) {
-            val date = Instant.ofEpochMilli(trigger).atZone(zone).toLocalDate()
-            if (!holidayRepository.isHoliday(date)) return trigger
-            trigger = calculator.calculate(alarm, date.plusDays(1).atStartOfDay(zone))
-            attempts++
-        }
-        val finalDate = Instant.ofEpochMilli(trigger).atZone(zone).toLocalDate()
-        return if (holidayRepository.isHoliday(finalDate)) null else trigger
     }
 
     private fun canScheduleExactAlarms(): Boolean {

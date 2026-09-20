@@ -22,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
@@ -41,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import com.wakesync.app.ui.components.AppSectionTitle
 import com.wakesync.app.ui.components.AppStatusChip
 import com.wakesync.app.ui.components.AppSurfaceCard
-import com.wakesync.app.ui.theme.AccentBlue
 import com.wakesync.app.ui.theme.WakeSyncTheme
 import com.wakesync.app.ui.theme.DismissGreen
 import com.wakesync.app.ui.theme.HeaderTop
@@ -60,7 +58,6 @@ class MorningBriefingActivity : ComponentActivity() {
     companion object {
         const val EXTRA_TIME = "briefing_time"
         const val EXTRA_DATE = "briefing_date"
-        const val EXTRA_WEATHER = "briefing_weather"
         const val EXTRA_NEXT_EVENT = "briefing_next_event"
         const val EXTRA_ROUTINE = "briefing_routine"
     }
@@ -82,7 +79,6 @@ class MorningBriefingActivity : ComponentActivity() {
 
         val time = intent.getStringExtra(EXTRA_TIME) ?: ""
         val date = intent.getStringExtra(EXTRA_DATE) ?: ""
-        val weather = intent.getStringExtra(EXTRA_WEATHER) ?: ""
         val nextEvent = intent.getStringExtra(EXTRA_NEXT_EVENT) ?: ""
         val routine = intent.getStringExtra(EXTRA_ROUTINE) ?: ""
 
@@ -91,7 +87,6 @@ class MorningBriefingActivity : ComponentActivity() {
                 MorningBriefingScreen(
                     time = time,
                     date = date,
-                    weather = weather,
                     nextEvent = nextEvent,
                     morningRoutine = routine,
                     onClose = { finish() }
@@ -105,13 +100,11 @@ class MorningBriefingActivity : ComponentActivity() {
 fun MorningBriefingScreen(
     time: String,
     date: String,
-    weather: String,
     nextEvent: String,
     morningRoutine: String = "",
     onClose: () -> Unit
 ) {
     val routineItems = morningRoutine.split("\n").mapNotNull { it.trim().takeIf(String::isNotBlank) }
-    val hasWeather = weather.isNotBlank()
     val hasEvent = nextEvent.isNotBlank()
 
     Box(
@@ -203,11 +196,6 @@ fun MorningBriefingScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             AppStatusChip(
-                                label = if (hasWeather) "Weather ready" else "No weather",
-                                icon = Icons.Default.Cloud,
-                                color = if (hasWeather) AccentBlue else TextMuted
-                            )
-                            AppStatusChip(
                                 label = if (hasEvent) "Next event" else "Open schedule",
                                 icon = Icons.Default.Event,
                                 color = if (hasEvent) DismissGreen else TextMuted
@@ -232,13 +220,6 @@ fun MorningBriefingScreen(
                     title = "Morning briefing",
                     description = "A quick snapshot so you can start moving with context."
                 )
-                if (weather.isNotBlank()) {
-                    BriefingRow(
-                        icon = Icons.Default.Cloud,
-                        tint = AccentBlue,
-                        text = weather
-                    )
-                }
                 if (nextEvent.isNotBlank()) {
                     BriefingRow(
                         icon = Icons.Default.Event,
@@ -246,7 +227,7 @@ fun MorningBriefingScreen(
                         text = nextEvent
                     )
                 }
-                if (weather.isBlank() && nextEvent.isBlank()) {
+                if (nextEvent.isBlank()) {
                     Text(
                         text = "Nothing urgent is queued right now. Enjoy a calmer start to the day.",
                         color = TextSecondary,

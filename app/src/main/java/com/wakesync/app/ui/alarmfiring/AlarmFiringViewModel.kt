@@ -113,10 +113,7 @@ data class FiringUiState(
     val challengeBypassRemainingSeconds: Int = -1,
     val locationDismissReady: Boolean = false,
     val locationDismissDistanceMeters: Float? = null,
-    val locationDismissStatus: String = "",
-    val weatherTemp: String? = null,
-    val weatherDescription: String? = null,
-    val firedEarlyForWeather: Boolean = false
+    val locationDismissStatus: String = ""
 ) {
     val requiresLocationDismiss: Boolean get() = alarm?.locationDismissEnabled == true
     val requiresChallenge: Boolean get() {
@@ -171,7 +168,6 @@ class AlarmFiringViewModel @Inject constructor(
     private val repository: AlarmRepository,
     private val eventRepository: com.wakesync.app.data.repository.AlarmEventRepository,
     private val preferencesManager: com.wakesync.app.data.preferences.PreferencesManager,
-    private val weatherRepository: com.wakesync.app.data.repository.WeatherRepository,
     private val digitalInkChallengeRecognizer: DigitalInkChallengeRecognizer
 ) : ViewModel() {
 
@@ -313,20 +309,6 @@ class AlarmFiringViewModel @Inject constructor(
 
         val quote = MOTIVATIONAL_QUOTES.random()
 
-        val weatherSettings = preferencesManager.getCachedSettings()
-        val haveLocation = weatherSettings.lastKnownLatitude != 0.0 || weatherSettings.lastKnownLongitude != 0.0
-        val cached = weatherRepository.getCachedWeather(
-            latitude = weatherSettings.lastKnownLatitude.takeIf { haveLocation },
-            longitude = weatherSettings.lastKnownLongitude.takeIf { haveLocation }
-        )
-        val weatherTemp = cached?.current?.temperature?.let { temp ->
-            val unit = cached.currentUnits?.temperature ?: ""
-            "${temp.toInt()}$unit"
-        }
-        val weatherDesc = cached?.current?.weatherCode?.let { code ->
-            com.wakesync.app.data.remote.WeatherCodes.describe(code)
-        }
-
         _uiState.value = FiringUiState(
             alarm = alarm,
             alarmLoaded = true,
@@ -342,13 +324,7 @@ class AlarmFiringViewModel @Inject constructor(
                 !alarm.locationDismissEnabled -> ""
                 !hasLocationDismissTarget -> "No saved place is set, so location dismissal is not locked."
                 else -> "Waiting for a location fix. Leave the saved ${LocationDismissPolicy.coerceRadius(alarm.locationDismissRadius)} m area to unlock dismiss."
-            },
-            weatherTemp = weatherTemp,
-            weatherDescription = weatherDesc,
-            firedEarlyForWeather = alarm.weatherEarlyMinutes > 0 && weatherDesc != null &&
-                com.wakesync.app.domain.AlarmScheduler.isSnowOrIceCode(
-                    cached?.current?.weatherCode ?: 0
-                )
+            }
         )
         // Start Simon sequence playback when Simon is the very first challenge.
         if (firstChallenge is Challenge.SimonSaysChallenge) {

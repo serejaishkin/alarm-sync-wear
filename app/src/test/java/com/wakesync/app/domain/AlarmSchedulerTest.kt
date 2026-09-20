@@ -12,7 +12,6 @@ import com.wakesync.app.data.preferences.AppSettings
 import com.wakesync.app.data.preferences.PreferencesManager
 import com.wakesync.app.data.repository.AlarmIncidentRepository
 import com.wakesync.app.data.repository.AlarmRepository
-import com.wakesync.app.data.repository.HolidayRepository
 import com.wakesync.app.widget.WidgetUpdater
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -44,9 +43,7 @@ class AlarmSchedulerTest {
     private lateinit var repository: AlarmRepository
     private lateinit var calculator: NextAlarmCalculator
     private lateinit var preferencesManager: PreferencesManager
-    private lateinit var holidayRepository: HolidayRepository
     private lateinit var incidentRepository: AlarmIncidentRepository
-    private lateinit var weatherRepository: com.wakesync.app.data.repository.WeatherRepository
     private lateinit var workManager: WorkManager
     private lateinit var scheduler: AlarmScheduler
 
@@ -56,7 +53,6 @@ class AlarmSchedulerTest {
         repository = mockk(relaxed = true)
         calculator = mockk()
         preferencesManager = mockk()
-        holidayRepository = mockk()
         incidentRepository = mockk(relaxed = true)
         workManager = mockk(relaxed = true)
 
@@ -69,19 +65,13 @@ class AlarmSchedulerTest {
 
         coEvery { preferencesManager.getCurrentSettings() } returns AppSettings()
         every { preferencesManager.getCachedSettings() } returns AppSettings()
-        coEvery { holidayRepository.isHoliday(any()) } returns false
-
-        weatherRepository = mockk(relaxed = true)
-        every { weatherRepository.getCachedWeather() } returns null
 
         scheduler = AlarmScheduler(
             context = context,
             repository = repository,
             calculator = calculator,
             preferencesManager = preferencesManager,
-            holidayRepository = holidayRepository,
-            alarmIncidentRepository = incidentRepository,
-            weatherRepository = weatherRepository
+            alarmIncidentRepository = incidentRepository
         )
     }
 
@@ -198,27 +188,6 @@ class AlarmSchedulerTest {
     }
 
     @Test
-    fun oneShotHolidaySuppressionStoresZeroTrigger() = runTest {
-        // Storing the suppressed future trigger let reboot/app-update
-        // reschedules re-arm the alarm without a holiday check, so it fired
-        // on the holiday the user asked to skip.
-        val triggerTime = System.currentTimeMillis() + 20 * 60_000L
-        val oneShot = enabledAlarm(id = 88L).copy(repeatDays = emptySet(), skipOnHolidays = true)
-        every { calculator.calculate(any<Alarm>(), any()) } returns triggerTime
-        coEvery { preferencesManager.getCurrentSettings() } returns
-            AppSettings(holidayAutoSkipEnabled = true)
-        coEvery { holidayRepository.isHoliday(any()) } returns true
-
-        scheduler.schedule(oneShot, requestWidgetUpdate = false)
-
-        coVerify { repository.updateNextTrigger(88L, 0L) }
-        assertEquals(
-            0,
-            shadowOf(context.getSystemService(AlarmManager::class.java)).scheduledAlarms.size
-        )
-    }
-
-    @Test
     fun forceRecalculatePreservesLiveSnoozeTrigger() = runTest {
         // Automatic forced reschedules (dashboard location/solar refresh,
         // TIME_SET) must not silently un-snooze: a stored trigger earlier
@@ -246,74 +215,6 @@ class AlarmSchedulerTest {
         assertEquals(1, processed)
         coVerify { repository.updateNextTrigger(7L, triggerTime) }
         verify { WidgetUpdater.requestUpdate(context) }
-    }
-
-    @Test
-    fun weatherEarlyShiftsTriggerTimeWhenSnowForecast() = runTest {
-        val triggerTime = System.currentTimeMillis() + 8 * 3_600_000L
-        val triggerDate = java.time.Instant.ofEpochMilli(triggerTime)
-            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()
-        val alarm = enabledAlarm(id = 99L).copy(weatherEarlyMinutes = 15)
-        every { calculator.calculate(any<Alarm>(), any()) } returns triggerTime
-
-        val weatherResponse = com.wakesync.app.data.remote.WeatherResponse(
-            current = null,
-            hourly = null,
-            daily = com.wakesync.app.data.remote.DailyWeather(
-                time = listOf(triggerDate),
-                maxTemp = listOf(28.0),
-                minTemp = listOf(20.0),
-                weatherCode = listOf(71),
-                precipChance = null,
-                sunrise = null,
-                sunset = null,
-                uvIndexMax = null
-            ),
-            currentUnits = null
-        )
-        every { weatherRepository.getCachedWeather() } returns weatherResponse
-
-        scheduler.schedule(alarm, requestWidgetUpdate = false)
-
-        coVerify { repository.updateNextTrigger(99L, triggerTime - 15 * 60_000L) }
-    }
-
-    @Test
-    fun weatherEarlyNoShiftWhenClearForecast() = runTest {
-        val triggerTime = System.currentTimeMillis() + 8 * 3_600_000L
-        val triggerDate = java.time.Instant.ofEpochMilli(triggerTime)
-            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()
-        val alarm = enabledAlarm(id = 100L).copy(weatherEarlyMinutes = 15)
-        every { calculator.calculate(any<Alarm>(), any()) } returns triggerTime
-
-        val weatherResponse = com.wakesync.app.data.remote.WeatherResponse(
-            current = null,
-            hourly = null,
-            daily = com.wakesync.app.data.remote.DailyWeather(
-                time = listOf(triggerDate),
-                maxTemp = listOf(72.0),
-                minTemp = listOf(55.0),
-                weatherCode = listOf(0),
-                precipChance = null,
-                sunrise = null,
-                sunset = null,
-                uvIndexMax = null
-            ),
-            currentUnits = null
-        )
-        every { weatherRepository.getCachedWeather() } returns weatherResponse
-
-        scheduler.schedule(alarm, requestWidgetUpdate = false)
-
-        coVerify { repository.updateNextTrigger(100L, triggerTime) }
-    }
-
-    @Test
-    fun isSnowOrIceCodeMatchesExpectedWmoCodes() {
-        val snowCodes = listOf(56, 57, 66, 67, 71, 73, 75, 77, 85, 86)
-        val clearCodes = listOf(0, 1, 2, 3, 45, 48, 51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99)
-        snowCodes.forEach { assert(AlarmScheduler.isSnowOrIceCode(it)) { "Expected $it to be snow/ice" } }
-        clearCodes.forEach { assert(!AlarmScheduler.isSnowOrIceCode(it)) { "Expected $it to NOT be snow/ice" } }
     }
 
     private fun enabledAlarm(id: Long): Alarm = Alarm(

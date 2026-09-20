@@ -2,10 +2,6 @@ package com.wakesync.app.service
 
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.preferences.AppSettings
-import com.wakesync.app.data.remote.CurrentUnits
-import com.wakesync.app.data.remote.CurrentWeather
-import com.wakesync.app.data.remote.DailyWeather
-import com.wakesync.app.data.remote.WeatherResponse
 import com.wakesync.app.data.repository.CalendarEvent
 import com.wakesync.app.worker.WakeConfirmWorker
 import java.time.LocalDate
@@ -101,7 +97,6 @@ class AlarmServiceControllerTest {
         assertEquals("It is 6 oh 5 A.M.. Today is Thursday, July 2.", text)
         assertEquals("1:07 PM", payload.time)
         assertEquals("Thursday, July 2", payload.date)
-        assertEquals("", payload.weather)
         assertEquals("", payload.nextEvent)
         assertEquals("Stretch, water", payload.routine)
     }
@@ -114,28 +109,6 @@ class AlarmServiceControllerTest {
                 AppSettings(postDismissSummaryEnabled = true)
             )
         )
-        val weather = WeatherResponse(
-            current = CurrentWeather(
-                temperature = 63.6,
-                humidity = 50,
-                weatherCode = 2,
-                windSpeed = 4.0,
-                feelsLike = 63.0,
-                uvIndex = 1.0
-            ),
-            hourly = null,
-            daily = DailyWeather(
-                time = listOf("2026-07-02"),
-                maxTemp = listOf(72.2),
-                minTemp = listOf(55.7),
-                weatherCode = listOf(2),
-                precipChance = listOf(30),
-                sunrise = null,
-                sunset = null,
-                uvIndexMax = null
-            ),
-            currentUnits = CurrentUnits(temperature = "°F")
-        )
         val event = CalendarEvent(
             id = 1L,
             title = "Team sync",
@@ -146,10 +119,6 @@ class AlarmServiceControllerTest {
             calendarColor = 0
         )
 
-        assertEquals(
-            "Partly cloudy · 64°F · high 72, low 56 · 30% precipitation",
-            AlarmPostDismissController.cachedWeatherSummary(weather)
-        )
         assertTrue(
             AlarmPostDismissController.nextCalendarEventSummary(
                 events = listOf(event),

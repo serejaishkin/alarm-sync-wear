@@ -29,7 +29,7 @@ class AlarmIncidentRepository @Inject constructor(
     // teardown. Callers that record right before finish()/stopSelf() (firing
     // activity, AlarmService, wake-confirm activity) would otherwise race
     // their own scope cancellation and silently drop the most diagnostic
-    // events — the same bug class WebhookService.fireAsync() exists to fix.
+    // events.
     private val recordScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     fun observeRecent(limit: Int = DEFAULT_EXPORT_LIMIT): Flow<List<AlarmIncidentEvent>> {
         return dao.observeRecent(limit.coerceIn(1, MAX_ROWS))

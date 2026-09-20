@@ -221,40 +221,6 @@ internal fun LazyListScope.alarmEditAdvancedSection(
                 )
             }
         }
-        var showWeatherEarlyMenu by remember { mutableStateOf(false) }
-        SettingsRow(label = stringResource(R.string.alarm_edit_weather_early)) {
-            Box {
-                SettingsValueButton(
-                    label = if (state.weatherEarlyMinutes == 0) {
-                        stringResource(R.string.alarm_edit_disabled)
-                    } else {
-                        stringResource(R.string.alarm_edit_minutes_short, state.weatherEarlyMinutes)
-                    },
-                    onClick = { showWeatherEarlyMenu = true }
-                )
-                DropdownMenu(expanded = showWeatherEarlyMenu, onDismissRequest = { showWeatherEarlyMenu = false }) {
-                    listOf(0, 10, 15, 20, 30).forEach { mins ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    if (mins == 0) {
-                                        stringResource(R.string.alarm_edit_disabled)
-                                    } else {
-                                        stringResource(R.string.alarm_edit_minutes_earlier, mins)
-                                    }
-                                )
-                            },
-                            onClick = { viewModel.updateWeatherEarlyMinutes(mins); showWeatherEarlyMenu = false }
-                        )
-                    }
-                }
-            }
-        }
-        SettingsHint(
-            stringResource(R.string.alarm_edit_weather_early_hint),
-            tone = HintTone.Neutral
-        )
-
         var showEarlyMenu by remember { mutableStateOf(false) }
         SettingsRow(label = stringResource(R.string.alarm_edit_early_dismiss)) {
             Box {

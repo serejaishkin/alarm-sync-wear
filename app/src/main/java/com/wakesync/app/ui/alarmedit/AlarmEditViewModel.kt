@@ -62,8 +62,6 @@ data class AlarmEditUiState(
     // F6: Smart alarm (light-sleep detection)
     val smartAlarmEnabled: Boolean = false,
     val smartAlarmWindowMinutes: Int = 30,
-    // F13: Holiday skip
-    val skipOnHolidays: Boolean = false,
     // F7: NFC tag challenge
     val nfcTagId: String = "",
     // F8: Barcode challenge
@@ -111,7 +109,6 @@ data class AlarmEditUiState(
     // v1.12.0 (roadmap N7): pre-vibration delay in seconds (pairs with
     // gradualVolumeSeconds for a "gentle wake" preset).
     val vibrationDelaySeconds: Int = 0,
-    val weatherEarlyMinutes: Int = 0,
     val firingBackgroundImageEnabled: Boolean = false,
     val firingBackgroundImageUri: String = "",
     val firingBackgroundBlurEnabled: Boolean = true,
@@ -198,7 +195,6 @@ class AlarmEditViewModel @Inject constructor(
                         wakeConfirmDelayMinutes = alarm.wakeConfirmDelayMinutes,
                         smartAlarmEnabled = alarm.smartAlarmEnabled,
                         smartAlarmWindowMinutes = alarm.smartAlarmWindowMinutes,
-                        skipOnHolidays = alarm.skipOnHolidays,
                         nfcTagId = alarm.nfcTagId,
                         barcodeValue = alarm.barcodeValue,
                         spotifyUri = alarm.spotifyUri,
@@ -232,7 +228,6 @@ class AlarmEditViewModel @Inject constructor(
                         solarOffsetMinutes = alarm.solarOffsetMinutes,
                         solarAnchor = alarm.solarAnchor,
                         vibrationDelaySeconds = alarm.vibrationDelaySeconds,
-                        weatherEarlyMinutes = alarm.weatherEarlyMinutes,
                         firingBackgroundImageEnabled = alarm.firingBackgroundImageEnabled,
                         firingBackgroundImageUri = alarm.firingBackgroundImageUri,
                         firingBackgroundBlurEnabled = alarm.firingBackgroundBlurEnabled,
@@ -294,10 +289,6 @@ class AlarmEditViewModel @Inject constructor(
     /** v1.12.0 (roadmap N7): set per-alarm vibration start-delay (seconds). */
     fun updateVibrationDelay(seconds: Int) {
         _uiState.value = _uiState.value.copy(vibrationDelaySeconds = seconds.coerceIn(0, 600))
-    }
-
-    fun updateWeatherEarlyMinutes(minutes: Int) {
-        _uiState.value = _uiState.value.copy(weatherEarlyMinutes = minutes.coerceIn(0, 60))
     }
 
     fun updateOverrideVolume(override: Boolean) {
@@ -366,10 +357,6 @@ class AlarmEditViewModel @Inject constructor(
             smartAlarmWindowMinutes = (windowMinutes ?: _uiState.value.smartAlarmWindowMinutes)
                 .coerceIn(0, Alarm.MAX_SMART_ALARM_WINDOW_MINUTES)
         )
-    }
-
-    fun updateSkipOnHolidays(skip: Boolean) {
-        _uiState.value = _uiState.value.copy(skipOnHolidays = skip)
     }
 
     fun updateNfcTagId(tagId: String) {
@@ -546,7 +533,6 @@ class AlarmEditViewModel @Inject constructor(
                 shiftPatternStartDate = s.shiftPatternStartDate,
                 timezonePolicy = s.timezonePolicy,
                 fixedTimezoneId = s.fixedTimezoneId,
-                skipOnHolidays = s.skipOnHolidays,
                 isEnabled = true
             )
             val settings = preferencesManager.getCurrentSettings()
@@ -649,7 +635,6 @@ class AlarmEditViewModel @Inject constructor(
                 wakeConfirmDelayMinutes = s.wakeConfirmDelayMinutes,
                 smartAlarmEnabled = s.smartAlarmEnabled,
                 smartAlarmWindowMinutes = s.smartAlarmWindowMinutes,
-                skipOnHolidays = s.skipOnHolidays,
                 nfcTagId = s.nfcTagId,
                 barcodeValue = s.barcodeValue,
                 spotifyUri = s.spotifyUri,
@@ -683,7 +668,6 @@ class AlarmEditViewModel @Inject constructor(
                 solarOffsetMinutes = s.solarOffsetMinutes,
                 solarAnchor = s.solarAnchor,
                 vibrationDelaySeconds = s.vibrationDelaySeconds,
-                weatherEarlyMinutes = s.weatherEarlyMinutes,
                 firingBackgroundImageEnabled = s.firingBackgroundImageEnabled,
                 firingBackgroundImageUri = s.firingBackgroundImageUri,
                 firingBackgroundBlurEnabled = s.firingBackgroundBlurEnabled,

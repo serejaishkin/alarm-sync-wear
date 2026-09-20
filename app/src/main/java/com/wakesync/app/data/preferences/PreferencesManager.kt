@@ -315,7 +315,7 @@ class PreferencesManager @Inject constructor(
                 // failures and on a corrupted preferences file (which it
                 // recovers from by emitting empty preferences). Either way the
                 // user sees their settings reset to defaults, including
-                // sensitive ones like webhookUrl/hueApiKey/newsFeedUrl. Log so
+                // sensitive ones like hueApiKey. Log so
                 // we have a breadcrumb instead of a silent factory-reset.
                 Log.w(
                     "PreferencesManager",

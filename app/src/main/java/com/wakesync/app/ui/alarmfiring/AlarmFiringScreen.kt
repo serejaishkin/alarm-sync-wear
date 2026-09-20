@@ -496,26 +496,6 @@ fun AlarmFiringScreen(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (state.firedEarlyForWeather) {
-                        AppStatusChip(
-                            label = stringResource(
-                                R.string.firing_weather_early,
-                                state.weatherDescription ?: stringResource(R.string.firing_weather_fallback)
-                            ),
-                            icon = Icons.Default.AcUnit,
-                            color = AccentBlue
-                        )
-                    } else if (state.weatherTemp != null) {
-                        AppStatusChip(
-                            label = stringResource(
-                                R.string.firing_weather_summary,
-                                state.weatherTemp.orEmpty(),
-                                state.weatherDescription.orEmpty()
-                            ).trim(),
-                            icon = Icons.Default.Cloud,
-                            color = TextSecondary
-                        )
-                    }
                     AppStatusChip(
                         label = if (state.totalChallenges > 1) {
                             stepLabel

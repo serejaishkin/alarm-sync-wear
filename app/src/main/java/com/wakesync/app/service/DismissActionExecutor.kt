@@ -2,8 +2,6 @@ package com.wakesync.app.service
 
 import android.content.Context
 import android.content.Intent
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.preferences.AppSettings
 import com.wakesync.app.data.preferences.PreferencesManager
@@ -37,14 +35,10 @@ class DismissActionExecutor @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val client: OkHttpClient,
     private val hueBridgeClient: HueBridgeClient,
-    private val hueTrustStore: HueTrustStore,
-    moshi: Moshi
+    private val hueTrustStore: HueTrustStore
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val json = "application/json".toMediaType()
-    private val payloadAdapter = moshi.adapter<Map<String, Any?>>(
-        Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java)
-    ).serializeNulls()
 
     fun executeAsync(alarm: Alarm) {
         scope.launch { execute(alarm) }
@@ -57,7 +51,6 @@ class DismissActionExecutor @Inject constructor(
 
         runCatching {
             when (type) {
-                "WEBHOOK" -> executeWebhook(alarm, payload)
                 "BROADCAST" -> executeBroadcast(alarm, payload)
                 "HUE_SCENE" -> executeHueScene(payload)
                 else -> DismissActionResult.Skipped
@@ -65,33 +58,6 @@ class DismissActionExecutor @Inject constructor(
         }.getOrElse { error ->
             DismissActionResult.Failure(error.message ?: error::class.java.simpleName)
         }
-    }
-
-    private fun executeWebhook(alarm: Alarm, url: String): DismissActionResult {
-        if (!WebhookService.isAllowedWebhookUrl(url)) {
-            return DismissActionResult.Failure("WEBHOOK_URL_REJECTED")
-        }
-        if (LocalNetworkPermission.requiresPermissionForUrl(url) &&
-            !LocalNetworkPermission.isGranted(context)
-        ) {
-            return DismissActionResult.Failure("LOCAL_NETWORK_PERMISSION_MISSING")
-        }
-
-        val body = payloadAdapter.toJson(
-            linkedMapOf(
-                "schemaVersion" to 1,
-                "event" to "dismiss_action",
-                "alarmId" to alarm.id,
-                "label" to alarm.label,
-                "occurredAt" to java.time.Instant.now().toString()
-            )
-        )
-        val request = Request.Builder()
-            .url(url)
-            .post(body.toRequestBody(json))
-            .header("Content-Type", "application/json")
-            .build()
-        return executeRequest(request)
     }
 
     private fun executeBroadcast(alarm: Alarm, action: String): DismissActionResult {

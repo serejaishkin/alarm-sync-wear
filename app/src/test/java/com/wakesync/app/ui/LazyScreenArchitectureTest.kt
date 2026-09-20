@@ -14,7 +14,7 @@ class LazyScreenArchitectureTest {
 
         assertTrue(content.contains("LazyColumn("))
         assertTrue(content.contains("state = settingsListState"))
-        assertTrue(content.countOccurrences("settingsItem(\"") >= 20)
+        assertTrue(content.countOccurrences("settingsItem(\"") >= 14)
         assertFalse(content.contains(".verticalScroll("))
     }
 

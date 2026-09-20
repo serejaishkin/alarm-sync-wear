@@ -4,19 +4,16 @@ import androidx.work.Data
 import androidx.work.workDataOf
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.preferences.AppSettings
-import com.wakesync.app.data.remote.WeatherCodes
-import com.wakesync.app.data.remote.WeatherResponse
 import com.wakesync.app.data.repository.CalendarEvent
 import com.wakesync.app.worker.WakeConfirmWorker
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.roundToInt
+import java.util.Locale
 
 internal data class MorningBriefingPayload(
     val time: String,
     val date: String,
-    val weather: String = "",
     val nextEvent: String = "",
     val routine: String
 )
@@ -45,48 +42,25 @@ internal object AlarmPostDismissController {
             else -> "${now.minute}"
         }
         val amPm = if (now.hour < 12) "A.M." else "P.M."
-        val dayName = today.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }
-        val monthName = today.month.name.lowercase().replaceFirstChar { it.uppercase() }
+        val dayName = today.dayOfWeek.name.lowercase(Locale.US).replaceFirstChar { it.uppercase(Locale.US) }
+        val monthName = today.month.name.lowercase(Locale.US).replaceFirstChar { it.uppercase(Locale.US) }
         return "It is $h $minStr $amPm. Today is $dayName, $monthName ${today.dayOfMonth}."
     }
 
     fun morningBriefingPayload(
         alarm: Alarm,
-        weather: String = "",
         nextEvent: String = "",
         now: LocalTime = LocalTime.now(),
         today: LocalDate = LocalDate.now()
     ): MorningBriefingPayload {
         val time = "${if (now.hour % 12 == 0) 12 else now.hour % 12}:${String.format("%02d", now.minute)} ${if (now.hour < 12) "AM" else "PM"}"
-        val date = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
+        val date = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.US))
         return MorningBriefingPayload(
             time = time,
             date = date,
-            weather = weather,
             nextEvent = nextEvent,
             routine = alarm.morningRoutine
         )
-    }
-
-    fun cachedWeatherSummary(weather: WeatherResponse?): String {
-        val response = weather ?: return ""
-        val current = response.current
-        val daily = response.daily
-        val parts = buildList {
-            current?.weatherCode?.let { add(WeatherCodes.describe(it)) }
-            current?.temperature?.let { temperature ->
-                add("${temperature.roundToInt()}${response.currentUnits?.temperature.orEmpty()}")
-            }
-            val high = daily?.maxTemp?.firstOrNull()?.roundToInt()
-            val low = daily?.minTemp?.firstOrNull()?.roundToInt()
-            if (high != null && low != null) {
-                add("high $high, low $low")
-            }
-            daily?.precipChance?.firstOrNull()?.takeIf { it > 0 }?.let {
-                add("$it% precipitation")
-            }
-        }
-        return parts.joinToString(" · ")
     }
 
     fun nextCalendarEventSummary(

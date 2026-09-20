@@ -151,22 +151,4 @@ internal fun LazyListScope.alarmEditScheduleSections(
             )
         }
     }
-
-    // Holiday Skip
-    SettingsSection(editorPage, AlarmEditorSection.HOLIDAYS) {
-        SettingsRow(
-            label = stringResource(R.string.alarm_edit_skip_holidays),
-            trailing = {
-                Switch(
-                    checked = state.skipOnHolidays,
-                    onCheckedChange = viewModel::updateSkipOnHolidays,
-                    colors = appSwitchColors()
-                )
-            }
-        )
-        SettingsHint(
-            stringResource(R.string.alarm_edit_holidays_hint),
-            tone = HintTone.Warning
-        )
-    }
 }

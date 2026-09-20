@@ -317,17 +317,6 @@ object SupportDiagnosticsFormatter {
         latestIncidentStatus: String?,
         latestIncidentReason: String?,
         stats: AlarmStats,
-        ytEngineBundledVersion: String = "",
-        ytEngineActiveVersion: String = "",
-        ytEngineLastUpdateMs: Long = 0,
-        ytEngineLastUpdateStatus: String = "",
-        ytEngineLastUpdateSource: String = "",
-        ytEngineLastFailureReason: String = "",
-        showWeatherOnDashboard: Boolean = false,
-        holidayAutoSkipEnabled: Boolean = false,
-        showRadarEmbed: Boolean = false,
-        showNewsTab: Boolean = false,
-        webhookEnabled: Boolean = false,
         hueBridgeConfigured: Boolean = false,
         healthConnectEnabled: Boolean = false,
         learnedCommuteRouteCount: Int = 0,
@@ -400,27 +389,7 @@ object SupportDiagnosticsFormatter {
             appendLine("- Day counts: ${formatDayMap(stats.dayOfWeekCounts)}")
             appendLine("- Day average response seconds: ${formatDayMap(stats.dayOfWeekAvgResponseSec)}")
             appendLine()
-            appendLine("YouTube engine")
-            appendLine("- Bundled version: ${ytEngineBundledVersion.ifBlank { "unknown" }}")
-            appendLine("- Active version: ${ytEngineActiveVersion.ifBlank { "unknown" }}")
-            if (ytEngineActiveVersion.isNotBlank() && ytEngineActiveVersion < com.wakesync.app.service.YouTubeAudioDownloader.MIN_SAFE_VERSION) {
-                appendLine("- WARNING: engine is below minimum safe version ${com.wakesync.app.service.YouTubeAudioDownloader.MIN_SAFE_VERSION}")
-            }
-            if (ytEngineLastUpdateMs > 0) {
-                appendLine("- Last update: ${java.time.Instant.ofEpochMilli(ytEngineLastUpdateMs)}")
-                appendLine("- Last update status: $ytEngineLastUpdateStatus")
-                appendLine("- Last update source: $ytEngineLastUpdateSource")
-            }
-            if (ytEngineLastFailureReason.isNotBlank()) {
-                appendLine("- Last failure: $ytEngineLastFailureReason")
-            }
-            appendLine()
             appendLine("Connections")
-            appendLine("- Weather (Open-Meteo): ${if (showWeatherOnDashboard) "active" else "off"}")
-            appendLine("- Public holidays (Nager.Date): ${if (holidayAutoSkipEnabled) "active" else "off"}")
-            appendLine("- Radar (Windy embed): ${if (showRadarEmbed) "active" else "off"}")
-            appendLine("- News feed: ${if (showNewsTab) "active" else "off"}")
-            appendLine("- Webhook: ${if (webhookEnabled) "active" else "off"}")
             appendLine("- Hue bridge: ${if (hueBridgeConfigured) "configured" else "off"}")
             appendLine("- Health Connect: ${if (healthConnectEnabled) "active" else "off"}")
             appendLine("- Learned commute routes: ${learnedCommuteRouteCount.coerceAtLeast(0)}")

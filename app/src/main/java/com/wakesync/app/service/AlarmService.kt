@@ -37,7 +37,6 @@ import com.wakesync.app.data.repository.AlarmEventRepository
 import com.wakesync.app.data.repository.AlarmIncidentRepository
 import com.wakesync.app.data.repository.AlarmRepository
 import com.wakesync.app.data.repository.CalendarRepository
-import com.wakesync.app.data.repository.WeatherRepository
 import com.wakesync.app.domain.OnCallDndOverride
 import com.wakesync.app.domain.AlarmScheduler
 import com.wakesync.app.receiver.DismissReceiver
@@ -71,10 +70,8 @@ class AlarmService : Service() {
     @Inject lateinit var eventRepository: AlarmEventRepository
     @Inject lateinit var alarmIncidentRepository: AlarmIncidentRepository
     @Inject lateinit var preferencesManager: com.wakesync.app.data.preferences.PreferencesManager
-    @Inject lateinit var webhookService: WebhookService
     @Inject lateinit var wearNextAlarmBridge: WearNextAlarmBridge
     @Inject lateinit var dismissActionExecutor: DismissActionExecutor
-    @Inject lateinit var weatherRepository: WeatherRepository
     @Inject lateinit var calendarRepository: CalendarRepository
     @Inject lateinit var alarmSyncCoordinator: AlarmSyncCoordinator
 
@@ -521,15 +518,6 @@ class AlarmService : Service() {
             }
         }
 
-        // F8: Webhook on alarm fire (fire-and-forget on its own scope; see WebhookService)
-        webhookService.fireAsync(
-            event = WebhookEvent.AlarmFired,
-            alarmId = alarm.id,
-            label = alarm.label,
-            timeFormatted = formatAlarmTime(alarm),
-            scheduledForMillis = currentScheduledAt.takeIf { it > 0L },
-            fireId = currentFireId
-        )
         AlarmBroadcastContract.send(
             this, AlarmBroadcastContract.ACTION_ALARM_FIRED,
             alarmId = alarm.id, label = alarm.label,
@@ -556,14 +544,6 @@ class AlarmService : Service() {
                             status = AlarmIncidentEvent.STATUS_SUCCEEDED,
                             reasonCode = "AUTO_SILENCED_AFTER_${autoSilenceMinutes}_MINUTES",
                             source = "AlarmService"
-                        )
-                        webhookService.fireAsync(
-                            event = WebhookEvent.AlarmMissed,
-                            alarmId = missedAlarm.id,
-                            label = missedAlarm.label,
-                            timeFormatted = formatAlarmTime(missedAlarm),
-                            scheduledForMillis = currentScheduledAt.takeIf { it > 0L },
-                            fireId = currentFireId
                         )
                         AlarmBroadcastContract.send(
                             this@AlarmService, AlarmBroadcastContract.ACTION_ALARM_MISSED,
@@ -1655,8 +1635,6 @@ class AlarmService : Service() {
         stopAlarmPlayback()
         val alarm = repository.getById(alarmId)?.sanitized()
         if (alarm != null) {
-            val webhookScheduledAt = currentScheduledAt
-            val webhookFireId = currentFireId
             // Snoozing means the user interacted with the alarm, so cancel any pending
             // Guardian Angel call/SMS — they're plainly awake enough to hit snooze.
             // The next fire after snooze will re-arm Guardian if still configured.
@@ -1665,11 +1643,6 @@ class AlarmService : Service() {
                     .cancelUniqueWork("guardian_${alarm.id}")
             }
             val nextSnoozeCount = currentSnoozeCount + 1
-            // v1.6.3: Track which event was actually persisted so the webhook
-            // emits the matching event name. The previous code recorded
-            // ACTION_DISMISSED when the snooze cap was hit but still fired the
-            // "snoozed" webhook — Tasker integrations got the wrong event.
-            val webhookEvent: WebhookEvent
             if (alarm.maxSnoozeCount > 0 && nextSnoozeCount > alarm.maxSnoozeCount) {
                 // Max snoozes reached - treat as dismiss
                 currentSnoozeCount = alarm.maxSnoozeCount
@@ -1696,7 +1669,6 @@ class AlarmService : Service() {
                 currentAlarmId = -1
                 activeAlarm.set(null)
                 alarmScheduler.handleAlarmFired(alarmId, currentScheduledAt)
-                webhookEvent = WebhookEvent.AlarmDismissed
             } else {
                 currentSnoozeCount = nextSnoozeCount
                 persistSnoozeCount(alarmId, currentSnoozeCount)
@@ -1724,20 +1696,11 @@ class AlarmService : Service() {
                     source = "AlarmService",
                     alarmId = alarm.id
                 )
-                webhookEvent = WebhookEvent.AlarmSnoozed
             }
-            webhookService.fireAsync(
-                event = webhookEvent,
-                alarmId = alarm.id,
-                label = alarm.label,
-                timeFormatted = formatAlarmTime(alarm),
-                scheduledForMillis = webhookScheduledAt.takeIf { it > 0L },
-                fireId = webhookFireId
-            )
             AlarmBroadcastContract.send(
                 this, AlarmBroadcastContract.ACTION_ALARM_SNOOZED,
                 alarmId = alarm.id, label = alarm.label,
-                displayTime = formatAlarmTime(alarm), fireId = webhookFireId
+                displayTime = formatAlarmTime(alarm), fireId = currentFireId
             )
             wearNextAlarmBridge.publishAlarmIdle(alarm.id)
         } else {
@@ -1794,23 +1757,13 @@ class AlarmService : Service() {
             currentAlarmId = -1
             activeAlarm.set(null)
 
-            // F8: Webhook on dismiss (fire-and-forget on its own scope)
-            webhookService.fireAsync(
-                event = WebhookEvent.AlarmDismissed,
-                alarmId = alarm.id,
-                label = alarm.label,
-                timeFormatted = formatAlarmTime(alarm),
-                scheduledForMillis = wakeConfirmScheduledAt.takeIf { it > 0L },
-                fireId = wakeConfirmFireId
-            )
+            // v1.15.1: Per-alarm dismiss action (AlarmKit pattern)
+            dismissActionExecutor.executeAsync(alarm)
             AlarmBroadcastContract.send(
                 this, AlarmBroadcastContract.ACTION_ALARM_DISMISSED,
                 alarmId = alarm.id, label = alarm.label,
                 displayTime = formatAlarmTime(alarm), fireId = wakeConfirmFireId
             )
-
-            // v1.15.1: Per-alarm dismiss action (AlarmKit pattern)
-            dismissActionExecutor.executeAsync(alarm)
 
             // F11: TTS morning announcement
             if (AlarmPostDismissController.shouldSpeakMorningAnnouncement(alarm)) {
@@ -1918,15 +1871,6 @@ class AlarmService : Service() {
         val settings = preferencesManager.getCachedSettings()
         if (!AlarmPostDismissController.shouldShowMorningBriefing(settings)) return
 
-        val hasLocation = settings.lastKnownLatitude != 0.0 || settings.lastKnownLongitude != 0.0
-        val cachedWeather = if (settings.showWeatherOnDashboard) {
-            weatherRepository.getCachedWeather(
-                latitude = settings.lastKnownLatitude.takeIf { hasLocation },
-                longitude = settings.lastKnownLongitude.takeIf { hasLocation }
-            )
-        } else {
-            null
-        }
         val events = if (settings.showCalendarOnDashboard) {
             calendarRepository.getTodayEvents().getOrDefault(emptyList())
         } else {
@@ -1934,7 +1878,6 @@ class AlarmService : Service() {
         }
         val payload = AlarmPostDismissController.morningBriefingPayload(
             alarm = alarm,
-            weather = AlarmPostDismissController.cachedWeatherSummary(cachedWeather),
             nextEvent = AlarmPostDismissController.nextCalendarEventSummary(events)
         )
 
@@ -1942,7 +1885,6 @@ class AlarmService : Service() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(MorningBriefingActivity.EXTRA_TIME, payload.time)
             putExtra(MorningBriefingActivity.EXTRA_DATE, payload.date)
-            putExtra(MorningBriefingActivity.EXTRA_WEATHER, payload.weather)  // Weather cached separately
             putExtra(MorningBriefingActivity.EXTRA_NEXT_EVENT, payload.nextEvent)
             putExtra(MorningBriefingActivity.EXTRA_ROUTINE, payload.routine)
         }

@@ -164,11 +164,6 @@ fun AlarmListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showBulkDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // v1.7.1: Prominent (non-tucked) YouTube download entry. The user can
-    // build up an alarm-sound library without first creating an alarm.
-    var showYouTubeDialog by remember { mutableStateOf(false) }
-    val youTubeAvailable = com.wakesync.app.ui.components.isYouTubeDownloaderAvailable()
-
     var statsAlarmLabel by remember { mutableStateOf<String?>(null) }
     val alarmStats by viewModel.alarmStats.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
@@ -226,27 +221,6 @@ fun AlarmListScreen(
     var draggingAlarmId by remember { mutableStateOf<Long?>(null) }
     var dragOffsetPx by remember { mutableStateOf(0f) }
     var selectedAlarmId by rememberSaveable { mutableStateOf<Long?>(null) }
-
-    if (showYouTubeDialog) {
-        com.wakesync.app.ui.components.YouTubeDownloadDialog(
-            onDismiss = { showYouTubeDialog = false },
-            onDownloaded = { savedTitle ->
-                showYouTubeDialog = false
-                snackbarScope.launch {
-                    snackbarHostState.showSnackbar(
-                        "Saved \"$savedTitle\". Pick it from any alarm's sound list.",
-                        duration = SnackbarDuration.Long
-                    )
-                }
-            },
-            onError = { msg ->
-                showYouTubeDialog = false
-                snackbarScope.launch {
-                    snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Long)
-                }
-            }
-        )
-    }
 
     LaunchedEffect(Unit) {
         viewModel.feedbackEvents.collect { message ->
@@ -712,14 +686,6 @@ fun AlarmListScreen(
                         QuickAlarmRow(
                             onQuickAlarm = viewModel::createQuickAlarm,
                             napDefaultMinutes = state.napDefaultMinutes
-                        )
-                    }
-                }
-                if (youTubeAvailable) {
-                    item {
-                        YouTubeDownloadCard(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                            onClick = { showYouTubeDialog = true }
                         )
                     }
                 }
@@ -1771,63 +1737,4 @@ private fun nextOccurrenceLabel(alarm: Alarm, is24Hour: Boolean): String {
         .atZone(ZoneId.systemDefault())
         .format(DateTimeFormatter.ofPattern(pattern))
     return "Next occurrence: $formatted"
-}
-
-@Composable
-private fun YouTubeDownloadCard(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val shapeTokens = LocalAppShapeTokens.current
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
-        shape = shapeTokens.card,
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceCard
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CloudDownload,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = "Alarm sounds",
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "YouTube downloads",
-                    color = TextSecondary,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
 }

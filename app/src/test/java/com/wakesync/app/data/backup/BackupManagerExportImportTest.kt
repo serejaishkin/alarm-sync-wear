@@ -84,15 +84,10 @@ class BackupManagerExportImportTest {
         assertTrue(settings.is24HourFormat)
         assertEquals(25, settings.defaultSnoozeDuration)
         assertEquals(15, settings.autoSilenceMinutes)
-        assertEquals("Portland, Oregon", settings.locationName)
         assertEquals(false, settings.showTimerTab)
-        assertEquals("https://feeds.example/private.xml", settings.newsFeedUrl)
         assertEquals(true, settings.hideAlarmLabelsOnPublicSurfaces)
         assertEquals(true, settings.calendarCommuteAwareEnabled)
         assertEquals(35, settings.calendarCommuteBaselineMinutes)
-        assertEquals(20, settings.calendarCommuteWeatherExtraMinutes)
-        assertEquals("routes-test-key", settings.googleRoutesApiKey)
-        assertEquals("webhook-signing-secret", settings.webhookSigningSecret)
         assertEquals("0,1,2,3,4", settings.chronotypeAnswers)
         assertEquals(5 * 60 + 45, settings.jetLagTargetWakeMinutes)
         assertEquals(5, settings.jetLagAdjustmentDays)
@@ -121,19 +116,12 @@ class BackupManagerExportImportTest {
                     vacationModeEnabled = false,
                     vacationStartMillis = 0,
                     vacationEndMillis = 0,
-                    showWeatherOnDashboard = false,
                     showCalendarOnDashboard = true,
                     autoSilenceMinutes = 15,
-                    locationName = "Portland, Oregon",
-                    useManualLocation = true,
                     showTimerTab = false,
-                    newsFeedUrl = "https://feeds.example/private.xml",
                     chronotypeAnswers = "0,1,2,3,4",
-                    webhookSigningSecret = "webhook-signing-secret",
                     calendarCommuteAwareEnabled = true,
                     calendarCommuteBaselineMinutes = 35,
-                    calendarCommuteWeatherExtraMinutes = 20,
-                    googleRoutesApiKey = "routes-test-key",
                     jetLagTargetWakeMinutes = 5 * 60 + 45,
                     jetLagAdjustmentDays = 5,
                     jetLagDirection = "advance"
@@ -153,15 +141,10 @@ class BackupManagerExportImportTest {
 
         assertTrue(result.isSuccess)
         assertEquals(1, result.getOrThrow())
-        assertEquals("Portland, Oregon", restoredSettings!!.locationName)
         assertEquals(false, restoredSettings!!.showTimerTab)
-        assertEquals("https://feeds.example/private.xml", restoredSettings!!.newsFeedUrl)
         assertEquals(true, restoredSettings!!.hideAlarmLabelsOnPublicSurfaces)
         assertEquals(true, restoredSettings!!.calendarCommuteAwareEnabled)
         assertEquals(35, restoredSettings!!.calendarCommuteBaselineMinutes)
-        assertEquals(20, restoredSettings!!.calendarCommuteWeatherExtraMinutes)
-        assertEquals("routes-test-key", restoredSettings!!.googleRoutesApiKey)
-        assertEquals("webhook-signing-secret", restoredSettings!!.webhookSigningSecret)
         assertEquals("0,1,2,3,4", restoredSettings!!.chronotypeAnswers)
         assertEquals(5 * 60 + 45, restoredSettings!!.jetLagTargetWakeMinutes)
         assertEquals(5, restoredSettings!!.jetLagAdjustmentDays)
@@ -203,9 +186,7 @@ class BackupManagerExportImportTest {
                     vacationModeEnabled = false,
                     vacationStartMillis = 0,
                     vacationEndMillis = 0,
-                    showWeatherOnDashboard = false,
-                    showCalendarOnDashboard = true,
-                    webhookSigningSecret = "webhook-signing-secret"
+                    showCalendarOnDashboard = true
                 )
             )
         )
@@ -223,7 +204,7 @@ class BackupManagerExportImportTest {
         assertEquals(0, preview.invalidAlarmCount)
         assertTrue(preview.settingsIncluded)
         assertTrue(preview.canImport)
-        assertTrue(preview.privateDataCategories.contains("Webhook signing secret"))
+        assertTrue(preview.privateDataCategories.contains("Device-local ringtone or image URIs"))
         coVerify(exactly = 0) { repository.save(any()) }
         coVerify(exactly = 0) { preferencesManager.update(any()) }
         coVerify(exactly = 0) { scheduler.schedule(any()) }
@@ -296,18 +277,11 @@ class BackupManagerExportImportTest {
         usePhoneSpeakers = true,
         showOnLockScreen = false,
         hideAlarmLabelsOnPublicSurfaces = true,
-        showWeatherOnDashboard = false,
         showCalendarOnDashboard = true,
         autoSilenceMinutes = 15,
-        locationName = "Portland, Oregon",
-        useManualLocation = true,
         showTimerTab = false,
-        newsFeedUrl = "https://feeds.example/private.xml",
-        webhookSigningSecret = "webhook-signing-secret",
         calendarCommuteAwareEnabled = true,
         calendarCommuteBaselineMinutes = 35,
-        calendarCommuteWeatherExtraMinutes = 20,
-        googleRoutesApiKey = "routes-test-key",
         chronotypeAnswers = "0,1,2,3,4",
         jetLagTargetWakeMinutes = 5 * 60 + 45,
         jetLagAdjustmentDays = 5,

@@ -1191,9 +1191,6 @@ private fun UtilityShortcutCard(
 @Composable
 internal fun dashboardSummary(state: SettingsUiState): String {
     val base = when {
-        state.settings.showWeatherOnDashboard && state.settings.showCalendarOnDashboard ->
-            stringResource(R.string.settings_dashboard_weather_calendar)
-        state.settings.showWeatherOnDashboard -> stringResource(R.string.settings_dashboard_weather_only)
         state.settings.showCalendarOnDashboard -> stringResource(R.string.settings_dashboard_calendar_only)
         else -> stringResource(R.string.settings_dashboard_minimal)
     }
@@ -1291,26 +1288,7 @@ internal fun wakeReadinessSummary(state: SettingsUiState): String {
 
 internal fun requiresLocalNetworkAccess(state: SettingsUiState): Boolean {
     if (!LocalNetworkPermission.isRuntimeRequired()) return false
-    return state.settings.hueBridgeIp.isNotBlank() ||
-        LocalNetworkPermission.isLikelyLocalEndpoint(state.settings.webhookUrl)
-}
-
-@Composable
-internal fun formatWebhookDeliveryStatus(settings: AppSettings): String? {
-    val status = settings.webhookLastDeliveryStatus.takeIf { it.isNotBlank() } ?: return null
-    val locale = LocalConfiguration.current.locales[0]
-    val timestamp = settings.webhookLastDeliveryAtMillis.takeIf { it > 0 }
-        ?.let {
-            Instant.ofEpochMilli(it)
-                .atZone(ZoneId.systemDefault())
-                .format(
-                    DateTimeFormatter.ofLocalizedDateTime(
-                        java.time.format.FormatStyle.MEDIUM,
-                        java.time.format.FormatStyle.SHORT
-                    ).withLocale(locale)
-                )
-        } ?: stringResource(R.string.settings_recently)
-    return stringResource(R.string.settings_last_delivery, timestamp, status)
+    return state.settings.hueBridgeIp.isNotBlank()
 }
 
 @Composable

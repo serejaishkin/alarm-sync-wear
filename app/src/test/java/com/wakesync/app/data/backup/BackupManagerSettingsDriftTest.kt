@@ -23,16 +23,7 @@ class BackupManagerSettingsDriftTest {
      * default on restore is the correct behavior", not "we forgot".
      */
     private val intentionallyNotBackedUp = setOf(
-        "ytEngineBundledVersion",
-        "ytEngineActiveVersion",
-        "ytEngineLastUpdateMs",
-        "ytEngineLastUpdateStatus",
-        "ytEngineLastUpdateSource",
-        "ytEngineLastFailureReason",
         "bedtimeStayUpLateUntilMillis",
-        "webhookLastDeliveryStatus",
-        "webhookLastDeliveryAtMillis",
-        "webhookDeliveryLog",
         // Device-local audio comfort settings should not silently change alarm
         // loudness when a backup moves to hardware with different speakers.
         "challengeAudioDuckingEnabled",

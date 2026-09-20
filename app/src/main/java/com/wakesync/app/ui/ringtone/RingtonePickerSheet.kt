@@ -28,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
@@ -70,7 +69,6 @@ import com.wakesync.app.ui.components.AppInputShape
 import com.wakesync.app.ui.components.appOutlinedTextFieldColors
 import com.wakesync.app.service.AlarmAudioRouting
 import com.wakesync.app.ui.theme.AccentBlue
-import com.wakesync.app.ui.theme.AccentRed
 import com.wakesync.app.ui.theme.DismissGreen
 import com.wakesync.app.ui.theme.SnoozeYellow
 import com.wakesync.app.ui.theme.SurfaceMedium
@@ -105,8 +103,7 @@ fun RingtonePickerSheet(
 ) {
     val context = LocalContext.current
     // v1.7.0: Ringtones are loaded into state instead of remember-once so the
-    // list refreshes after a YouTube download finishes (the new alarm tone
-    // appears under Alarms/ in MediaStore and we re-enumerate to pick it up).
+    // list stays fresh when the underlying MediaStore enumeration changes.
     var ringtoneLoad by remember { mutableStateOf(loadRingtones(context)) }
     val ringtones = ringtoneLoad.items
     val currentSelection = remember(currentUri, ringtones) {
@@ -123,10 +120,6 @@ fun RingtonePickerSheet(
     var playingUri by remember { mutableStateOf<String?>(null) }
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var previewError by remember { mutableStateOf("") }
-    var showYouTubeDialog by remember { mutableStateOf(false) }
-    var youTubeStatus by remember { mutableStateOf("") }
-    var youTubeStatusIsError by remember { mutableStateOf(false) }
-    var lastDownloadedTitle by remember { mutableStateOf<String?>(null) }
     var folderStatus by remember { mutableStateOf("") }
 
     val folderLauncher = rememberLauncherForActivityResult(
@@ -147,11 +140,6 @@ fun RingtonePickerSheet(
         }
     }
 
-    // The shared YouTubeDownloadDialog handles its own Hilt lookup — we just
-    // need a quick "is the engine up?" probe to decide whether to show the
-    // entry point on this flavor.
-    val youTubeAvailable = com.wakesync.app.ui.components.isYouTubeDownloaderAvailable()
-
     val filteredRingtones = remember(ringtones, searchQuery) {
         if (searchQuery.isBlank()) {
             ringtones
@@ -160,36 +148,6 @@ fun RingtonePickerSheet(
                 ringtoneSearchText(ringtone).contains(searchQuery.trim(), ignoreCase = true)
             }
         }
-    }
-
-    // After a successful download, find the newly-saved ringtone in the
-    // refreshed list and auto-scroll the user to it. Best-effort match by
-    // case-insensitive title contains.
-    LaunchedEffect(lastDownloadedTitle, ringtones) {
-        val target = lastDownloadedTitle ?: return@LaunchedEffect
-        ringtones.firstOrNull { it.title.contains(target, ignoreCase = true) }?.let {
-            // The user can now tap "Use" on that row. We don't auto-select
-            // because they may want to preview it first.
-        }
-    }
-
-    if (showYouTubeDialog) {
-        com.wakesync.app.ui.components.YouTubeDownloadDialog(
-            onDismiss = { showYouTubeDialog = false },
-            onDownloaded = { savedTitle ->
-                showYouTubeDialog = false
-                lastDownloadedTitle = savedTitle
-                youTubeStatusIsError = false
-                youTubeStatus = "Saved \"$savedTitle\" to your alarms."
-                // Refresh the picker list so the new file shows up immediately.
-                ringtoneLoad = loadRingtones(context)
-            },
-            onError = { msg ->
-                lastDownloadedTitle = null
-                youTubeStatusIsError = true
-                youTubeStatus = msg
-            }
-        )
     }
 
     DisposableEffect(Unit) {
@@ -270,35 +228,9 @@ fun RingtonePickerSheet(
                                 Spacer(modifier = Modifier.size(6.dp))
                                 Text("From folder", fontWeight = FontWeight.SemiBold)
                             }
-                            if (youTubeAvailable) {
-                                OutlinedButton(
-                                    onClick = { showYouTubeDialog = true },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.primary
-                                    )
-                                ) {
-                                    Icon(
-                                        Icons.Default.CloudDownload,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.size(6.dp))
-                                    Text("From YouTube", fontWeight = FontWeight.SemiBold)
-                                }
-                            }
                     }
                 }
             )
-
-            if (youTubeStatus.isNotBlank()) {
-                AppInlineNotice(
-                    title = if (youTubeStatusIsError) "Download needs attention" else "Sound saved",
-                    message = youTubeStatus,
-                    icon = if (youTubeStatusIsError) Icons.Default.Warning else Icons.Default.CheckCircle,
-                    color = if (youTubeStatusIsError) AccentRed else DismissGreen
-                )
-            }
 
             if (folderStatus.isNotBlank()) {
                 AppInlineNotice(
@@ -351,7 +283,7 @@ fun RingtonePickerSheet(
             if (ringtoneLoad.enumerationFailed) {
                 AppInlineNotice(
                     title = "Sound list limited",
-                    message = ringtoneEnumerationWarning(youTubeAvailable),
+                    message = "Couldn't read this device's sound list. Default and Silent are still available.",
                     icon = Icons.Default.Warning,
                     color = SnoozeYellow
                 )
@@ -562,13 +494,6 @@ private fun ringtoneSearchText(ringtone: RingtoneItem): String = buildString {
     if (ringtone.isSilent) append(" silent quiet")
 }
 
-internal fun ringtoneEnumerationWarning(youTubeAvailable: Boolean): String =
-    if (youTubeAvailable) {
-        "Couldn't read this device's sound list. Default and Silent are still available, and you can add a new sound from YouTube."
-    } else {
-        "Couldn't read this device's sound list. Default and Silent are still available."
-    }
-
 private fun loadRingtones(context: Context): RingtoneLoadResult {
     val ringtones = mutableListOf<RingtoneItem>()
     var enumerationFailed = false
@@ -614,7 +539,3 @@ private fun loadRingtones(context: Context): RingtoneLoadResult {
 
     return RingtoneLoadResult(items = ringtones, enumerationFailed = enumerationFailed)
 }
-
-// v1.7.1: The YouTube download dialog and its Hilt entry point moved to
-// ui/components/YouTubeDownloadDialog.kt so the prominent entry on the
-// Alarms screen and this picker can share one implementation.

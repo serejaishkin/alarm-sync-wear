@@ -2,7 +2,6 @@ package com.wakesync.app.service
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.squareup.moshi.Moshi
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.preferences.AppSettings
 import com.wakesync.app.data.preferences.PreferencesManager
@@ -28,40 +27,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class DismissActionExecutorTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-
-    @Test
-    fun webhookExecutesHttpsPost() = runTest {
-        val requests = mutableListOf<Request>()
-        val executor = executorWith(requestRecorder(requests))
-        val result = executor.execute(
-            Alarm(
-                id = 42,
-                label = "Work",
-                dismissActionType = "WEBHOOK",
-                dismissActionPayload = "https://example.com/hook"
-            )
-        )
-
-        assertEquals(DismissActionResult.Success, result)
-        assertEquals("POST", requests.single().method)
-        assertEquals("https://example.com/hook", requests.single().url.toString())
-        assertTrue(requests.single().body != null)
-    }
-
-    @Test
-    fun webhookRejectsPlainHttp() = runTest {
-        val requests = mutableListOf<Request>()
-        val executor = executorWith(requestRecorder(requests))
-        val result = executor.execute(
-            Alarm(
-                dismissActionType = "WEBHOOK",
-                dismissActionPayload = "http://example.com/hook"
-            )
-        )
-
-        assertTrue(result is DismissActionResult.Failure)
-        assertTrue(requests.isEmpty())
-    }
 
     @Test
     fun broadcastIntentIsPackageScopedAndCarriesAlarmFields() {
@@ -152,8 +117,7 @@ class DismissActionExecutorTest {
             preferencesManager = preferences,
             client = client,
             hueBridgeClient = HueBridgeClient(client),
-            hueTrustStore = mockk<HueTrustStore>(relaxed = true),
-            moshi = Moshi.Builder().build()
+            hueTrustStore = mockk<HueTrustStore>(relaxed = true)
         )
     }
 

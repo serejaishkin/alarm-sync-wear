@@ -5,7 +5,6 @@ import android.net.Uri
 import com.wakesync.app.BuildConfig
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.preferences.AppSettings
-import com.wakesync.app.data.preferences.DEFAULT_NEWS_FEED_URL
 import com.wakesync.app.data.preferences.PreferencesManager
 import com.wakesync.app.data.repository.AlarmRepository
 import com.wakesync.app.domain.AlarmScheduler
@@ -124,11 +123,9 @@ data class SettingsBackup(
     val vacationModeEnabled: Boolean,
     val vacationStartMillis: Long,
     val vacationEndMillis: Long,
-    val showWeatherOnDashboard: Boolean,
     val showCalendarOnDashboard: Boolean,
     val postDismissSummaryEnabled: Boolean = false,
     // Previously missing settings
-    val temperatureUnit: String = "fahrenheit",
     val bedtimeEnabled: Boolean = false,
     val bedtimeHour: Int = 23,
     val bedtimeMinute: Int = 0,
@@ -141,12 +138,6 @@ data class SettingsBackup(
     val jetLagDirection: String = "auto",
     val bedtimeDndEnabled: Boolean = false,
     val flipToSnoozeEnabled: Boolean = false,
-    val webhookEnabled: Boolean = false,
-    val webhookUrl: String = "",
-    val webhookIncludeLabel: Boolean = true,
-    val webhookSigningSecret: String = "",
-    val holidayAutoSkipEnabled: Boolean = false,
-    val holidayCountryCode: String = "",
     val hueBridgeIp: String = "",
     val hueApiKey: String = "",
     val hueLightIds: String = "",
@@ -157,8 +148,6 @@ data class SettingsBackup(
     val calendarAutoAlarmMinutesBefore: Int = 60,
     val calendarCommuteAwareEnabled: Boolean = false,
     val calendarCommuteBaselineMinutes: Int = 0,
-    val calendarCommuteWeatherExtraMinutes: Int = 15,
-    val googleRoutesApiKey: String = "",
     val guardianContactName: String = "",
     val guardianContactPhone: String = "",
     val customTypingPhrases: String = "",
@@ -182,9 +171,6 @@ data class SettingsBackup(
     // user who restores onto a new Play-flavor device doesn't have to
     // re-tap the toggle. F-Droid restore ignores it.
     val healthConnectEnabled: Boolean = false,
-    // v1.13.3 (roadmap X2): round-trip the user's selected feed URL and warn
-    // before readable exports when custom/private feed endpoints are present.
-    val newsFeedUrl: String = DEFAULT_NEWS_FEED_URL,
     // Backup v9+: AppSettings fields that previously never made it into the
     // backup, so every restore silently reset them to defaults — the same
     // drift class as the v1.1.0 backup data loss. Defaults below match
@@ -192,15 +178,11 @@ data class SettingsBackup(
     val upcomingAlarmMinutes: Int = 60,
     val showNoAlarmsWarning: Boolean = true,
     val autoSilenceMinutes: Int = 10,
-    val locationName: String = "",
-    val useManualLocation: Boolean = false,
     val lastKnownLatitude: Double = 0.0,
     val lastKnownLongitude: Double = 0.0,
     val showDashboardTab: Boolean = true,
     val showTimerTab: Boolean = true,
     val showWorldClockTab: Boolean = true,
-    val showNewsTab: Boolean = true,
-    val showRadarEmbed: Boolean = true,
     val cancellationLockMinutes: Int = 0,
     val holdToDismissMillis: Int = LongPressThreshold.DEFAULT_MILLIS,
     val hueBridgeCertFingerprint: String = "",
@@ -260,32 +242,12 @@ class BackupManager @Inject constructor(
             alarms: List<Alarm>
         ): BackupExportWarning {
             val categories = buildList {
-                if (settings.webhookUrl.isNotBlank()) {
-                    add("Webhook endpoint URL")
-                }
-                if (settings.webhookSigningSecret.isNotBlank()) {
-                    add("Webhook signing secret")
-                }
                 if (
                     settings.hueBridgeIp.isNotBlank() ||
                     settings.hueApiKey.isNotBlank() ||
                     settings.hueLightIds.isNotBlank()
                 ) {
                     add("Philips Hue bridge details and API key")
-                }
-                if (settings.newsFeedUrl.isCustomFeedUrl()) {
-                    add("Custom news feed URL")
-                }
-                if (settings.googleRoutesApiKey.isNotBlank()) {
-                    add("Google Routes API key")
-                }
-                // Backup v9+ carries the saved weather location; surface it the
-                // same way the per-alarm location-dismiss coordinates are.
-                if (settings.locationName.isNotBlank() ||
-                    settings.lastKnownLatitude != 0.0 ||
-                    settings.lastKnownLongitude != 0.0
-                ) {
-                    add("Saved weather location")
                 }
                 if (alarms.any { it.internetRadioUrl.isNotBlank() }) {
                     add("Internet radio stream URLs")
@@ -301,11 +263,6 @@ class BackupManager @Inject constructor(
                 }
             }
             return BackupExportWarning(categories)
-        }
-
-        private fun String.isCustomFeedUrl(): Boolean {
-            val value = trim()
-            return value.isNotEmpty() && !value.equals(DEFAULT_NEWS_FEED_URL, ignoreCase = true)
         }
 
         private fun Alarm.hasDeviceLocalUris(): Boolean {
@@ -357,10 +314,8 @@ class BackupManager @Inject constructor(
                 vacationModeEnabled = settings.vacationModeEnabled,
                 vacationStartMillis = settings.vacationStartMillis,
                 vacationEndMillis = settings.vacationEndMillis,
-                showWeatherOnDashboard = settings.showWeatherOnDashboard,
                 showCalendarOnDashboard = settings.showCalendarOnDashboard,
                 postDismissSummaryEnabled = settings.postDismissSummaryEnabled,
-                temperatureUnit = settings.temperatureUnit,
                 bedtimeEnabled = settings.bedtimeEnabled,
                 bedtimeHour = settings.bedtimeHour,
                 bedtimeMinute = settings.bedtimeMinute,
@@ -373,12 +328,6 @@ class BackupManager @Inject constructor(
                 jetLagDirection = settings.jetLagDirection,
                 bedtimeDndEnabled = settings.bedtimeDndEnabled,
                 flipToSnoozeEnabled = settings.flipToSnoozeEnabled,
-                webhookEnabled = settings.webhookEnabled,
-                webhookUrl = settings.webhookUrl,
-                webhookIncludeLabel = settings.webhookIncludeLabel,
-                webhookSigningSecret = settings.webhookSigningSecret,
-                holidayAutoSkipEnabled = settings.holidayAutoSkipEnabled,
-                holidayCountryCode = settings.holidayCountryCode,
                 hueBridgeIp = settings.hueBridgeIp,
                 hueApiKey = settings.hueApiKey,
                 hueLightIds = settings.hueLightIds,
@@ -388,8 +337,6 @@ class BackupManager @Inject constructor(
                 calendarAutoAlarmMinutesBefore = settings.calendarAutoAlarmMinutesBefore,
                 calendarCommuteAwareEnabled = settings.calendarCommuteAwareEnabled,
                 calendarCommuteBaselineMinutes = settings.calendarCommuteBaselineMinutes,
-                calendarCommuteWeatherExtraMinutes = settings.calendarCommuteWeatherExtraMinutes,
-                googleRoutesApiKey = settings.googleRoutesApiKey,
                 guardianContactName = settings.guardianContactName,
                 guardianContactPhone = settings.guardianContactPhone,
                 customTypingPhrases = settings.customTypingPhrases,
@@ -405,19 +352,14 @@ class BackupManager @Inject constructor(
                 napDefaultMinutes = settings.napDefaultMinutes,
                 pauseUntilMillis = settings.pauseUntilMillis,
                 healthConnectEnabled = settings.healthConnectEnabled,
-                newsFeedUrl = settings.newsFeedUrl,
                 upcomingAlarmMinutes = settings.upcomingAlarmMinutes,
                 showNoAlarmsWarning = settings.showNoAlarmsWarning,
                 autoSilenceMinutes = settings.autoSilenceMinutes,
-                locationName = settings.locationName,
-                useManualLocation = settings.useManualLocation,
                 lastKnownLatitude = settings.lastKnownLatitude,
                 lastKnownLongitude = settings.lastKnownLongitude,
                 showDashboardTab = settings.showDashboardTab,
                 showTimerTab = settings.showTimerTab,
                 showWorldClockTab = settings.showWorldClockTab,
-                showNewsTab = settings.showNewsTab,
-                showRadarEmbed = settings.showRadarEmbed,
                 cancellationLockMinutes = settings.cancellationLockMinutes,
                 holdToDismissMillis = settings.holdToDismissMillis,
                 hueBridgeCertFingerprint = settings.hueBridgeCertFingerprint,
@@ -581,10 +523,8 @@ class BackupManager @Inject constructor(
         vacationModeEnabled = s.vacationModeEnabled,
         vacationStartMillis = s.vacationStartMillis,
         vacationEndMillis = s.vacationEndMillis,
-        showWeatherOnDashboard = s.showWeatherOnDashboard,
         showCalendarOnDashboard = s.showCalendarOnDashboard,
         postDismissSummaryEnabled = s.postDismissSummaryEnabled,
-        temperatureUnit = s.temperatureUnit,
         bedtimeEnabled = s.bedtimeEnabled,
         bedtimeHour = s.bedtimeHour,
         bedtimeMinute = s.bedtimeMinute,
@@ -597,12 +537,6 @@ class BackupManager @Inject constructor(
         jetLagDirection = s.jetLagDirection,
         bedtimeDndEnabled = s.bedtimeDndEnabled,
         flipToSnoozeEnabled = s.flipToSnoozeEnabled,
-        webhookEnabled = s.webhookEnabled,
-        webhookUrl = s.webhookUrl,
-        webhookIncludeLabel = s.webhookIncludeLabel,
-        webhookSigningSecret = s.webhookSigningSecret,
-        holidayAutoSkipEnabled = s.holidayAutoSkipEnabled,
-        holidayCountryCode = s.holidayCountryCode,
         hueBridgeIp = s.hueBridgeIp,
         hueApiKey = s.hueApiKey,
         hueLightIds = s.hueLightIds,
@@ -612,8 +546,6 @@ class BackupManager @Inject constructor(
         calendarAutoAlarmMinutesBefore = s.calendarAutoAlarmMinutesBefore,
         calendarCommuteAwareEnabled = s.calendarCommuteAwareEnabled,
         calendarCommuteBaselineMinutes = s.calendarCommuteBaselineMinutes,
-        calendarCommuteWeatherExtraMinutes = s.calendarCommuteWeatherExtraMinutes,
-        googleRoutesApiKey = s.googleRoutesApiKey,
         guardianContactName = s.guardianContactName,
         guardianContactPhone = s.guardianContactPhone,
         customTypingPhrases = s.customTypingPhrases,
@@ -629,19 +561,14 @@ class BackupManager @Inject constructor(
         napDefaultMinutes = s.napDefaultMinutes,
         pauseUntilMillis = s.pauseUntilMillis,
         healthConnectEnabled = s.healthConnectEnabled,
-        newsFeedUrl = s.newsFeedUrl,
         upcomingAlarmMinutes = s.upcomingAlarmMinutes,
         showNoAlarmsWarning = s.showNoAlarmsWarning,
         autoSilenceMinutes = s.autoSilenceMinutes,
-        locationName = s.locationName,
-        useManualLocation = s.useManualLocation,
         lastKnownLatitude = s.lastKnownLatitude,
         lastKnownLongitude = s.lastKnownLongitude,
         showDashboardTab = s.showDashboardTab,
         showTimerTab = s.showTimerTab,
         showWorldClockTab = s.showWorldClockTab,
-        showNewsTab = s.showNewsTab,
-        showRadarEmbed = s.showRadarEmbed,
         cancellationLockMinutes = s.cancellationLockMinutes,
         holdToDismissMillis = s.holdToDismissMillis,
         hueBridgeCertFingerprint = s.hueBridgeCertFingerprint,

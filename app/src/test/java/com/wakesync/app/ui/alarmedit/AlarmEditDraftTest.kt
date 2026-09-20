@@ -95,7 +95,6 @@ class AlarmEditDraftTest {
             AlarmEditorSection.ANNOUNCEMENT to AlarmEditorPage.WAKE,
             AlarmEditorSection.WAKE_CONFIRM to AlarmEditorPage.WAKE,
             AlarmEditorSection.SMART_ALARM to AlarmEditorPage.SCHEDULE,
-            AlarmEditorSection.HOLIDAYS to AlarmEditorPage.SCHEDULE,
             AlarmEditorSection.SPOTIFY to AlarmEditorPage.INTEGRATIONS,
             AlarmEditorSection.HUE to AlarmEditorPage.INTEGRATIONS,
             AlarmEditorSection.CHAIN to AlarmEditorPage.DISMISS,

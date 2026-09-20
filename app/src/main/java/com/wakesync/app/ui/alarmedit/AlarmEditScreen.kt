@@ -106,7 +106,6 @@ internal enum class AlarmEditorSection(
     ANNOUNCEMENT(AlarmEditorPage.WAKE, R.string.alarm_edit_announcement, R.string.alarm_edit_section_announcement_description),
     WAKE_CONFIRM(AlarmEditorPage.WAKE, R.string.alarm_edit_wake_confirmation, R.string.alarm_edit_section_wake_confirmation_description),
     SMART_ALARM(AlarmEditorPage.SCHEDULE, R.string.alarm_edit_smart_alarm, R.string.alarm_edit_section_smart_alarm_description),
-    HOLIDAYS(AlarmEditorPage.SCHEDULE, R.string.alarm_edit_holidays, R.string.alarm_edit_section_holidays_description),
     SPOTIFY(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_spotify, R.string.alarm_edit_section_spotify_description),
     HUE(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_hue, R.string.alarm_edit_section_hue_description),
     CHAIN(AlarmEditorPage.DISMISS, R.string.alarm_edit_mission_chain, R.string.alarm_edit_section_chain_description),
@@ -483,8 +482,7 @@ fun AlarmEditScreen(
             state.shiftPattern,
             state.shiftPatternStartDate,
             state.timezonePolicy,
-            state.fixedTimezoneId,
-            state.skipOnHolidays
+            state.fixedTimezoneId
         ) {
             viewModel.computeForecast()
         }

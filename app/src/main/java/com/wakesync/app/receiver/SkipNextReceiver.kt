@@ -7,7 +7,6 @@ import android.util.Log
 import com.wakesync.app.AlarmClockApp
 import com.wakesync.app.data.local.entity.AlarmEvent
 import com.wakesync.app.domain.AlarmScheduler
-import com.wakesync.app.service.WebhookEvent
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,15 +16,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.time.ZoneId
-import java.util.Locale
 
 /**
  * Handles the "Skip this alarm" action from the persistent next-alarm notification.
  *
  * Performs the work in [goAsync] using a Hilt EntryPoint rather than starting a
  * foreground service: the previous implementation routed through DismissReceiver,
- * which incorrectly triggered TTS, the morning briefing, the wake-confirmation
- * worker and the dismiss webhook — none of which apply to "skip".
+ * which incorrectly triggered TTS, the morning briefing and the wake-confirmation
+ * worker — none of which apply to "skip".
  *
  * For repeating alarms the next occurrence is recomputed from one minute past the
  * trigger we just skipped (via NextAlarmCalculator). For one-shot alarms it
@@ -54,7 +52,6 @@ class SkipNextReceiver : BroadcastReceiver() {
                     val repo = ep.alarmRepository()
                     val scheduler = ep.alarmScheduler()
                     val eventRepo = ep.alarmEventRepository()
-                    val webhookService = ep.webhookService()
 
                     val alarm = repo.getById(alarmId) ?: return@withTimeout
 
@@ -75,23 +72,13 @@ class SkipNextReceiver : BroadcastReceiver() {
                         )
                     }
 
-                    webhookService.fireAsync(
-                        event = WebhookEvent.AlarmSkipped,
-                        alarmId = alarm.id,
-                        label = alarm.label,
-                        timeFormatted = "%02d:%02d".format(Locale.US, alarm.hour, alarm.minute),
-                        scheduledForMillis = alarm.nextTriggerTime.takeIf { it > 0L },
-                        fireId = null
-                    )
-
                     if (!alarm.isRecurringSchedule) {
                         repo.setEnabled(alarm.id, enabled = false, nextTrigger = 0)
                         scheduler.cancel(alarm.id)
                     } else {
                         scheduler.cancel(alarm.id)
                         // Route through the full scheduling policy so the
-                        // replacement occurrence honors holiday auto-skip,
-                        // vacation mode, and weather lead adjustments instead
+                        // replacement occurrence honors vacation mode instead
                         // of landing raw on a policy-skipped day.
                         val skipFloorMs = alarm.nextTriggerTime
                             .coerceAtLeast(System.currentTimeMillis()) + 60_000L

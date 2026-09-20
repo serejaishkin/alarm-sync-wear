@@ -19,39 +19,18 @@ class BackupExportWarningTest {
     }
 
     @Test
-    fun `settings secrets and custom feeds are disclosed before export`() {
+    fun `settings secrets are disclosed before export`() {
         val warning = BackupManager.assessExportWarning(
             settings = AppSettings(
-                webhookUrl = "https://example.com/hook?token=abc",
-                webhookSigningSecret = "hmac-secret",
                 hueBridgeIp = "192.168.1.50",
                 hueApiKey = "bridge-secret",
-                hueLightIds = "1,2",
-                newsFeedUrl = "https://example.com/private-feed.xml?key=abc"
+                hueLightIds = "1,2"
             ),
             alarms = emptyList()
         )
 
         assertTrue(warning.shouldWarn)
-        assertTrue(warning.categories.contains("Webhook endpoint URL"))
-        assertTrue(warning.categories.contains("Webhook signing secret"))
         assertTrue(warning.categories.contains("Philips Hue bridge details and API key"))
-        assertTrue(warning.categories.contains("Custom news feed URL"))
-    }
-
-    @Test
-    fun `saved weather location is disclosed before export`() {
-        val warning = BackupManager.assessExportWarning(
-            settings = AppSettings(
-                locationName = "Dallas, Texas, United States",
-                lastKnownLatitude = 32.78,
-                lastKnownLongitude = -96.8
-            ),
-            alarms = emptyList()
-        )
-
-        assertTrue(warning.shouldWarn)
-        assertTrue(warning.categories.contains("Saved weather location"))
     }
 
     @Test
