@@ -83,24 +83,6 @@ internal fun LazyListScope.alarmEditIntegrationSections(
     viewModel: AlarmEditViewModel,
     context: Context
 ) {
-    // Spotify Ringtone
-    SettingsSection(editorPage, AlarmEditorSection.SPOTIFY) {
-        OutlinedTextField(
-            value = state.spotifyUri,
-            onValueChange = viewModel::updateSpotifyUri,
-            label = { Text(stringResource(R.string.alarm_edit_spotify_uri), color = TextMuted) },
-            placeholder = { Text(stringResource(R.string.alarm_edit_default_ringtone_placeholder), color = TextMuted) },
-            colors = appOutlinedTextFieldColors(),
-            shape = AppInputShape,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            singleLine = true
-        )
-        SettingsHint(
-            stringResource(R.string.alarm_edit_spotify_hint),
-            tone = HintTone.Warning
-        )
-    }
-
     // Philips Hue Sunrise
     SettingsSection(editorPage, AlarmEditorSection.HUE) {
         SettingsRow(
@@ -144,24 +126,6 @@ internal fun LazyListScope.alarmEditIntegrationSections(
                 tone = HintTone.Warning
             )
         }
-    }
-
-    // v1.2.0: Sound Source
-    SettingsSection(editorPage, AlarmEditorSection.RADIO) {
-        OutlinedTextField(
-            value = state.internetRadioUrl,
-            onValueChange = viewModel::updateInternetRadioUrl,
-            label = { Text(stringResource(R.string.alarm_edit_stream_url), color = TextMuted) },
-            placeholder = { Text(stringResource(R.string.alarm_edit_default_ringtone_placeholder), color = TextMuted) },
-            colors = appOutlinedTextFieldColors(),
-            shape = AppInputShape,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            singleLine = true
-        )
-        SettingsHint(
-            stringResource(R.string.alarm_edit_radio_hint),
-            tone = HintTone.Warning
-        )
     }
 
     // v1.2.0: Guardian Angel

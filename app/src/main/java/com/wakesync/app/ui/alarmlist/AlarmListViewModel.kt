@@ -65,6 +65,18 @@ private data class SelectionSnapshot(
     val selectedProfile: String?
 )
 
+/** Full-identical alarms (same time, days and label) — extras of each group,
+ *  keeping the earliest-created (lowest id) of every group. */
+internal fun findDuplicateExtras(alarms: List<Alarm>): List<Alarm> {
+    return alarms
+        .groupBy { it.duplicateFingerprint() }
+        .values
+        .flatMap { group -> group.sortedBy { it.id }.drop(1) }
+}
+
+private fun Alarm.duplicateFingerprint(): String =
+    "${hour}:${minute}:${label.trim().lowercase()}:${repeatDays.sorted().joinToString(",")}"
+
 data class AlarmListUiState(
     val alarms: List<Alarm> = emptyList(),
     val nextAlarm: Alarm? = null,
@@ -87,7 +99,11 @@ data class AlarmListUiState(
     val vacationStartMillis: Long = 0L,
     val vacationEndMillis: Long = 0L,
     // Which device last changed each alarm and when (sync provenance).
-    val syncChanges: Map<Long, AlarmLastChange> = emptyMap()
+    val syncChanges: Map<Long, AlarmLastChange> = emptyMap(),
+    // Extras of exact-duplicate groups (same time + days + label). The user's
+    // "remove duplicates" action deletes exactly these; the first of each
+    // group is always kept.
+    val duplicateExtras: List<Alarm> = emptyList()
 )
 
 @HiltViewModel
@@ -151,6 +167,8 @@ class AlarmListViewModel @Inject constructor(
 
             val sorted = sortAlarmsForList(filtered, sort)
 
+            val duplicates = findDuplicateExtras(alarms)
+
             // Extract unique groups from all alarms (not filtered), hiding the
             // empty/default group so the chip row never gets a blank filter.
             val groups = alarms.map { it.group.trim() }
@@ -185,7 +203,8 @@ class AlarmListViewModel @Inject constructor(
                 } else 0L,
                 vacationEndMillis = if (VacationAlarmPolicy.hasConfiguredWindow(settings)) {
                     settings.vacationEndMillis
-                } else 0L
+                } else 0L,
+                duplicateExtras = duplicates
             )
         },
         syncChangesFlow
@@ -424,6 +443,29 @@ class AlarmListViewModel @Inject constructor(
 
     fun confirmDelete() {
         _undoAlarm.value = null
+    }
+
+    /**
+     * Remove the duplicate extras detected in [AlarmListUiState.duplicateExtras].
+     * The first alarm of every identical-time/days/label group is kept.
+     */
+    fun removeDuplicateExtras() {
+        viewModelScope.launch {
+            val extras = uiState.value.duplicateExtras
+            if (extras.isEmpty()) return@launch
+            extras.forEach { alarm ->
+                scheduler.cancel(alarm.id)
+                repository.getById(alarm.id)?.let { repository.delete(it) }
+            }
+            scheduler.syncBedtimeDndRule()
+            emitFeedback(
+                if (extras.size == 1) {
+                    "Duplicate alarm removed"
+                } else {
+                    "${extras.size} duplicate alarms removed"
+                }
+            )
+        }
     }
 
     /**

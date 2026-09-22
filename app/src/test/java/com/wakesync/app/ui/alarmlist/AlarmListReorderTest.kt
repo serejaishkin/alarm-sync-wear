@@ -3,6 +3,7 @@ package com.wakesync.app.ui.alarmlist
 import com.wakesync.app.data.model.Alarm
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.DayOfWeek
 
 class AlarmListReorderTest {
 
@@ -42,4 +43,50 @@ class AlarmListReorderTest {
         assertEquals(visibleIds, reorderAlarmIds(visibleIds, movedId = 20L, targetId = 99L))
         assertEquals(visibleIds, reorderAlarmIds(visibleIds, movedId = 20L, targetId = 20L))
     }
+
+    @Test
+    fun findDuplicateExtrasKeepsLowestIdOfEachDuplicateGroup() {
+        val ids = 1L..6L
+        val alarms = listOf(
+            alarm(1L, 6, 0, "Wake Up"),
+            alarm(2L, 6, 0, "Wake Up"),
+            alarm(3L, 6, 0, "Wake Up"),
+            alarm(4L, 8, 45, "Morning"),
+            alarm(5L, 7, 30, "Gym"),
+            alarm(6L, 7, 30, "Gym")
+        )
+
+        val extras = findDuplicateExtras(alarms)
+
+        assertEquals(listOf(2L, 3L, 6L), extras.map { it.id })
+    }
+
+    @Test
+    fun findDuplicateExtrasIgnoresDifferentTimeDaysOrLabel() {
+        val alarms = listOf(
+            alarm(1L, 6, 0, "Wake Up"),
+            alarm(2L, 6, 0, "Wake up "),
+            alarm(3L, 6, 1, "Wake Up"),
+            alarm(4L, 6, 0, "Gym"),
+            alarm(5L, 6, 0, "Wake Up", days = setOf(DayOfWeek.MONDAY)),
+            alarm(6L, 6, 0, "Wake Up", days = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY))
+        )
+
+        val extras = findDuplicateExtras(alarms)
+
+        assertEquals(listOf(2L), extras.map { it.id })
+    }
+
+    @Test
+    fun findDuplicateExtrasHandlesEmptyList() {
+        assertEquals(emptyList<Alarm>(), findDuplicateExtras(emptyList()))
+    }
+
+    private fun alarm(
+        id: Long,
+        hour: Int,
+        minute: Int,
+        label: String,
+        days: Set<DayOfWeek> = setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY)
+    ) = Alarm(id = id, hour = hour, minute = minute, label = label, repeatDays = days)
 }

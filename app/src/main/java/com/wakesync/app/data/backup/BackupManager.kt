@@ -249,9 +249,6 @@ class BackupManager @Inject constructor(
                 ) {
                     add("Philips Hue bridge details and API key")
                 }
-                if (alarms.any { it.internetRadioUrl.isNotBlank() }) {
-                    add("Internet radio stream URLs")
-                }
                 if (alarms.any { it.hasDeviceLocalUris() }) {
                     add("Device-local ringtone or image URIs")
                 }

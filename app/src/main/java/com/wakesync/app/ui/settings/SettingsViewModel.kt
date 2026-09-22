@@ -306,13 +306,6 @@ class SettingsViewModel @Inject constructor(
         _wakeReadinessState.value = WakeReadinessState.from(context)
     }
 
-    // v1.2.0 personalization — these settings exist in PreferencesManager but
-    // had no UI surface until this audit pass. Setters live alongside the
-    // existing toggle helpers so the SettingsScreen call-site stays uniform.
-    fun toggleShowMotivationalQuotes(enabled: Boolean) =
-        updateSettings { it.copy(showMotivationalQuotes = enabled) }
-    fun toggleAdaptiveDifficulty(enabled: Boolean) =
-        updateSettings { it.copy(adaptiveDifficultyEnabled = enabled) }
     fun updateAccentColor(hex: String) {
         // Defensive: only persist a value that parses cleanly so a corrupt
         // input can't blank-out the entire theme.
@@ -358,14 +351,6 @@ class SettingsViewModel @Inject constructor(
         updateSettings { it.copy(sleepSoundTimerMinutes = minutes.coerceAtLeast(0)) }
     fun updateSleepSoundFade(seconds: Int) =
         updateSettings { it.copy(sleepSoundFadeSeconds = seconds.coerceIn(5, 600)) }
-
-    // v1.7.1: Bottom-nav visibility toggles
-    fun toggleShowDashboardTab(enabled: Boolean) =
-        updateSettings { it.copy(showDashboardTab = enabled) }
-    fun toggleShowTimerTab(enabled: Boolean) =
-        updateSettings { it.copy(showTimerTab = enabled) }
-    fun toggleShowWorldClockTab(enabled: Boolean) =
-        updateSettings { it.copy(showWorldClockTab = enabled) }
 
     fun toggle24Hour(enabled: Boolean) = updateSettings { it.copy(is24HourFormat = enabled) }
     fun togglePhoneSpeakers(enabled: Boolean) = updateSettings { it.copy(usePhoneSpeakers = enabled) }

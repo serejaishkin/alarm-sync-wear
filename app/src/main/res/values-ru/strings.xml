@@ -151,8 +151,6 @@
     <string name="alarm_edit_page_schedule_subtitle">Ближайшие срабатывания, праздники и умное пробуждение.</string>
     <string name="alarm_edit_page_wake">Пробуждение</string>
     <string name="alarm_edit_page_wake_subtitle">Эффекты пробуждения, объявления, подтверждение и утренняя рутина.</string>
-    <string name="alarm_edit_page_integrations">Интеграции и безопасность</string>
-    <string name="alarm_edit_page_integrations_subtitle">Hue, аудиосервисы и экстренное уведомление.</string>
     <string name="alarm_edit_page_advanced">Дополнительно</string>
     <string name="alarm_edit_page_advanced_subtitle">Смены, солнце, аппаратные кнопки и расширенные параметры.</string>
     <string name="alarm_edit_group">Группа</string>
@@ -165,12 +163,9 @@
     <string name="alarm_edit_wake_confirmation">Подтверждение пробуждения</string>
     <string name="alarm_edit_smart_alarm">Умный будильник</string>
     <string name="alarm_edit_holidays">Праздники</string>
-    <string name="alarm_edit_spotify">Мелодия Spotify</string>
     <string name="alarm_edit_hue">Рассвет Philips Hue</string>
     <string name="alarm_edit_mission_chain">Цепочка заданий</string>
     <string name="alarm_edit_anti_snooze">Защита от повторных отсрочек</string>
-    <string name="alarm_edit_sunrise">Имитация рассвета</string>
-    <string name="alarm_edit_internet_radio">Интернет-радио</string>
     <string name="alarm_edit_guardian">Аварийное уведомление</string>
     <string name="alarm_edit_morning_routine">Утренняя рутина</string>
     <string name="alarm_edit_advanced">Расширенные настройки</string>
@@ -187,12 +182,9 @@
     <string name="alarm_edit_section_wake_confirmation_description">Добавьте дополнительную проверку, чтобы убедиться, что вы действительно проснулись.</string>
     <string name="alarm_edit_section_smart_alarm_description">Разрешите срабатывание внутри заданного окна пробуждения.</string>
     <string name="alarm_edit_section_holidays_description">Не запускайте обычные будильники в дни отдыха.</string>
-    <string name="alarm_edit_section_spotify_description">Используйте музыку вместо обычной мелодии.</string>
     <string name="alarm_edit_section_hue_description">Синхронизируйте освещение с будильником.</string>
     <string name="alarm_edit_section_chain_description">Объедините несколько заданий пробуждения.</string>
     <string name="alarm_edit_section_anti_snooze_description">Добавьте ограничения на повторную отсрочку.</string>
-    <string name="alarm_edit_section_sunrise_description">Плавно увеличивайте яркость экрана до пробуждения.</string>
-    <string name="alarm_edit_section_radio_description">Просыпайтесь под интернет-радио.</string>
     <string name="alarm_edit_section_guardian_description">Уведомите контакт, если будильник остался без внимания.</string>
     <string name="alarm_edit_section_routine_description">Составьте список первых дел после пробуждения.</string>
     <string name="alarm_edit_section_advanced_description">Тонкая настройка поведения и защиты от нестандартных ситуаций.</string>
@@ -220,7 +212,6 @@
     <string name="alarm_edit_settings_title">Настройки будильника</string>
     <string name="alarm_edit_settings_description">Откройте категорию для изменения. Текущие параметры остаются видимыми здесь.</string>
     <string name="alarm_edit_feature_flash">Вспышка</string>
-    <string name="alarm_edit_feature_sunrise">Рассвет</string>
     <string name="alarm_edit_feature_announcement">Объявление</string>
     <string name="alarm_edit_feature_routine">Рутина</string>
     <string name="alarm_edit_feature_profile">Профиль</string>
@@ -233,7 +224,6 @@
     <string name="alarm_edit_vibration_off">Вибрация выключена</string>
     <string name="alarm_edit_dismiss_category_summary">%1$s • отсрочка %2$d мин</string>
     <string name="alarm_edit_standard_wake">Обычное пробуждение</string>
-    <string name="alarm_edit_no_integrations">Нет дополнительных интеграций</string>
     <string name="alarm_edit_using_defaults">Используются настройки по умолчанию</string>
     <string name="alarm_edit_repeat_once">Один раз</string>
     <string name="alarm_edit_repeat_daily">Каждый день</string>
@@ -331,8 +321,6 @@
     <string name="alarm_edit_smart_alarm_hint">Использует осторожную оценку движений телефона и ждёт достаточных признаков перед ранним срабатыванием.</string>
     <string name="alarm_edit_skip_holidays">Пропускать государственные праздники</string>
     <string name="alarm_edit_holidays_hint">Требует включённого автоматического пропуска праздников и кода страны в настройках интеграций.</string>
-    <string name="alarm_edit_default_ringtone_placeholder">Оставьте пустым для стандартной мелодии</string>
-    <string name="alarm_edit_spotify_hint">Требует установленного Spotify. При недоступности используется стандартная мелодия.</string>
     <string name="alarm_edit_hue_sunrise">Имитация рассвета</string>
     <string name="alarm_edit_hue_start">Включить свет до будильника</string>
     <string name="alarm_edit_progressive_snooze">Постепенно сокращать отсрочку</string>
@@ -340,9 +328,6 @@
     <string name="alarm_edit_backup_sound">Резервное усиление звука</string>
     <string name="alarm_edit_escalate_after">Усилить через</string>
     <string name="alarm_edit_flashlight_strobe">Стробоскоп фонарика</string>
-    <string name="alarm_edit_screen_sunrise">Рассвет на экране</string>
-    <string name="alarm_edit_duration">Длительность</string>
-    <string name="alarm_edit_stream_url">URL потока (http://…)</string>
     <string name="alarm_edit_emergency_alert">Уведомление экстренного контакта</string>
     <string name="alarm_edit_emergency_phone">Телефон экстренного контакта</string>
     <string name="alarm_edit_alert_after">Уведомить через</string>
@@ -392,7 +377,6 @@
     <string name="alarm_edit_silent_wake">Тихое пробуждение</string>
     <string name="alarm_edit_default_sound">Стандартный звук</string>
     <string name="alarm_edit_custom_tone">Своя мелодия</string>
-    <string name="alarm_edit_spotify_short">Spotify</string>
     <string name="alarm_edit_empty_ringtone">(пусто)</string>
     <string name="alarm_edit_clock_entry">Часы</string>
     <string name="alarm_edit_numpad_entry">Цифровая клавиатура</string>
@@ -459,16 +443,6 @@
     <string name="settings_weather_buffer">Запас на плохую погоду</string>
     <string name="settings_no_weather_buffer">Без запаса на погоду</string>
     <string name="settings_clear">Очистить</string>
-    <string name="settings_celsius">Цельсий (°C)</string>
-    <string name="settings_fahrenheit">Фаренгейт (°F)</string>
-    <string name="settings_temperature_description">Используется на панели и карточках погоды.</string>
-    <string name="settings_bottom_navigation">Нижняя навигация</string>
-    <string name="settings_bottom_navigation_description">Скрывайте ненужные вкладки. Будильники и настройки всегда доступны.</string>
-    <string name="settings_show_today_tab">Показывать вкладку «Сегодня»</string>
-    <string name="settings_show_timer_tab">Показывать вкладку «Таймер»</string>
-    <string name="settings_show_world_tab">Показывать вкладку «Мир»</string>
-    <string name="settings_show_news_tab">Показывать вкладку «Новости»</string>
-    <string name="settings_radar_tab">Радар на вкладке погоды</string>
     <string name="settings_utilities">Инструменты</string>
     <string name="settings_alarm_statistics">Статистика будильников</string>
     <string name="settings_alarm_statistics_description">Просматривайте серии, время реакции и привычки.</string>
@@ -1081,8 +1055,6 @@
     <string name="alarm_edit_hue_hint">Требуется IP моста Hue и API-ключ, настроенные в разделе Настройки → Philips Hue.</string>
     <string name="alarm_edit_backup_sound_hint">Увеличивает громкость до максимума, если нет взаимодействия в течение задержки.</string>
     <string name="alarm_edit_flashlight_warning">Внимание: быстрые вспышки могут вызвать судороги или дискомфорт. Уменьшите движение и мигание в настройках отключает этот эффект.</string>
-    <string name="alarm_edit_sunrise_hint">Переходит экран от тёмно-красного к тёплому жёлтому, имитируя рассвет.</string>
-    <string name="alarm_edit_radio_hint">Воспроизводит интернет-радио как звук будильника и откатывается к стандартной мелодии при ошибке.</string>
     <string name="alarm_edit_guardian_call_granted">Разрешение прямого звонка предоставлено.</string>
     <string name="alarm_edit_guardian_call_dialer">Запасной вариант открывает наборщик, так как разрешение CALL_PHONE не предоставлено.</string>
     <string name="alarm_edit_guardian_inactive">Guardian Angel отключён для этого будильника.</string>
@@ -1127,9 +1099,6 @@
 
     <!-- alarm editor: solar hint -->
     <string name="alarm_edit_solar_hint">Когда смещение не нулевое, будильник срабатывает относительно выбранного восхода или заката в последнем известном местоположении.</string>
-
-    <!-- alarm editor: spotify uri -->
-    <string name="alarm_edit_spotify_uri">Spotify URI (например, spotify:track:…)</string>
 
     <!-- alarm editor: challenge unknown -->
     <string name="alarm_edit_challenge_unknown">%1$s</string>
@@ -1194,13 +1163,8 @@
     <string name="settings_packaging_diagnostics">Упаковка локальных журналов сбоев и обезличенной диагностики…</string>
     <string name="settings_packaging_export">Упаковка локального диагностического экспорта</string>
     <string name="settings_packaging_support_bundle">Упаковка пакета поддержки</string>
-    <string name="settings_radar_description">Встраивает анимированный радар осадков Windy.com под карточкой погоды.</string>
     <string name="settings_routes_api_key">API-ключ Google Routes</string>
     <string name="settings_routes_api_placeholder">Необязательно для оценки транспорта</string>
-    <string name="settings_show_news_description">Публичные RSS-ленты — Google News, BBC, NPR, Hacker News.</string>
-    <string name="settings_show_timer_description">Таймеры обратного отсчёта с несколькими полосами.</string>
-    <string name="settings_show_today_description">Ежедневный обзор — условия, почасовой, УФ, восход/закат и радар.</string>
-    <string name="settings_show_world_description">Отслеживание часовых поясов городов, которые важны для вас.</string>
     <string name="settings_support_bundle_ready">Пакет поддержки готов</string>
     <string name="settings_support_bundle_subject">Пакет поддержки WakeSync</string>
     <string name="settings_support_export_failed">Ошибка экспорта поддержки</string>
@@ -1249,5 +1213,58 @@
     <string name="nav_alarms">Будильники</string>
     <string name="nav_timer">Таймер</string>
     <string name="nav_settings">Настройки</string>
+
+    <string name="onboarding_welcome">Добро пожаловать</string>
+    <string name="onboarding_tagline">Надёжные утра без лишней суеты</string>
+    <string name="onboarding_set_up_later">Настроить позже</string>
+    <string name="onboarding_continue">Продолжить</string>
+    <string name="onboarding_step">Шаг %1$d из %2$d</string>
+    <string name="onboarding_reliable_title">Надёжное пробуждение</string>
+    <string name="onboarding_reliable_description">WakeSync создан, чтобы оставаться надёжным, даже когда Android экономит заряд в фоне.</string>
+    <string name="onboarding_reliable_exact">Точные будильники, выдерживающие режим Doze</string>
+    <string name="onboarding_reliable_battery">Настройка батареи для агрессивных производителей</string>
+    <string name="onboarding_challenge_title">Просыпайтесь по-настоящему</string>
+    <string name="onboarding_challenge_description">Отключение будильника через задания помогает убедиться, что вы действительно проснулись, прежде чем он замолчит.</string>
+    <string name="onboarding_challenge_types">Математика, встряска, память, шаги, штрихкод и другое</string>
+    <string name="onboarding_challenge_layers">Комбинируйте несколько заданий, когда нужна дополнительная уверенность</string>
+    <string name="onboarding_dashboard_title">Начинайте день осознанно</string>
+    <string name="onboarding_dashboard_description">Календарь и следующий будильник в одном месте — с первого взгляда утро становится спокойнее.</string>
+    <string name="onboarding_dashboard_context">Компактная дневная сводка с событиями и следующим будильником</string>
+    <string name="onboarding_dashboard_clean">Полезный контекст без рекламы и лишнего шума</string>
+    <string name="onboarding_privacy_title">Конфиденциальность по умолчанию</string>
+    <string name="onboarding_privacy_description">Без рекламы. Без слежки. Без аккаунта.</string>
+    <string name="onboarding_privacy_permissions">Разрешения необязательны и их можно изменить позже</string>
+    <string name="onboarding_privacy_local">Данные остаются на устройстве, если вы не настроите интеграцию</string>
+    <string name="onboarding_recommended_setup">Рекомендуемая настройка</string>
+    <string name="onboarding_optional">Необязательно</string>
+    <string name="onboarding_exact_alarm_access">Точные будильники</string>
+    <string name="onboarding_alarm_notifications">Уведомления о будильниках</string>
+    <string name="onboarding_fullscreen_alarm_access">Полноэкранный будильник</string>
+    <string name="onboarding_battery_protection">Защита батареи</string>
+    <string name="onboarding_test_alarm">Тестовый будильник</string>
+    <string name="onboarding_open">Открыть</string>
+    <string name="onboarding_enable">Включить</string>
+    <string name="onboarding_run">Запустить</string>
+    <string name="onboarding_ready">Готово</string>
+    <string name="onboarding_review">Проверить</string>
+    <string name="onboarding_finish_setup">Завершить настройку</string>
+    <string name="onboarding_enable_alarm_alerts">Включить оповещения о будильниках</string>
+    <string name="onboarding_finish_without_changes">Завершить без изменений</string>
+    <string name="onboarding_skip_permissions">Пропустить разрешения</string>
+    <string name="onboarding_notice_before_night">Перед сном</string>
+    <string name="onboarding_notice_scheduled">Тестовый будильник запланирован</string>
+    <string name="onboarding_notice_completed">Тестовый будильник завершён</string>
+    <string name="onboarding_notice_unavailable">Тестовый будильник недоступен</string>
+    <string name="onboarding_notice_guidance">Проверьте точные будильники, уведомления, доступ к батарее и тестовый будильник, прежде чем рассчитывать на ночное пробуждение.</string>
+    <string name="onboarding_test_alarm_completed">Тестовый будильник завершён. Ваше устройство успешно открыло экран будильника.</string>
+    <string name="onboarding_test_alarm_scheduled">Тестовый будильник запланирован. Он сработает через 10 секунд.</string>
+    <string name="onboarding_test_alarm_failed">Не удалось запланировать тестовый будильник.</string>
+    <string name="onboarding_test_unavailable_msg">Планирование будильников недоступно на этом устройстве.</string>
+    <string name="onboarding_test_exact_required">Проверьте доступ к точным будильникам перед запуском тестового будильника.</string>
+    <string name="onboarding_test_notification_title">Тестовый будильник</string>
+    <string name="onboarding_test_notification_text">WakeSync может разбудить это устройство. Отклоните тест, чтобы завершить настройку.</string>
+    <string name="onboarding_test_screen_body">Ваше устройство может открыть экран будильника, воспроизвести звук и вибрацию. Сохранённые будильники не создавались и не изменялись.</string>
+    <string name="onboarding_test_dismiss">Отклонить тестовый будильник</string>
+    <string name="onboarding_test_footer">Если вы не услышали и не почувствовали этот тест, проверьте громкость, режим «Не беспокоить» и настройки батареи, прежде чем полагаться на ночной будильник.</string>
 
 </resources>

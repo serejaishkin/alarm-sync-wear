@@ -61,8 +61,6 @@ data class FiringUiState(
     val totalChallenges: Int = 1,
     // v1.2.0: Squat challenge
     val squatCount: Int = 0,
-    // v1.2.0: Motivational quote
-    val motivationalQuote: String = "",
     // v1.2.0: Maze challenge
     val mazeCurrentPos: Int = 0,
     // v1.2.0: Wi-Fi challenge
@@ -166,7 +164,6 @@ internal fun buildChallenge(
 class AlarmFiringViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: AlarmRepository,
-    private val eventRepository: com.wakesync.app.data.repository.AlarmEventRepository,
     private val preferencesManager: com.wakesync.app.data.preferences.PreferencesManager,
     private val digitalInkChallengeRecognizer: DigitalInkChallengeRecognizer
 ) : ViewModel() {
@@ -190,11 +187,6 @@ class AlarmFiringViewModel @Inject constructor(
     val flipToSnoozeEnabled: StateFlow<Boolean> = preferencesManager.settings
         .map { it.flipToSnoozeEnabled }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
-    /** Whether the user has opted into motivational quotes on the firing screen. */
-    val showMotivationalQuotes: StateFlow<Boolean> = preferencesManager.settings
-        .map { it.showMotivationalQuotes }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val reduceMotionAndFlashing: StateFlow<Boolean> = preferencesManager.settings
         .map { it.reduceMotionAndFlashing }
@@ -275,29 +267,13 @@ class AlarmFiringViewModel @Inject constructor(
         } else {
             emptyList()
         }
-        // v1.2.0: Adaptive difficulty — escalate if user snoozes a lot
-        // Read recent events to decide if we should bump difficulty
+        // v1.2.0: Adapt chain composition from config
         val firingSettings = preferencesManager.getCurrentSettings()
         customPhrases = firingSettings.customTypingPhrases
-        val adaptiveDifficultyEnabled = firingSettings.adaptiveDifficultyEnabled
-        val adaptedChain = if (adaptiveDifficultyEnabled && chainTypes.isNotEmpty()) {
-            try {
-                val recentStats = eventRepository.getStats()
-                if (recentStats.snoozeRate > 50) {
-                    chainTypes.map { type ->
-                        when (type) {
-                            ChallengeType.MATH_EASY -> ChallengeType.MATH_MEDIUM
-                            ChallengeType.MATH_MEDIUM -> ChallengeType.MATH_HARD
-                            else -> type
-                        }
-                    }
-                } else chainTypes
-            } catch (_: Exception) { chainTypes }
-        } else chainTypes
-        challengeChainTypes = adaptedChain
+        challengeChainTypes = chainTypes
 
-        val firstChallenge = if (adaptedChain.isNotEmpty()) {
-            buildChallengeForType(adaptedChain[0], alarm)
+        val firstChallenge = if (chainTypes.isNotEmpty()) {
+            buildChallengeForType(chainTypes[0], alarm)
         } else {
             null
         }
@@ -307,17 +283,14 @@ class AlarmFiringViewModel @Inject constructor(
         )
         val locationDismissActive = alarm.locationDismissEnabled && hasLocationDismissTarget
 
-        val quote = MOTIVATIONAL_QUOTES.random()
-
         _uiState.value = FiringUiState(
             alarm = alarm,
             alarmLoaded = true,
             challenge = firstChallenge,
-            challengeSolved = adaptedChain.isEmpty(),
+            challengeSolved = chainTypes.isEmpty(),
             challengeStartedAtMillis = if (firstChallenge != null) System.currentTimeMillis() else 0L,
-            totalChallenges = maxOf(adaptedChain.size, 1),
+            totalChallenges = maxOf(chainTypes.size, 1),
             currentChallengeIndex = 0,
-            motivationalQuote = quote,
             mazeCurrentPos = (firstChallenge as? Challenge.MazeChallenge)?.startPos ?: 0,
             locationDismissReady = !locationDismissActive,
             locationDismissStatus = when {
@@ -1215,25 +1188,5 @@ class AlarmFiringViewModel @Inject constructor(
                 totalWrongAttempts = _uiState.value.totalWrongAttempts + 1
             )
         }
-    }
-
-    companion object {
-        private val MOTIVATIONAL_QUOTES = listOf(
-            "The secret of getting ahead is getting started.",
-            "Today is a new beginning. Make the most of it.",
-            "Your future is created by what you do today.",
-            "Rise up, start fresh, see the bright opportunity in each new day.",
-            "Every morning brings new potential.",
-            "Do something today that your future self will thank you for.",
-            "The only way to do great work is to love what you do.",
-            "Believe you can and you are halfway there.",
-            "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-            "The best time for new beginnings is now.",
-            "You are never too old to set another goal or to dream a new dream.",
-            "What you do today can improve all your tomorrows.",
-            "Start where you are. Use what you have. Do what you can.",
-            "It does not matter how slowly you go as long as you do not stop.",
-            "Act as if what you do makes a difference. It does."
-        )
     }
 }

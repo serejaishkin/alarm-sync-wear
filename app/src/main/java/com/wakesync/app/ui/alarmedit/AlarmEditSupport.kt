@@ -270,22 +270,19 @@ internal fun AlarmEditorCategoryOverview(
     }
     val wakeFeatures = listOfNotNull(
         stringResource(R.string.alarm_edit_feature_flash).takeIf { state.flashWake || state.flashlightStrobe },
-        stringResource(R.string.alarm_edit_feature_sunrise).takeIf { state.sunriseSimulation },
         stringResource(R.string.alarm_edit_feature_announcement).takeIf { state.ttsEnabled },
         stringResource(R.string.alarm_edit_feature_routine).takeIf { state.morningRoutine.isNotBlank() }
     )
-    val integrationCount = listOf(
-        state.spotifyUri.isNotBlank(),
-        state.hueEnabled,
-        state.internetRadioUrl.isNotBlank(),
-        state.guardianEnabled
-    ).count { it }
+    val integrationFeatures = listOfNotNull(
+        stringResource(R.string.alarm_edit_hue).takeIf { state.hueEnabled },
+        stringResource(R.string.alarm_edit_guardian).takeIf { state.guardianEnabled }
+    )
     val advancedFeatures = listOfNotNull(
         stringResource(R.string.alarm_edit_feature_profile).takeIf { state.profileName.isNotBlank() },
         stringResource(R.string.alarm_edit_feature_shift).takeIf { state.shiftPattern.isNotBlank() },
         stringResource(R.string.alarm_edit_feature_solar).takeIf { state.solarOffsetMinutes != 0 },
         stringResource(R.string.alarm_edit_feature_wifi).takeIf { state.wifiDismissSsid.isNotBlank() }
-    )
+    ) + integrationFeatures
     val categories = listOf(
         AlarmEditorCategory(
             page = AlarmEditorPage.SOUND,
@@ -321,16 +318,6 @@ internal fun AlarmEditorCategoryOverview(
             summary = wakeFeatures.takeIf { it.isNotEmpty() }?.joinToString(" • ")
                 ?: stringResource(R.string.alarm_edit_standard_wake),
             icon = Icons.Default.WbSunny
-        ),
-        AlarmEditorCategory(
-            page = AlarmEditorPage.INTEGRATIONS,
-            title = stringResource(R.string.alarm_edit_page_integrations),
-            summary = if (integrationCount == 0) {
-                stringResource(R.string.alarm_edit_no_integrations)
-            } else {
-                pluralStringResource(R.plurals.alarm_edit_active_integrations, integrationCount, integrationCount)
-            },
-            icon = Icons.Default.Hub
         ),
         AlarmEditorCategory(
             page = AlarmEditorPage.ADVANCED,
@@ -951,8 +938,6 @@ internal fun AlarmEditUiState.challengeSummary(): String {
 @Composable
 internal fun AlarmEditUiState.soundSummary(): String = stringResource(
     when {
-        internetRadioUrl.isNotBlank() -> R.string.alarm_edit_internet_radio
-        spotifyUri.isNotBlank() -> R.string.alarm_edit_spotify_short
         ringtoneUri == "silent" -> R.string.alarm_edit_silent_wake
         ringtoneUri.isBlank() -> R.string.alarm_edit_default_sound
         else -> R.string.alarm_edit_custom_tone

@@ -342,8 +342,6 @@ private fun Alarm.challengeSummary(): String {
 private fun Alarm.soundSummary(): String {
     return when {
         ringtonePool.isNotBlank() -> "Random ringtone pool"
-        internetRadioUrl.isNotBlank() -> "Internet radio"
-        spotifyUri.isNotBlank() -> "Spotify"
         ringtoneUri == "silent" -> "Silent alarm"
         ringtoneUri.isNotBlank() -> "Custom ringtone"
         else -> "Device default"
@@ -361,8 +359,6 @@ private fun String.toSharedImportLabel(): String {
 
 private fun Alarm.sharedImportRiskLabels(): List<String> = buildList {
     if (ringtoneUri.isNotBlank() || ringtonePool.isNotBlank()) add("Custom sound URI")
-    if (spotifyUri.isNotBlank()) add("Spotify URI")
-    if (internetRadioUrl.isNotBlank()) add("Internet radio URL")
     if (guardianEnabled || guardianPhone.isNotBlank()) add("Guardian Angel contact")
     if (hueEnabled) add("Philips Hue sunrise setting")
     if (nfcTagId.isNotBlank()) add("NFC tag identifier")

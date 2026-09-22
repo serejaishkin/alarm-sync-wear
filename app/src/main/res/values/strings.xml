@@ -291,8 +291,6 @@
     <string name="alarm_edit_page_schedule_subtitle">Upcoming rings, holiday policy, and smart wake timing.</string>
     <string name="alarm_edit_page_wake">Wake experience</string>
     <string name="alarm_edit_page_wake_subtitle">Wake effects, announcements, confirmation, and morning routine.</string>
-    <string name="alarm_edit_page_integrations">Integrations &amp; safety</string>
-    <string name="alarm_edit_page_integrations_subtitle">Hue, audio services, and guardian escalation.</string>
     <string name="alarm_edit_page_advanced">Advanced behavior</string>
     <string name="alarm_edit_page_advanced_subtitle">Shift, solar, hardware, and power-user controls.</string>
     <string name="alarm_edit_group">Group</string>
@@ -305,12 +303,9 @@
     <string name="alarm_edit_wake_confirmation">Wake confirmation</string>
     <string name="alarm_edit_smart_alarm">Smart alarm</string>
     <string name="alarm_edit_holidays">Holidays</string>
-    <string name="alarm_edit_spotify">Spotify ringtone</string>
     <string name="alarm_edit_hue">Philips Hue sunrise</string>
     <string name="alarm_edit_mission_chain">Mission chaining</string>
     <string name="alarm_edit_anti_snooze">Anti-snooze</string>
-    <string name="alarm_edit_sunrise">Sunrise simulation</string>
-    <string name="alarm_edit_internet_radio">Internet radio</string>
     <string name="alarm_edit_guardian">Guardian Angel</string>
     <string name="alarm_edit_morning_routine">Morning routine</string>
     <string name="alarm_edit_advanced">Advanced</string>
@@ -327,12 +322,9 @@
     <string name="alarm_edit_section_wake_confirmation_description">Require a second check-in if this alarm needs extra accountability.</string>
     <string name="alarm_edit_section_smart_alarm_description">Allow the alarm to ring inside a window when the timing is more natural.</string>
     <string name="alarm_edit_section_holidays_description">Prevent routine alarms from firing when the day should stay flexible.</string>
-    <string name="alarm_edit_section_spotify_description">Use music services when you want a less generic wake-up sound.</string>
     <string name="alarm_edit_section_hue_description">Coordinate bedside lighting with the alarm for a gentler rise.</string>
     <string name="alarm_edit_section_chain_description">Stack multiple wake-up steps when one challenge is not enough.</string>
     <string name="alarm_edit_section_anti_snooze_description">Add guardrails that make repeated delay harder.</string>
-    <string name="alarm_edit_section_sunrise_description">Blend the screen into a brighter pre-wake color transition.</string>
-    <string name="alarm_edit_section_radio_description">Wake up to a live stream instead of a local ringtone.</string>
     <string name="alarm_edit_section_guardian_description">Escalate if missing this alarm has consequences beyond oversleeping.</string>
     <string name="alarm_edit_section_routine_description">Capture the first few things you want to do once the alarm is done.</string>
     <string name="alarm_edit_section_advanced_description">Fine-tune fallback behavior and edge-case wake-up protections.</string>
@@ -394,7 +386,6 @@
     <plurals name="alarm_edit_meters"><item quantity="one">%1$d meter</item><item quantity="other">%1$d meters</item></plurals>
     <plurals name="alarm_edit_challenges"><item quantity="one">%1$d challenge</item><item quantity="other">%1$d challenges</item></plurals>
     <plurals name="alarm_edit_step_chain"><item quantity="one">%1$d-step chain</item><item quantity="other">%1$d-step chain</item></plurals>
-    <plurals name="alarm_edit_active_integrations"><item quantity="one">%1$d active</item><item quantity="other">%1$d active</item></plurals>
 
     <!-- Alarm editor overview, sound, and vibration -->
     <string name="alarm_edit_label_placeholder">Alarm label</string>
@@ -436,7 +427,6 @@
     <string name="alarm_edit_settings_title">Alarm settings</string>
     <string name="alarm_edit_settings_description">Open a category to adjust it. Your current choices stay visible here.</string>
     <string name="alarm_edit_feature_flash">Flash</string>
-    <string name="alarm_edit_feature_sunrise">Sunrise</string>
     <string name="alarm_edit_feature_announcement">Announcement</string>
     <string name="alarm_edit_feature_routine">Routine</string>
     <string name="alarm_edit_feature_profile">Profile</string>
@@ -454,7 +444,6 @@
     <string name="alarm_edit_vibration_off">Vibration off</string>
     <string name="alarm_edit_dismiss_category_summary">%1$s • %2$d min snooze</string>
     <string name="alarm_edit_standard_wake">Standard wake</string>
-    <string name="alarm_edit_no_integrations">No optional integrations</string>
     <string name="alarm_edit_using_defaults">Using defaults</string>
     <string name="alarm_edit_repeat_once">One-time</string>
     <string name="alarm_edit_repeat_daily">Every day</string>
@@ -595,9 +584,6 @@
     <string name="alarm_edit_smart_alarm_hint">Uses conservative phone-motion scoring and waits for enough evidence before firing early.</string>
     <string name="alarm_edit_skip_holidays">Skip on public holidays</string>
     <string name="alarm_edit_holidays_hint">Requires holiday auto-skip and country code configured in Settings → Integrations.</string>
-    <string name="alarm_edit_spotify_uri">Spotify URI (for example, spotify:track:…)</string>
-    <string name="alarm_edit_default_ringtone_placeholder">Leave blank to use default ringtone</string>
-    <string name="alarm_edit_spotify_hint">Requires Spotify installed. Falls back to default ringtone if unavailable.</string>
     <string name="alarm_edit_hue_sunrise">Sunrise light simulation</string>
     <string name="alarm_edit_hue_start">Start lights before alarm</string>
     <string name="alarm_edit_hue_hint">Requires Hue bridge IP and API key configured in Settings → Philips Hue.</string>
@@ -608,11 +594,6 @@
     <string name="alarm_edit_backup_sound_hint">Cranks volume to maximum if there is no interaction within the delay.</string>
     <string name="alarm_edit_flashlight_strobe">Flashlight strobe</string>
     <string name="alarm_edit_flashlight_warning">Warning: rapid flashing can trigger seizures or discomfort. Reduce motion and flashing in Settings disables this effect.</string>
-    <string name="alarm_edit_screen_sunrise">Screen sunrise (color transition)</string>
-    <string name="alarm_edit_duration">Duration</string>
-    <string name="alarm_edit_sunrise_hint">Transitions the screen from deep red to warm yellow to simulate sunrise.</string>
-    <string name="alarm_edit_stream_url">Stream URL (http://…)</string>
-    <string name="alarm_edit_radio_hint">Streams internet radio as the alarm sound and falls back to the default ringtone on failure.</string>
     <string name="alarm_edit_emergency_alert">Emergency contact alert</string>
     <string name="alarm_edit_emergency_phone">Emergency phone number</string>
     <string name="alarm_edit_alert_after">Alert after</string>
@@ -688,7 +669,6 @@
     <string name="alarm_edit_silent_wake">Silent wake</string>
     <string name="alarm_edit_default_sound">Default sound</string>
     <string name="alarm_edit_custom_tone">Custom tone</string>
-    <string name="alarm_edit_spotify_short">Spotify</string>
 
     <!-- Settings shell, defaults, dashboard, and utilities -->
     <string name="settings_pane_readiness">Readiness</string>
@@ -763,24 +743,9 @@
     <string name="settings_commute_history">Learned commute history</string>
     <string name="settings_clear">Clear</string>
     <string name="settings_commute_history_description">Stores only hashed route keys and up to eight recent durations per route on this device; locations are excluded from support bundles.</string>
-    <string name="settings_celsius">Celsius (°C)</string>
-    <string name="settings_fahrenheit">Fahrenheit (°F)</string>
-    <string name="settings_temperature_description">Applied across the dashboard and weather cards.</string>
     <string name="settings_clear_commute_title">Clear learned commute history?</string>
     <string name="settings_clear_commute_message">Calendar auto-alarms will use live Routes estimates or your manual baseline until enough new local samples are learned.</string>
     <string name="settings_clear_history">Clear history</string>
-    <string name="settings_bottom_navigation">Bottom navigation</string>
-    <string name="settings_bottom_navigation_description">Hide tabs you never use. Alarms and Settings always stay available.</string>
-    <string name="settings_show_today_tab">Show Today tab</string>
-    <string name="settings_show_today_description">Daily overview — conditions, hourly, UV, sunrise/sunset, and live radar.</string>
-    <string name="settings_show_timer_tab">Show Timer tab</string>
-    <string name="settings_show_timer_description">Countdown timers with multiple lanes.</string>
-    <string name="settings_show_world_tab">Show World tab</string>
-    <string name="settings_show_world_description">Track time zones for cities you care about.</string>
-    <string name="settings_show_news_tab">Show News tab</string>
-    <string name="settings_show_news_description">Public RSS feeds — Google News, BBC, NPR, Hacker News.</string>
-    <string name="settings_radar_tab">Live radar on Weather tab</string>
-    <string name="settings_radar_description">Embed Windy.com’s animated precipitation radar below the conditions card.</string>
     <string name="settings_utilities">Utilities</string>
     <string name="settings_utilities_description">Quick access to companion tools that round out the app.</string>
     <string name="settings_alarm_statistics">Alarm statistics</string>
@@ -1291,5 +1256,59 @@
     <string name="nav_alarms">Alarms</string>
     <string name="nav_timer">Timer</string>
     <string name="nav_settings">Settings</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome">Welcome</string>
+    <string name="onboarding_tagline">Dependable mornings with less friction</string>
+    <string name="onboarding_set_up_later">Set up later</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_reliable_title">Reliable wake-ups</string>
+    <string name="onboarding_reliable_description">WakeSync is built to stay dependable even when Android is trying to save power in the background.</string>
+    <string name="onboarding_reliable_exact">Exact alarms designed to survive Doze mode</string>
+    <string name="onboarding_reliable_battery">Battery guidance for aggressive device vendors</string>
+    <string name="onboarding_challenge_title">Wake up for real</string>
+    <string name="onboarding_challenge_description">Challenge-based dismiss flows help make sure you are actually awake before the alarm stops.</string>
+    <string name="onboarding_challenge_types">Math, shake, memory, steps, barcode, and more</string>
+    <string name="onboarding_challenge_layers">Layer multiple challenges when you need extra certainty</string>
+    <string name="onboarding_dashboard_title">Start the day informed</string>
+    <string name="onboarding_dashboard_description">See your calendar and your next alarm in one place so the morning feels calmer from the first glance.</string>
+    <string name="onboarding_dashboard_context">A quick daily dashboard with events and the next alarm</string>
+    <string name="onboarding_dashboard_clean">Useful context without ads or noisy clutter</string>
+    <string name="onboarding_privacy_title">Private by default</string>
+    <string name="onboarding_privacy_description">No ads. No tracking. No account.</string>
+    <string name="onboarding_privacy_permissions">Permissions are optional and can be changed later</string>
+    <string name="onboarding_privacy_local">Data stays on your device unless you configure an integration</string>
+    <string name="onboarding_recommended_setup">Recommended setup</string>
+    <string name="onboarding_optional">Optional</string>
+    <string name="onboarding_exact_alarm_access">Exact alarm access</string>
+    <string name="onboarding_alarm_notifications">Alarm notifications</string>
+    <string name="onboarding_fullscreen_alarm_access">Full-screen alarm access</string>
+    <string name="onboarding_battery_protection">Battery protection</string>
+    <string name="onboarding_test_alarm">Test alarm</string>
+    <string name="onboarding_open">Open</string>
+    <string name="onboarding_enable">Enable</string>
+    <string name="onboarding_run">Run</string>
+    <string name="onboarding_ready">Ready</string>
+    <string name="onboarding_review">Review</string>
+    <string name="onboarding_finish_setup">Finish setup</string>
+    <string name="onboarding_enable_alarm_alerts">Enable alarm alerts</string>
+    <string name="onboarding_finish_without_changes">Finish without more changes</string>
+    <string name="onboarding_skip_permissions">Skip permissions</string>
+    <string name="onboarding_notice_before_night">Before tonight</string>
+    <string name="onboarding_notice_scheduled">Test alarm scheduled</string>
+    <string name="onboarding_notice_completed">Test alarm completed</string>
+    <string name="onboarding_notice_unavailable">Test alarm unavailable</string>
+    <string name="onboarding_notice_guidance">Review exact alarms, notifications, battery access, and the test alarm before relying on an overnight wake-up.</string>
+    <string name="onboarding_test_alarm_completed">Test alarm completed. Your device opened the alarm screen successfully.</string>
+    <string name="onboarding_test_alarm_scheduled">Test alarm scheduled. It will ring in 10 seconds.</string>
+    <string name="onboarding_test_alarm_failed">Could not schedule the test alarm.</string>
+    <string name="onboarding_test_unavailable_msg">Alarm scheduling is unavailable on this device.</string>
+    <string name="onboarding_test_exact_required">Review exact alarm access before running the test alarm.</string>
+    <string name="onboarding_test_notification_title">Test alarm</string>
+    <string name="onboarding_test_notification_text">WakeSync can wake this device. Dismiss the test to finish setup.</string>
+    <string name="onboarding_test_screen_body">Your device can launch the alarm screen, play audio, and vibrate. This did not create or change any saved alarms.</string>
+    <string name="onboarding_test_dismiss">Dismiss test alarm</string>
+    <string name="onboarding_test_footer">If you did not hear or feel this test, review volume, Do Not Disturb, and battery settings before relying on an overnight alarm.</string>
 
 </resources>

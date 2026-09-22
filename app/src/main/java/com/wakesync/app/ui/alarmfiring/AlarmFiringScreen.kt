@@ -172,7 +172,6 @@ fun AlarmFiringScreen(
     // These two prefs gate optional UI surfaces below; collecting them with the
     // lifecycle keeps the firing screen reactive to a settings toggle made
     // mid-alarm (rare, but possible if user pulls down quick settings).
-    val showQuotes by viewModel.showMotivationalQuotes.collectAsStateWithLifecycle()
     val flipToSnoozeEnabled by viewModel.flipToSnoozeEnabled.collectAsStateWithLifecycle()
     val holdToDismissMillis by viewModel.holdToDismissMillis.collectAsStateWithLifecycle()
     val holdDurationSeconds = holdToDismissMillis / 1000f
@@ -555,20 +554,6 @@ fun AlarmFiringScreen(
                             color = DismissGreen
                         )
                     }
-                }
-
-                if (showQuotes) {
-                    state.motivationalQuote
-                        .takeIf { it.isNotBlank() }
-                        ?.let { quote ->
-                            Text(
-                                text = quote,
-                                color = TextMuted,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
                 }
             }
 

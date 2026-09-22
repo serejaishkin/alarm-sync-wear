@@ -367,10 +367,6 @@ class AlarmEditViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(barcodeValue = value)
     }
 
-    fun updateSpotifyUri(uri: String) {
-        _uiState.value = _uiState.value.copy(spotifyUri = uri)
-    }
-
     fun updateHue(enabled: Boolean, preWakeMinutes: Int? = null) {
         _uiState.value = _uiState.value.copy(
             hueEnabled = enabled,
@@ -386,9 +382,6 @@ class AlarmEditViewModel @Inject constructor(
     fun updateProgressiveSnooze(enabled: Boolean) { _uiState.value = _uiState.value.copy(progressiveSnooze = enabled) }
     fun updateBackupSound(enabled: Boolean, delaySec: Int? = null) {
         _uiState.value = _uiState.value.copy(backupSoundEnabled = enabled, backupSoundDelaySec = delaySec ?: _uiState.value.backupSoundDelaySec)
-    }
-    fun updateSunriseSimulation(enabled: Boolean, minutes: Int? = null) {
-        _uiState.value = _uiState.value.copy(sunriseSimulation = enabled, sunriseMinutes = minutes ?: _uiState.value.sunriseMinutes)
     }
     fun updateFiringBackgroundImage(uri: String) {
         val trimmed = uri.trim()
@@ -467,7 +460,6 @@ class AlarmEditViewModel @Inject constructor(
         )
     }
     fun updateWifiDismissSsid(ssid: String) { _uiState.value = _uiState.value.copy(wifiDismissSsid = ssid) }
-    fun updateInternetRadioUrl(url: String) { _uiState.value = _uiState.value.copy(internetRadioUrl = url) }
     fun updateFlashlightStrobe(enabled: Boolean) { _uiState.value = _uiState.value.copy(flashlightStrobe = enabled) }
     fun updateMorningRoutine(routine: String) { _uiState.value = _uiState.value.copy(morningRoutine = routine) }
     // v1.4.0 setters

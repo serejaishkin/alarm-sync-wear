@@ -223,9 +223,6 @@ fun SettingsScreen(
     var showDefaultSnoozeMenu by remember { mutableStateOf(false) }
     var showGradualVolumeMenu by remember { mutableStateOf(false) }
     var showAutoSilenceMenu by remember { mutableStateOf(false) }
-    var showCalendarLeadMenu by remember { mutableStateOf(false) }
-    var showCommuteBaselineMenu by remember { mutableStateOf(false) }
-    var showClearCommuteHistoryDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     var selectedLanguageOption by remember(context) {
@@ -296,12 +293,6 @@ fun SettingsScreen(
                         AlarmClockHeroHeader(
                             title = stringResource(R.string.settings_title),
                             subtitle = state.appVersion
-                        )
-                    }
-                    settingsItem("settings-home-readiness") {
-                        WakeReadinessSection(
-                            state = state,
-                            onOpenOnboardingChecklist = onOpenOnboardingChecklist
                         )
                     }
                     settingsItem("settings-home-categories") {
@@ -478,145 +469,6 @@ fun SettingsScreen(
                         )
                     }
                 }
-            }
-            }
-
-            settingsItem("defaults-dashboard") {
-            SettingsGroup(
-                title = stringResource(R.string.settings_dashboard),
-                description = stringResource(R.string.settings_dashboard_description)
-            ) {
-                SettingsToggle(
-                    label = stringResource(R.string.show_calendar),
-                    checked = state.settings.showCalendarOnDashboard,
-                    supportingText = stringResource(R.string.settings_show_calendar_description),
-                    onToggle = viewModel::toggleShowCalendar
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_post_dismiss_summary),
-                    checked = state.settings.postDismissSummaryEnabled,
-                    supportingText = stringResource(R.string.settings_post_dismiss_summary_description),
-                    onToggle = viewModel::togglePostDismissSummary
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_first_meeting_alarm),
-                    checked = state.settings.calendarAutoAlarmEnabled,
-                    supportingText = if (state.settings.calendarAutoAlarmEnabled) {
-                        stringResource(R.string.settings_first_meeting_enabled_description)
-                    } else {
-                        stringResource(R.string.settings_first_meeting_disabled_description)
-                    },
-                    onToggle = viewModel::toggleCalendarAutoAlarm
-                )
-                SettingsActionRow(
-                    label = stringResource(R.string.settings_meeting_lead_time),
-                    value = stringResource(R.string.settings_minutes_short, state.settings.calendarAutoAlarmMinutesBefore),
-                    supportingText = stringResource(R.string.settings_meeting_lead_description),
-                    onClick = { showCalendarLeadMenu = true }
-                )
-                DropdownMenu(
-                    expanded = showCalendarLeadMenu,
-                    onDismissRequest = { showCalendarLeadMenu = false }
-                ) {
-                    listOf(15, 30, 45, 60, 90, 120).forEach { minutes ->
-                        DropdownMenuItem(
-                            text = { Text(pluralStringResource(R.plurals.settings_minutes, minutes, minutes)) },
-                            onClick = {
-                                viewModel.updateCalendarAutoAlarmMinutes(minutes)
-                                showCalendarLeadMenu = false
-                            }
-                        )
-                    }
-                }
-                SettingsToggle(
-                    label = stringResource(R.string.settings_commute_aware),
-                    checked = state.settings.calendarCommuteAwareEnabled,
-                    supportingText = stringResource(R.string.settings_commute_aware_description),
-                    enabled = state.settings.calendarAutoAlarmEnabled,
-                    onToggle = viewModel::toggleCalendarCommuteAware
-                )
-                SettingsActionRow(
-                    label = stringResource(R.string.settings_normal_commute),
-                    value = if (state.settings.calendarCommuteBaselineMinutes == 0) {
-                        stringResource(R.string.settings_use_lead_time)
-                    } else {
-                        stringResource(R.string.settings_minutes_short, state.settings.calendarCommuteBaselineMinutes)
-                    },
-                    supportingText = stringResource(R.string.settings_normal_commute_description),
-                    onClick = { showCommuteBaselineMenu = true },
-                    enabled = state.settings.calendarCommuteAwareEnabled
-                )
-                DropdownMenu(
-                    expanded = showCommuteBaselineMenu,
-                    onDismissRequest = { showCommuteBaselineMenu = false }
-                ) {
-                    listOf(0, 15, 30, 45, 60, 90, 120).forEach { minutes ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    if (minutes == 0) stringResource(R.string.settings_use_meeting_lead)
-                                    else pluralStringResource(R.plurals.settings_minutes, minutes, minutes)
-                                )
-                            },
-                            onClick = {
-                                viewModel.updateCalendarCommuteBaselineMinutes(minutes)
-                                showCommuteBaselineMenu = false
-                            }
-                        )
-                    }
-                }
-                SettingsActionRow(
-                    label = stringResource(R.string.settings_commute_history),
-                    value = stringResource(R.string.settings_clear),
-                    supportingText = stringResource(R.string.settings_commute_history_description),
-                    onClick = { showClearCommuteHistoryDialog = true },
-                    enabled = state.settings.calendarCommuteAwareEnabled
-                )
-
-                if (showClearCommuteHistoryDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showClearCommuteHistoryDialog = false },
-                        title = { Text(stringResource(R.string.settings_clear_commute_title)) },
-                        text = { Text(stringResource(R.string.settings_clear_commute_message)) },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                viewModel.clearLearnedCommuteHistory()
-                                showClearCommuteHistoryDialog = false
-                            }) { Text(stringResource(R.string.settings_clear_history)) }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showClearCommuteHistoryDialog = false }) {
-                                Text(stringResource(R.string.cancel))
-                            }
-                        }
-                    )
-                }
-            }
-            }
-
-            settingsItem("defaults-navigation") {
-            SettingsGroup(
-                title = stringResource(R.string.settings_bottom_navigation),
-                description = stringResource(R.string.settings_bottom_navigation_description)
-            ) {
-                SettingsToggle(
-                    label = stringResource(R.string.settings_show_today_tab),
-                    checked = state.settings.showDashboardTab,
-                    supportingText = stringResource(R.string.settings_show_today_description),
-                    onToggle = viewModel::toggleShowDashboardTab
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_show_timer_tab),
-                    checked = state.settings.showTimerTab,
-                    supportingText = stringResource(R.string.settings_show_timer_description),
-                    onToggle = viewModel::toggleShowTimerTab
-                )
-                SettingsToggle(
-                    label = stringResource(R.string.settings_show_world_tab),
-                    checked = state.settings.showWorldClockTab,
-                    supportingText = stringResource(R.string.settings_show_world_description),
-                    onToggle = viewModel::toggleShowWorldClockTab
-                )
             }
             }
             }

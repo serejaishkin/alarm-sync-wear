@@ -87,19 +87,16 @@ internal fun LazyListScope.alarmEditWakeSections(
     // Wake effects
     SettingsSection(editorPage, AlarmEditorSection.WAKE_EFFECTS) {
         val isGentleWake = state.gradualVolumeSeconds >= 120 &&
-            state.vibrationDelaySeconds >= 60 &&
-            state.sunriseSimulation
+            state.vibrationDelaySeconds >= 60
         OutlinedButton(
             onClick = {
                 if (!isGentleWake) {
                     viewModel.updateGradualVolume(120)
                     viewModel.updateVibrationDelay(60)
-                    viewModel.updateSunriseSimulation(true)
                     viewModel.updateFlashWake(true)
                 } else {
                     viewModel.updateGradualVolume(60)
                     viewModel.updateVibrationDelay(0)
-                    viewModel.updateSunriseSimulation(false)
                     viewModel.updateFlashWake(false)
                 }
             },
@@ -256,43 +253,6 @@ internal fun LazyListScope.alarmEditWakeSections(
             SettingsHint(
                 stringResource(R.string.alarm_edit_realarm_hint),
                 tone = HintTone.Warning
-            )
-        }
-    }
-
-    // v1.2.0: Sunrise Simulation
-    SettingsSection(editorPage, AlarmEditorSection.SUNRISE) {
-        SettingsRow(
-            label = stringResource(R.string.alarm_edit_screen_sunrise),
-            trailing = {
-                Switch(
-                    checked = state.sunriseSimulation,
-                    onCheckedChange = { viewModel.updateSunriseSimulation(it) },
-                    colors = appSwitchColors()
-                )
-            }
-        )
-        if (state.sunriseSimulation) {
-            var showMenu by remember { mutableStateOf(false) }
-            SettingsRow(label = stringResource(R.string.alarm_edit_duration)) {
-                Box {
-                    SettingsValueButton(
-                        label = stringResource(R.string.alarm_edit_minutes_short, state.sunriseMinutes),
-                        onClick = { showMenu = true }
-                    )
-                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        listOf(5, 10, 15, 20, 30).forEach { mins ->
-                            DropdownMenuItem(
-                                text = { Text(pluralStringResource(R.plurals.alarm_edit_minutes, mins, mins)) },
-                                onClick = { viewModel.updateSunriseSimulation(true, mins); showMenu = false }
-                            )
-                        }
-                    }
-                }
-            }
-            SettingsHint(
-                stringResource(R.string.alarm_edit_sunrise_hint),
-                tone = HintTone.Neutral
             )
         }
     }

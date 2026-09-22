@@ -85,7 +85,6 @@ internal enum class AlarmEditorPage(
     DISMISS(R.string.alarm_edit_page_dismiss, R.string.alarm_edit_page_dismiss_subtitle),
     SCHEDULE(R.string.alarm_edit_page_schedule, R.string.alarm_edit_page_schedule_subtitle),
     WAKE(R.string.alarm_edit_page_wake, R.string.alarm_edit_page_wake_subtitle),
-    INTEGRATIONS(R.string.alarm_edit_page_integrations, R.string.alarm_edit_page_integrations_subtitle),
     ADVANCED(R.string.alarm_edit_page_advanced, R.string.alarm_edit_page_advanced_subtitle)
 }
 
@@ -106,13 +105,10 @@ internal enum class AlarmEditorSection(
     ANNOUNCEMENT(AlarmEditorPage.WAKE, R.string.alarm_edit_announcement, R.string.alarm_edit_section_announcement_description),
     WAKE_CONFIRM(AlarmEditorPage.WAKE, R.string.alarm_edit_wake_confirmation, R.string.alarm_edit_section_wake_confirmation_description),
     SMART_ALARM(AlarmEditorPage.SCHEDULE, R.string.alarm_edit_smart_alarm, R.string.alarm_edit_section_smart_alarm_description),
-    SPOTIFY(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_spotify, R.string.alarm_edit_section_spotify_description),
-    HUE(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_hue, R.string.alarm_edit_section_hue_description),
+    HUE(AlarmEditorPage.ADVANCED, R.string.alarm_edit_hue, R.string.alarm_edit_section_hue_description),
     CHAIN(AlarmEditorPage.DISMISS, R.string.alarm_edit_mission_chain, R.string.alarm_edit_section_chain_description),
     ANTI_SNOOZE(AlarmEditorPage.DISMISS, R.string.alarm_edit_anti_snooze, R.string.alarm_edit_section_anti_snooze_description),
-    SUNRISE(AlarmEditorPage.WAKE, R.string.alarm_edit_sunrise, R.string.alarm_edit_section_sunrise_description),
-    RADIO(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_internet_radio, R.string.alarm_edit_section_radio_description),
-    GUARDIAN(AlarmEditorPage.INTEGRATIONS, R.string.alarm_edit_guardian, R.string.alarm_edit_section_guardian_description),
+    GUARDIAN(AlarmEditorPage.ADVANCED, R.string.alarm_edit_guardian, R.string.alarm_edit_section_guardian_description),
     ROUTINE(AlarmEditorPage.WAKE, R.string.alarm_edit_morning_routine, R.string.alarm_edit_section_routine_description),
     ADVANCED(AlarmEditorPage.ADVANCED, R.string.alarm_edit_advanced, R.string.alarm_edit_section_advanced_description)
 }
@@ -543,17 +539,19 @@ fun AlarmEditScreen(
                     },
                     firingBackgroundStatus = firingBackgroundStatus
                 )
-                AlarmEditorPage.INTEGRATIONS -> alarmEditIntegrationSections(
-                    editorPage = editorPage,
-                    state = state,
-                    viewModel = viewModel,
-                    context = context
-                )
-                AlarmEditorPage.ADVANCED -> alarmEditAdvancedSection(
-                    editorPage = editorPage,
-                    state = state,
-                    viewModel = viewModel
-                )
+                AlarmEditorPage.ADVANCED -> {
+                    alarmEditAdvancedSection(
+                        editorPage = editorPage,
+                        state = state,
+                        viewModel = viewModel
+                    )
+                    alarmEditIntegrationSections(
+                        editorPage = editorPage,
+                        state = state,
+                        viewModel = viewModel,
+                        context = context
+                    )
+                }
             }
 
             item(key = "bottom-spacer") {

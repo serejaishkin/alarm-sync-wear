@@ -126,12 +126,16 @@ class AlarmClockApp : Application(), Configuration.Provider {
         // mutations to the watch via the Data Layer transport.
         entryPoint.syncCoordinator().start()
 
-        // Seed default alarm on first launch
+        // Seed default alarm on first launch, but only into an empty database.
+        // A backup restore, sync pull, or older install may already have
+        // alarms — seeding again would otherwise duplicate them.
         val prefs = getSharedPreferences("app_prefs", 0)
         if (!prefs.getBoolean("default_alarm_seeded", false)) {
             appScope.launch {
                 try {
-                    seedDefaultAlarm(entryPoint)
+                    if (entryPoint.alarmRepository().getAll().isEmpty()) {
+                        seedDefaultAlarm(entryPoint)
+                    }
                     prefs.edit().putBoolean("default_alarm_seeded", true).apply()
                 } catch (_: Exception) { /* Will retry next launch */ }
             }

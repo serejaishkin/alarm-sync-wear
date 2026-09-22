@@ -95,13 +95,10 @@ class AlarmEditDraftTest {
             AlarmEditorSection.ANNOUNCEMENT to AlarmEditorPage.WAKE,
             AlarmEditorSection.WAKE_CONFIRM to AlarmEditorPage.WAKE,
             AlarmEditorSection.SMART_ALARM to AlarmEditorPage.SCHEDULE,
-            AlarmEditorSection.SPOTIFY to AlarmEditorPage.INTEGRATIONS,
-            AlarmEditorSection.HUE to AlarmEditorPage.INTEGRATIONS,
+            AlarmEditorSection.HUE to AlarmEditorPage.ADVANCED,
             AlarmEditorSection.CHAIN to AlarmEditorPage.DISMISS,
             AlarmEditorSection.ANTI_SNOOZE to AlarmEditorPage.DISMISS,
-            AlarmEditorSection.SUNRISE to AlarmEditorPage.WAKE,
-            AlarmEditorSection.RADIO to AlarmEditorPage.INTEGRATIONS,
-            AlarmEditorSection.GUARDIAN to AlarmEditorPage.INTEGRATIONS,
+            AlarmEditorSection.GUARDIAN to AlarmEditorPage.ADVANCED,
             AlarmEditorSection.ROUTINE to AlarmEditorPage.WAKE,
             AlarmEditorSection.ADVANCED to AlarmEditorPage.ADVANCED
         )

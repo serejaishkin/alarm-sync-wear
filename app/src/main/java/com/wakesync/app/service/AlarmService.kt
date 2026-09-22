@@ -866,47 +866,6 @@ class AlarmService : Service() {
     }
 
     private fun startAudioInternal(alarm: Alarm) {
-
-        // F14: Spotify ringtone — open Spotify URI and skip in-app playback.
-        // Only accept canonical Spotify schemes ("spotify:..." or
-        // "https://open.spotify.com/...") so a typo'd setting can't accidentally
-        // open the browser or another deep-linked app at alarm time.
-        val spotifyUri = alarm.spotifyUri.trim()
-        if (spotifyUri.isNotBlank() && (
-                spotifyUri.startsWith("spotify:", ignoreCase = true) ||
-                spotifyUri.startsWith("https://open.spotify.com/", ignoreCase = true)
-            )
-        ) {
-            try {
-                val parsed = Uri.parse(spotifyUri)
-                val spotifyIntent = android.content.Intent(
-                    android.content.Intent.ACTION_VIEW,
-                    parsed
-                ).apply {
-                    setPackage("com.spotify.music")
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra("android.intent.extra.START_PLAYBACK", true)
-                }
-                // Verify Spotify is actually installed before launching; if not,
-                // fall through to the default ringtone path so the alarm still
-                // makes noise instead of silently no-oping.
-                if (spotifyIntent.resolveActivity(packageManager) != null) {
-                    startActivity(spotifyIntent)
-                    // Disabled to prevent media control panel during alarm
-                    // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
-                    recordIncidentAsync(
-                        type = AlarmIncidentEvent.TYPE_AUDIO,
-                        status = AlarmIncidentEvent.STATUS_SUCCEEDED,
-                        reasonCode = "SPOTIFY_DELEGATED",
-                        source = "AlarmService"
-                    )
-                    return  // Spotify handles playback; no in-app player needed
-                }
-            } catch (_: Exception) {
-                // Spotify not installed or URI invalid — fall through to default audio
-            }
-        }
-
         when (AlarmPlaybackBackend.fromBuildFlag(BuildConfig.USE_MEDIA3_ALARM_PLAYER)) {
             AlarmPlaybackBackend.MEDIA3 -> startMedia3AudioInternal(alarm)
             AlarmPlaybackBackend.MEDIA_PLAYER -> startMediaPlayerAudioInternal(alarm)
@@ -914,13 +873,6 @@ class AlarmService : Service() {
     }
 
     private fun startMedia3AudioInternal(alarm: Alarm) {
-        val radioUrl = alarm.internetRadioUrl.trim()
-        if (radioUrl.isNotBlank() && (radioUrl.startsWith("http://", true) || radioUrl.startsWith("https://", true))) {
-            if (startMedia3Radio(alarm, radioUrl)) {
-                return
-            }
-        }
-
         val uri = if (alarm.ringtoneUri.isNotBlank()) {
             runCatching { Uri.parse(alarm.ringtoneUri) }.getOrNull()
         } else {
@@ -937,73 +889,6 @@ class AlarmService : Service() {
         }
 
         startMedia3Tone(alarm, uri)
-    }
-
-    private fun startMedia3Radio(alarm: Alarm, radioUrl: String): Boolean {
-        return try {
-            var playbackRef: AlarmPlaybackPlayer? = null
-            val playbackStarted = AtomicBoolean(false)
-            val playback = createMedia3Playback(
-                mediaItem = MediaItem.fromUri(radioUrl),
-                audioAttributes = AlarmAudioRouting.media3AlarmMusicAttributes(),
-                repeatMode = Player.REPEAT_MODE_OFF,
-                initialVolume = alarmPlaybackGain(
-                    callMuted = callMutedAudio,
-                    challengeDuckingActive = challengeAudioDuckingActive,
-                    challengeDuckPercent = challengeAudioDuckPercent,
-                    rampGain = 1f
-                ),
-                onReady = {
-                    playbackStarted.set(true)
-                    cancelPlaybackWatchdog()
-                    // Disabled to prevent media control panel during alarm
-                    // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
-                    recordIncidentAsync(
-                        type = AlarmIncidentEvent.TYPE_AUDIO,
-                        status = AlarmIncidentEvent.STATUS_SUCCEEDED,
-                        reasonCode = "MEDIA3_INTERNET_RADIO_STARTED",
-                        source = "AlarmService"
-                    )
-                    if (alarm.overrideSystemVolume) {
-                        setConfiguredAlarmStreamVolume(alarm)
-                    }
-                    playbackRampGain = 1f
-                    applyPlaybackGain()
-                },
-                onEnded = {},
-                onError = { error ->
-                    cancelPlaybackWatchdog()
-                    playbackRef?.let { releasePlaybackIfCurrent(it) }
-                    recordIncidentAsync(
-                        type = AlarmIncidentEvent.TYPE_AUDIO,
-                        status = AlarmIncidentEvent.STATUS_FAILED,
-                        reasonCode = "MEDIA3_INTERNET_RADIO_ERROR_${error.javaClass.simpleName}",
-                        source = "AlarmService"
-                    )
-                    serviceScope.launch { escalateMedia3PlaybackFailure(alarm) }
-                }
-            )
-            playbackRef = playback
-            alarmPlayback = playback
-            armMedia3PlaybackWatchdog(alarm, playback, playbackStarted)
-            recordIncidentAsync(
-                type = AlarmIncidentEvent.TYPE_AUDIO,
-                status = AlarmIncidentEvent.STATUS_REQUESTED,
-                reasonCode = "MEDIA3_INTERNET_RADIO_PREPARING",
-                source = "AlarmService"
-            )
-            true
-        } catch (e: Exception) {
-            recordIncidentAsync(
-                type = AlarmIncidentEvent.TYPE_AUDIO,
-                status = AlarmIncidentEvent.STATUS_FAILED,
-                reasonCode = "MEDIA3_INTERNET_RADIO_SETUP_FAILED_${e.javaClass.simpleName}",
-                source = "AlarmService"
-            )
-            try { alarmPlayback?.stopAndRelease() } catch (_: Exception) {}
-            alarmPlayback = null
-            false
-        }
     }
 
     private fun startMedia3Tone(alarm: Alarm, uri: Uri) {
@@ -1168,12 +1053,7 @@ class AlarmService : Service() {
             reasonCode = "MEDIA3_DEFAULT_FALLBACK_TO_LEGACY",
             source = "AlarmService"
         )
-        startMediaPlayerAudioInternal(
-            alarm.copy(
-                internetRadioUrl = "",
-                spotifyUri = ""
-            )
-        )
+        startMediaPlayerAudioInternal(alarm)
     }
 
     @AndroidXOptIn(UnstableApi::class)
@@ -1255,83 +1135,6 @@ class AlarmService : Service() {
     }
 
     private fun startMediaPlayerAudioInternal(alarm: Alarm) {
-        // v1.2.0: Internet radio stream. Defensive: only accept http(s) URLs so a
-        // malformed setting can't crash MediaPlayer with an unknown scheme.
-        val radioUrl = alarm.internetRadioUrl.trim()
-        if (radioUrl.isNotBlank() && (radioUrl.startsWith("http://", true) || radioUrl.startsWith("https://", true))) {
-            try {
-                val player = MediaPlayer()
-                val playback = MediaPlayerAlarmPlaybackPlayer(player)
-                alarmPlayback = playback
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    forcedSpeakerDevice()?.let { runCatching { player.setPreferredDevice(it) } }
-                }
-                player.apply {
-                    setAudioAttributes(AlarmAudioRouting.alarmMusicAttributes())
-                    setDataSource(radioUrl)
-                    isLooping = false  // Streams don't loop
-                    setOnPreparedListener { mp ->
-                        mp.start()
-                        // Disabled to prevent media control panel during alarm
-                        // updateAlarmMediaSessionState(PlaybackState.STATE_PLAYING)
-                        recordIncidentAsync(
-                            type = AlarmIncidentEvent.TYPE_AUDIO,
-                            status = AlarmIncidentEvent.STATUS_SUCCEEDED,
-                            reasonCode = "INTERNET_RADIO_STARTED",
-                            source = "AlarmService"
-                        )
-                        if (alarm.overrideSystemVolume) {
-                            val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-                            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-                            val targetVol = (maxVol * alarm.volume / 100f).toInt().coerceIn(1, maxVol)
-                            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, targetVol, 0)
-                        }
-                        // v1.11.2: if a call landed during prepareAsync, honour it.
-                        playbackRampGain = 1f
-                        applyPlaybackGain()
-                    }
-                    // Without an OnErrorListener, a stream failure (DNS, 404, codec
-                    // mismatch) results in a silent alarm — fall back to the device
-                    // default ringtone via the standard path below.
-                    setOnErrorListener { mp, _, _ ->
-                        try { playback.stopAndRelease() } catch (_: Exception) {}
-                        if (alarmPlayback === playback) alarmPlayback = null
-                        recordIncidentAsync(
-                            type = AlarmIncidentEvent.TYPE_AUDIO,
-                            status = AlarmIncidentEvent.STATUS_FAILED,
-                            reasonCode = "INTERNET_RADIO_ERROR",
-                            source = "AlarmService"
-                        )
-                        // Re-enter startAudio without the radio URL so the default
-                        // ringtone path runs. Done on the service scope so the
-                        // OnErrorListener returns immediately.
-                        serviceScope.launch {
-                            startAudio(alarm.copy(internetRadioUrl = ""))
-                        }
-                        true
-                    }
-                    prepareAsync()
-                }
-                recordIncidentAsync(
-                    type = AlarmIncidentEvent.TYPE_AUDIO,
-                    status = AlarmIncidentEvent.STATUS_REQUESTED,
-                    reasonCode = "INTERNET_RADIO_PREPARING",
-                    source = "AlarmService"
-                )
-                return  // Radio handles playback
-            } catch (e: Exception) {
-                // Fall through to default audio
-                recordIncidentAsync(
-                    type = AlarmIncidentEvent.TYPE_AUDIO,
-                    status = AlarmIncidentEvent.STATUS_FAILED,
-                    reasonCode = "INTERNET_RADIO_SETUP_FAILED_${e.javaClass.simpleName}",
-                    source = "AlarmService"
-                )
-                try { alarmPlayback?.stopAndRelease() } catch (_: Exception) {}
-                alarmPlayback = null
-            }
-        }
-
         val uri = if (alarm.ringtoneUri.isNotBlank()) {
             runCatching { Uri.parse(alarm.ringtoneUri) }.getOrNull()
         } else {

@@ -21,7 +21,6 @@ data class SupportAlarmDiagnostic(
     val fixedTimezoneId: String,
     val challengeType: String,
     val hasCustomSound: Boolean,
-    val hasInternetRadio: Boolean,
     val hueEnabled: Boolean,
     val guardianEnabled: Boolean,
     val wakeConfirmEnabled: Boolean
@@ -39,9 +38,7 @@ data class SupportAlarmDiagnostic(
                 fixedTimezoneId = sanitized.fixedTimezoneId,
                 challengeType = sanitized.challengeType,
                 hasCustomSound = sanitized.ringtoneUri.isNotBlank() ||
-                    sanitized.ringtonePool.isNotBlank() ||
-                    sanitized.spotifyUri.isNotBlank(),
-                hasInternetRadio = sanitized.internetRadioUrl.isNotBlank(),
+                    sanitized.ringtonePool.isNotBlank(),
                 hueEnabled = sanitized.hueEnabled,
                 guardianEnabled = sanitized.guardianEnabled,
                 wakeConfirmEnabled = sanitized.wakeConfirmEnabled
@@ -104,7 +101,7 @@ object SupportDiagnosticsFormatter {
     private val ALARM_DIAGNOSTIC_FIELDS = listOf(
         "id", "enabled", "time", "repeat", "nextTriggerTime", "timezonePolicy",
         "fixedTimezoneId", "challengeType",
-        "hasCustomSound", "hasInternetRadio", "hueEnabled", "guardianEnabled",
+        "hasCustomSound", "hueEnabled", "guardianEnabled",
         "wakeConfirmEnabled"
     )
 
@@ -256,7 +253,6 @@ object SupportDiagnosticsFormatter {
                     "fixedTimezoneId",
                     "challengeType",
                     "hasCustomSound",
-                    "hasInternetRadio",
                     "hueEnabled",
                     "guardianEnabled",
                     "wakeConfirmEnabled"
@@ -274,7 +270,6 @@ object SupportDiagnosticsFormatter {
                         csv(alarm.fixedTimezoneId),
                         csv(alarm.challengeType),
                         alarm.hasCustomSound.toString(),
-                        alarm.hasInternetRadio.toString(),
                         alarm.hueEnabled.toString(),
                         alarm.guardianEnabled.toString(),
                         alarm.wakeConfirmEnabled.toString()
@@ -400,7 +395,7 @@ object SupportDiagnosticsFormatter {
             appendLine()
             appendLine("Privacy note")
             appendLine("This bundle is generated locally and is not uploaded by the app.")
-            appendLine("It omits alarm labels, custom media URIs, internet-radio URLs, Spotify URIs, Hue/webhook secrets, Wi-Fi/location/contact values, learned commute route keys, challenge reference values, Health Connect records, raw audio, and per-minute local motion buckets.")
+            appendLine("It omits alarm labels, custom media URIs, Hue/webhook secrets, Wi-Fi/location/contact values, learned commute route keys, challenge reference values, Health Connect records, raw audio, and per-minute local motion buckets.")
         }
     }
 

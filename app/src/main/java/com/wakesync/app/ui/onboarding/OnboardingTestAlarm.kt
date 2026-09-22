@@ -20,6 +20,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.res.stringResource
 import com.wakesync.app.R
 import com.wakesync.app.service.AlarmAudioRouting
 import com.wakesync.app.service.AlarmService
@@ -59,6 +60,8 @@ object OnboardingTestAlarm {
     const val ACTION_RING = "com.wakesync.app.ONBOARDING_TEST_ALARM"
     const val EXTRA_TRIGGER_AT = "trigger_at"
     const val NOTIFICATION_ID = 1907
+    const val FAILURE_UNAVAILABLE = "ALARM_SCHEDULING_UNAVAILABLE"
+    const val FAILURE_EXACT_REQUIRED = "EXACT_ALARM_ACCESS_REQUIRED"
     private const val REQUEST_CODE = 1907
     private const val DELAY_MS = 10_000L
 
@@ -92,9 +95,9 @@ object OnboardingTestAlarm {
 
     fun schedule(context: Context): Result<Unit> = runCatching {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-            ?: throw IllegalStateException("Alarm scheduling is unavailable on this device.")
+            ?: throw IllegalStateException(FAILURE_UNAVAILABLE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-            throw IllegalStateException("Review exact alarm access before running the test alarm.")
+            throw IllegalStateException(FAILURE_EXACT_REQUIRED)
         }
 
         val triggerAt = System.currentTimeMillis() + DELAY_MS
@@ -150,8 +153,8 @@ class OnboardingTestAlarmReceiver : BroadcastReceiver() {
         )
         val notification = NotificationCompat.Builder(context, AlarmService.CHANNEL_ALARM)
             .setSmallIcon(R.drawable.ic_alarm)
-            .setContentTitle("Test alarm")
-            .setContentText("WakeSync can wake this device. Dismiss the test to finish setup.")
+            .setContentTitle(context.getString(R.string.onboarding_test_notification_title))
+            .setContentText(context.getString(R.string.onboarding_test_notification_text))
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setFullScreenIntent(activityPendingIntent, true)
@@ -276,14 +279,14 @@ private fun TestAlarmContent(onDismiss: () -> Unit) {
             modifier = Modifier.padding(bottom = 20.dp)
         )
         Text(
-            text = "Test alarm",
+            text = stringResource(R.string.onboarding_test_alarm),
             color = TextPrimary,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
         Text(
-            text = "Your device can launch the alarm screen, play audio, and vibrate. This did not create or change any saved alarms.",
+            text = stringResource(R.string.onboarding_test_screen_body),
             color = TextSecondary,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
@@ -298,13 +301,13 @@ private fun TestAlarmContent(onDismiss: () -> Unit) {
         ) {
             Icon(Icons.Default.CheckCircle, contentDescription = null)
             Text(
-                text = "Dismiss test alarm",
+                text = stringResource(R.string.onboarding_test_dismiss),
                 modifier = Modifier.padding(start = 10.dp),
                 fontWeight = FontWeight.SemiBold
             )
         }
         Text(
-            text = "If you did not hear or feel this test, review volume, Do Not Disturb, and battery settings before relying on an overnight alarm.",
+            text = stringResource(R.string.onboarding_test_footer),
             color = TextMuted,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,

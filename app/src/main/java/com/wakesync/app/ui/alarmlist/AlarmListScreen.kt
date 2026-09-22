@@ -486,6 +486,43 @@ fun AlarmListScreen(
                     }
 
                     else -> {
+                        val duplicateExtras = state.duplicateExtras
+                        if (duplicateExtras.isNotEmpty()) {
+                            item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    AppInlineNotice(
+                                        title = if (duplicateExtras.size == 1) {
+                                            "Duplicate alarm"
+                                        } else {
+                                            "${duplicateExtras.size} duplicate alarms"
+                                        },
+                                        message = "Identical time, days and label. Remove the extras, keeping the first of each.",
+                                        icon = Icons.Default.ContentCopy,
+                                        color = AccentRed
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        TextButton(onClick = viewModel::removeDuplicateExtras) {
+                                            Text(
+                                                if (duplicateExtras.size == 1) {
+                                                    "Remove duplicate"
+                                                } else {
+                                                    "Remove ${duplicateExtras.size} duplicates"
+                                                },
+                                                color = AccentRed
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         val conflictTimes = filteredAlarms
                             .filter { it.isEnabled }
                             .groupBy { it.hour * 60 + it.minute }

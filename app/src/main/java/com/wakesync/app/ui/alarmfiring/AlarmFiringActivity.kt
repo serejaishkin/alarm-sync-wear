@@ -266,7 +266,7 @@ class AlarmFiringActivity : ComponentActivity() {
             }
         }
 
-        // v1.5.1: Kick off flash-wake + sunrise simulation exactly once, the
+        // v1.5.1: Kick off flash-wake exactly once, the
         // first time the alarm becomes non-null. The jobs themselves have
         // start-guards, but previously `collectLatest` re-evaluated on every
         // state emission and cancelled the coroutine body mid-check, which
@@ -279,9 +279,6 @@ class AlarmFiringActivity : ComponentActivity() {
                 .collect { alarm ->
                     if (alarm.flashWake && alarm.gradualVolumeSeconds > 0) {
                         startFlashWake(alarm.gradualVolumeSeconds)
-                    }
-                    if (alarm.sunriseSimulation && alarm.sunriseMinutes > 0) {
-                        startSunriseSimulation(alarm.sunriseMinutes)
                     }
                 }
         }
@@ -728,7 +725,6 @@ class AlarmFiringActivity : ComponentActivity() {
         finish()
     }
 
-    private var sunriseJob: kotlinx.coroutines.Job? = null
     private var flashWakeJob: kotlinx.coroutines.Job? = null
 
     private fun startFlashWake(durationSeconds: Int) {
@@ -749,32 +745,9 @@ class AlarmFiringActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * v1.2.0: Sunrise simulation — gradually tint the window background
-     * from dark red (0xFF330000) to warm yellow (0xFFFFCC00) over [minutes].
-     */
-    private fun startSunriseSimulation(minutes: Int) {
-        if (sunriseJob != null) return
-        sunriseJob = lifecycleScope.launch {
-            val steps = 100
-            val stepDelay = (minutes * 60 * 1000L) / steps
-            for (i in 0..steps) {
-                val fraction = i.toFloat() / steps
-                // Interpolate RGB: dark red (51,0,0) -> warm yellow (255,204,0)
-                val r = (51 + (204 * fraction)).toInt().coerceIn(0, 255)
-                val g = (0 + (204 * fraction)).toInt().coerceIn(0, 255)
-                val b = 0
-                val color = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
-                window.decorView.setBackgroundColor(color)
-                delay(stepDelay)
-            }
-        }
-    }
-
     override fun onDestroy() {
         updateChallengeAudioDucking(ChallengeAudioDuckingCommand(active = false, volumePercent = 100))
         flashWakeJob?.cancel()
-        sunriseJob?.cancel()
         stopShakeDetection()
         stopSquatDetection()
         stopPushUpDetection()

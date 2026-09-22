@@ -177,19 +177,6 @@ internal fun PersonalizationSection(state: SettingsUiState, viewModel: SettingsV
             onPick = viewModel::updateAccentColor
         )
 
-        SettingsToggle(
-            label = stringResource(R.string.settings_motivational_quotes),
-            checked = state.settings.showMotivationalQuotes,
-            supportingText = stringResource(R.string.settings_motivational_quotes_description),
-            onToggle = viewModel::toggleShowMotivationalQuotes
-        )
-        SettingsToggle(
-            label = stringResource(R.string.settings_adaptive_difficulty),
-            checked = state.settings.adaptiveDifficultyEnabled,
-            supportingText = stringResource(R.string.settings_adaptive_difficulty_description),
-            onToggle = viewModel::toggleAdaptiveDifficulty
-        )
-
         // v1.4.0: Material You — respects the user's wallpaper palette on Android 12+.
         // On older devices the toggle is still persisted but has no visual effect,
         // so the help copy names the requirement rather than silently no-op'ing.
