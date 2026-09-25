@@ -2328,4 +2328,18 @@
     <string name="challenge_ui_speed_phrase">«%1$s»</string>
     <string name="challenge_ui_wordle_instruction">Угадайте слово из 5 букв — осталось попыток: %1$d.</string>
     <string name="settings_language_russian">Русский</string>
+
+    <!-- Compatibility challenge strings kept for existing ChallengeViews references -->
+    <string name="challenge_math_instruction">Выберите правильный ответ, чтобы разблокировать отключение будильника.</string>
+    <string name="challenge_shake_description">Энергично встряхните телефон, чтобы окончательно проснуться и отключить будильник.</string>
+    <string name="challenge_typing_instruction">Введите те же слова и знаки препинания. Регистр букв не имеет значения.</string>
+    <string name="challenge_typing_placeholder">Введите фразу выше…</string>
+    <string name="challenge_voice_stop">Остановить прослушивание</string>
+    <string name="challenge_voice_fallback">Фраза для ввода</string>
+    <string name="challenge_voice_check_fallback">Проверить введённую фразу</string>
+    <string name="challenge_handwriting_draw">Поле для рисования слова ${challenge.targetText}</string>
+    <string name="challenge_handwriting_clear">Очистить</string>
+    <string name="challenge_handwriting_fallback">Слово для ввода</string>
+    <string name="challenge_handwriting_check_fallback">Проверить введённое слово</string>
+    <string name="challenge_walk_instruction">Несколько шагов помогут убедиться, что Вы действительно проснулись.</string>
 </resources>
