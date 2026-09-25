@@ -164,7 +164,7 @@ fun MathChallengeView(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(68.dp)
-                                .semantics { contentDescription = "Answer: $choice" },
+                                .semantics { contentDescription = stringResource(R.string.challenge_ui_answer, choice) },
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = SurfaceCard.copy(alpha = 0.82f),
@@ -184,7 +184,7 @@ fun MathChallengeView(
 
         if (wrongFlash) {
             ChallengeNotice(
-                text = "That one was off. Try the next option.",
+                text = stringResource(R.string.challenge_ui_math_wrong),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -234,12 +234,12 @@ fun ShakeChallengeView(
             icon = Icons.Default.PhoneAndroid,
             accent = AccentBlue,
             progress = progress,
-            statusLabel = "$currentShakes / ${challenge.requiredShakes} complete",
-            summary = if (currentShakes == 0) "Start shaking to build momentum." else "$remaining shakes remaining."
+            statusLabel = stringResource(R.string.challenge_ui_shake_progress, currentShakes, challenge.requiredShakes),
+            summary = if (currentShakes == 0) stringResource(R.string.challenge_ui_shake_start) else stringResource(R.string.challenge_ui_shake_remaining, remaining)
         ) {
             Icon(
                 imageVector = Icons.Default.PhoneAndroid,
-                contentDescription = "Shake your phone",
+                contentDescription = stringResource(R.string.challenge_ui_shake_phone),
                 tint = AccentBlue,
                 modifier = Modifier
                     .size(42.dp)
@@ -266,14 +266,14 @@ fun SequenceChallengeView(
     ) {
         ChallengeSupportText(
             if (nextExpected != null) {
-                "Tap the numbers from lowest to highest. Next target: $nextExpected."
+                stringResource(R.string.challenge_ui_sequence_instruction, nextExpected)
             } else {
-                "Sequence complete."
+                stringResource(R.string.challenge_ui_sequence_complete)
             }
         )
 
         AppStatusChip(
-            label = "${tappedIndices.size} of ${challenge.numbers.size} tapped",
+            label = stringResource(R.string.challenge_ui_sequence_progress, tappedIndices.size, challenge.numbers.size),
             color = AccentBlue
         )
 
@@ -330,9 +330,9 @@ fun MemoryPatternChallengeView(
     ) {
         AppStatusChip(
             label = when (phase) {
-                MemoryPhase.SHOWING -> "Watch"
-                MemoryPhase.INPUT -> "Repeat"
-                MemoryPhase.WRONG -> "Retry"
+                MemoryPhase.SHOWING -> stringResource(R.string.challenge_ui_memory_watch)
+                MemoryPhase.INPUT -> stringResource(R.string.challenge_ui_memory_repeat)
+                MemoryPhase.WRONG -> stringResource(R.string.challenge_ui_memory_retry)
             },
             color = when (phase) {
                 MemoryPhase.SHOWING -> SnoozeYellow
@@ -343,9 +343,9 @@ fun MemoryPatternChallengeView(
 
         ChallengeSupportText(
             text = when (phase) {
-                MemoryPhase.SHOWING -> "Memorize the highlighted tiles before the pattern disappears."
-                MemoryPhase.INPUT -> "Tap the same tiles in the same order."
-                MemoryPhase.WRONG -> "The pattern will show again in a moment."
+                MemoryPhase.SHOWING -> stringResource(R.string.challenge_ui_memory_instruction)
+                MemoryPhase.INPUT -> stringResource(R.string.challenge_ui_memory_input)
+                MemoryPhase.WRONG -> stringResource(R.string.challenge_ui_memory_retry_hint)
             },
             accent = when (phase) {
                 MemoryPhase.WRONG -> AccentRed
@@ -385,7 +385,7 @@ fun MemoryPatternChallengeView(
 
         if (phase == MemoryPhase.INPUT) {
             AppStatusChip(
-                label = "${tappedIndices.size} of ${challenge.pattern.size} matched",
+                label = stringResource(R.string.challenge_ui_memory_progress, tappedIndices.size, challenge.pattern.size),
                 color = AccentBlue
             )
         }
@@ -399,9 +399,9 @@ enum class EmojiMemoryPhase { REVEALING, INPUT }
 
 // v1.6.0: Rock-paper-scissors support types
 enum class RpsChoice(val emoji: String, val label: String) {
-    ROCK("\uD83E\uDEA8", "Rock"),
-    PAPER("\uD83D\uDCC4", "Paper"),
-    SCISSORS("\u2702\uFE0F", "Scissors")
+    ROCK("\uD83E\uDEA8", stringResource(R.string.challenge_ui_rps_rock)),
+    PAPER("\uD83D\uDCC4", stringResource(R.string.challenge_ui_rps_paper)),
+    SCISSORS("\u2702\uFE0F", stringResource(R.string.challenge_ui_rps_scissors))
 }
 
 enum class RpsOutcome { WIN, LOSE, DRAW }
@@ -495,7 +495,7 @@ fun TypingChallengeView(
 
         if (wrongAttempts > 0) {
             ChallengeNotice(
-                text = "Not quite. Match the phrase exactly before trying again.",
+                text = stringResource(R.string.challenge_ui_typing_wrong),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -510,7 +510,7 @@ fun TypingChallengeView(
             colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("Check phrase", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.challenge_ui_typing_check), fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -542,9 +542,9 @@ fun VoicePhraseChallengeView(
     ) { granted ->
         hasRecordPermission = granted
         localStatus = if (granted) {
-            "Microphone ready. Start listening again."
+            stringResource(R.string.challenge_ui_voice_ready)
         } else {
-            "Microphone permission was denied. Type the phrase below to finish."
+            stringResource(R.string.challenge_ui_voice_permission_denied)
         }
     }
 
@@ -567,18 +567,18 @@ fun VoicePhraseChallengeView(
     DisposableEffect(speechRecognizer, listenIntent) {
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                localStatus = "Listening. Say the phrase shown below."
+                localStatus = stringResource(R.string.challenge_ui_voice_listening_hint)
             }
 
             override fun onBeginningOfSpeech() {
-                localStatus = "Speech detected."
+                localStatus = stringResource(R.string.challenge_ui_voice_detected)
             }
 
             override fun onRmsChanged(rmsdB: Float) = Unit
             override fun onBufferReceived(buffer: ByteArray?) = Unit
 
             override fun onEndOfSpeech() {
-                localStatus = "Checking what was heard..."
+                localStatus = stringResource(R.string.challenge_ui_voice_checking)
             }
 
             override fun onError(error: Int) {
@@ -601,7 +601,7 @@ fun VoicePhraseChallengeView(
                     ?.firstOrNull()
                     .orEmpty()
                 if (partial.isNotBlank()) {
-                    localStatus = "Hearing: $partial"
+                    localStatus = stringResource(R.string.challenge_ui_voice_partial, partial)
                 }
             }
 
@@ -630,7 +630,7 @@ fun VoicePhraseChallengeView(
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         ChallengeSupportText(
-            "Say the phrase clearly. Offline recognition is preferred when Android provides it."
+            stringResource(R.string.challenge_ui_voice_clear)
         )
 
         Card(
@@ -654,17 +654,17 @@ fun VoicePhraseChallengeView(
             onClick = {
                 when {
                     !speechAvailable -> {
-                        localStatus = "Android speech recognition is unavailable here. Type the phrase below."
+                        localStatus = stringResource(R.string.challenge_ui_voice_unavailable)
                     }
                     !hasRecordPermission -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     else -> {
                         runCatching {
                             isListening = true
-                            localStatus = "Starting microphone..."
+                            localStatus = stringResource(R.string.challenge_ui_voice_starting)
                             speechRecognizer?.startListening(listenIntent)
                         }.onFailure {
                             isListening = false
-                            localStatus = "Could not start speech recognition. Type the phrase below."
+                            localStatus = stringResource(R.string.challenge_ui_voice_start_error)
                         }
                     }
                 }
@@ -677,7 +677,7 @@ fun VoicePhraseChallengeView(
             shape = RoundedCornerShape(10.dp)
         ) {
             Text(
-                text = if (isListening) "Listening..." else "Start listening",
+                text = if (isListening) stringResource(R.string.challenge_ui_voice_listening) else stringResource(R.string.challenge_ui_voice_start),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -688,7 +688,7 @@ fun VoicePhraseChallengeView(
                 onClick = {
                     runCatching { speechRecognizer?.stopListening() }
                     isListening = false
-                    localStatus = "Stopped listening."
+                    localStatus = stringResource(R.string.challenge_ui_voice_stopped)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
@@ -701,7 +701,7 @@ fun VoicePhraseChallengeView(
         if (visibleStatus.isNotBlank()) {
             ChallengeNotice(
                 text = visibleStatus,
-                accent = if (status.startsWith("Heard") || status.startsWith("No phrase")) {
+                accent = if (status.startsWith(stringResource(R.string.challenge_ui_voice_heard)) || status.startsWith(stringResource(R.string.challenge_ui_voice_no_phrase))) {
                     AccentRed
                 } else {
                     SnoozeYellow
@@ -710,7 +710,7 @@ fun VoicePhraseChallengeView(
             )
         } else if (transcript.isNotBlank()) {
             ChallengeNotice(
-                text = "Heard: $transcript",
+                text = stringResource(R.string.challenge_ui_voice_heard_text, transcript),
                 accent = TextSecondary,
                 icon = Icons.Default.PhoneAndroid
             )
@@ -741,17 +741,17 @@ fun VoicePhraseChallengeView(
 }
 
 private fun speechErrorMessage(error: Int): String = when (error) {
-    SpeechRecognizer.ERROR_AUDIO -> "The microphone had an audio error. Try again or type the phrase."
-    SpeechRecognizer.ERROR_CLIENT -> "Speech recognition stopped. Try again or type the phrase."
+    SpeechRecognizer.ERROR_AUDIO -> stringResource(R.string.challenge_ui_voice_audio_error)
+    SpeechRecognizer.ERROR_CLIENT -> stringResource(R.string.challenge_ui_voice_stopped_error)
     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
-        "Microphone permission is missing. Grant it or type the phrase."
-    SpeechRecognizer.ERROR_NETWORK -> "Speech recognition network error. Offline fallback may be unavailable."
-    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Speech recognition timed out. Try again or type the phrase."
-    SpeechRecognizer.ERROR_NO_MATCH -> "No matching speech was detected. Say the phrase again."
-    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Speech recognition is busy. Wait a moment and retry."
-    SpeechRecognizer.ERROR_SERVER -> "Speech service error. Type the phrase if it keeps happening."
-    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech was heard. Try again or type the phrase."
-    else -> "Speech recognition failed. Try again or type the phrase."
+        stringResource(R.string.challenge_ui_voice_permission_missing)
+    SpeechRecognizer.ERROR_NETWORK -> stringResource(R.string.challenge_ui_voice_network_error)
+    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> stringResource(R.string.challenge_ui_voice_timeout)
+    SpeechRecognizer.ERROR_NO_MATCH -> stringResource(R.string.challenge_ui_voice_no_match)
+    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> stringResource(R.string.challenge_ui_voice_busy)
+    SpeechRecognizer.ERROR_SERVER -> stringResource(R.string.challenge_ui_voice_service_error)
+    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> stringResource(R.string.challenge_ui_voice_no_speech)
+    else -> stringResource(R.string.challenge_ui_voice_failed)
 }
 
 @Composable
@@ -785,7 +785,7 @@ fun HandwritingChallengeView(
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         ChallengeSupportText(
-            "Draw the word in the box. Recognition runs on-device after the handwriting model is available."
+            stringResource(R.string.challenge_ui_handwriting_instruction)
         )
 
         Card(
@@ -873,7 +873,7 @@ fun HandwritingChallengeView(
 
             if (strokes.isEmpty() && currentStroke.isEmpty()) {
                 Text(
-                    text = "Write ${challenge.targetText}",
+                    text = stringResource(R.string.challenge_ui_handwriting_write, challenge.targetText),
                     color = TextMuted,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -911,7 +911,7 @@ fun HandwritingChallengeView(
                 colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text(if (busy) "Checking..." else "Check drawing")
+                Text(if (busy) stringResource(R.string.challenge_ui_checking) else stringResource(R.string.challenge_ui_check_drawing))
             }
         }
 
@@ -923,8 +923,8 @@ fun HandwritingChallengeView(
             ChallengeNotice(
                 text = status,
                 accent = when {
-                    status.endsWith("matched.") -> DismissGreen
-                    status.startsWith("Checking") -> SnoozeYellow
+                    status.endsWith(stringResource(R.string.challenge_ui_matched)) -> DismissGreen
+                    status.startsWith(stringResource(R.string.challenge_ui_checking_short)) -> SnoozeYellow
                     else -> AccentRed
                 },
                 icon = Icons.Default.WarningAmber
@@ -979,8 +979,8 @@ fun WalkChallengeView(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
             accent = DismissGreen,
             progress = progress,
-            statusLabel = "$currentSteps / ${challenge.requiredSteps} steps",
-            summary = if (currentSteps == 0) "Start walking to build progress." else "$remaining steps remaining."
+            statusLabel = stringResource(R.string.challenge_ui_walk_progress, currentSteps, challenge.requiredSteps),
+            summary = if (currentSteps == 0) stringResource(R.string.challenge_ui_walk_start) else stringResource(R.string.challenge_ui_walk_remaining, remaining)
         )
 
         if (walkStatus.isNotBlank()) {
@@ -1033,7 +1033,7 @@ fun NfcScanChallengeView(
         ChallengeIconPanel(accent = AccentBlue.copy(alpha = 0.12f)) {
             Icon(
                 imageVector = Icons.Default.Nfc,
-                contentDescription = "NFC scan",
+                contentDescription = stringResource(R.string.challenge_ui_nfc_scan),
                 tint = AccentBlue.copy(alpha = pulseAlpha),
                 modifier = Modifier.size(84.dp)
             )
@@ -1049,7 +1049,7 @@ fun NfcScanChallengeView(
 
         if (challenge.registeredTagId.isBlank()) {
             ChallengeNotice(
-                text = "No tag is registered yet. Any NFC tag will work for now.",
+                text = stringResource(R.string.challenge_ui_nfc_no_tag),
                 accent = SnoozeYellow,
                 icon = Icons.Default.Nfc
             )
@@ -1091,7 +1091,7 @@ fun BarcodeScanChallengeView(
             ) {
                 Icon(
                     imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = "Barcode scan",
+                    contentDescription = stringResource(R.string.challenge_ui_barcode_scan),
                     tint = AccentBlue,
                     modifier = Modifier.size(72.dp)
                 )
@@ -1123,7 +1123,7 @@ fun BarcodeScanChallengeView(
 
         if (challenge.registeredValue.isBlank()) {
             ChallengeNotice(
-                text = "No code is registered yet. Continue to complete this challenge.",
+                text = stringResource(R.string.challenge_ui_barcode_no_code),
                 accent = SnoozeYellow,
                 icon = Icons.Default.QrCodeScanner
             )
@@ -1187,7 +1187,7 @@ fun PhotoMatchChallengeView(
         ChallengeIconPanel(accent = AccentBlue.copy(alpha = 0.12f)) {
             Icon(
                 imageVector = Icons.Default.PhotoCamera,
-                contentDescription = "Take photo",
+                contentDescription = stringResource(R.string.challenge_ui_photo_take),
                 tint = AccentBlue,
                 modifier = Modifier.size(72.dp)
             )
@@ -1203,7 +1203,7 @@ fun PhotoMatchChallengeView(
 
         if (challenge.referencePhotoUri.isBlank()) {
             ChallengeNotice(
-                text = "No reference photo is registered yet. Any photo will work for now.",
+                text = stringResource(R.string.challenge_ui_photo_no_reference),
                 accent = SnoozeYellow,
                 icon = Icons.Default.PhotoCamera
             )
@@ -1217,9 +1217,9 @@ fun PhotoMatchChallengeView(
             colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Icon(imageVector = Icons.Default.CameraAlt, contentDescription = "Open camera", modifier = Modifier.size(20.dp))
+            Icon(imageVector = Icons.Default.CameraAlt, contentDescription = stringResource(R.string.challenge_ui_photo_camera), modifier = Modifier.size(20.dp))
             Text(
-                text = "Open camera",
+                text = stringResource(R.string.challenge_ui_photo_camera),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp)
@@ -1252,11 +1252,11 @@ fun SquatChallengeView(
             icon = Icons.Default.FitnessCenter,
             accent = DismissGreen,
             progress = progress,
-            statusLabel = "$currentSquats / ${challenge.requiredSquats} squats",
-            summary = if (currentSquats == 0) "Start with one clean squat." else "$remaining squats remaining."
+            statusLabel = stringResource(R.string.challenge_ui_squat_progress, currentSquats, challenge.requiredSquats),
+            summary = if (currentSquats == 0) stringResource(R.string.challenge_ui_squat_start) else stringResource(R.string.challenge_ui_squat_remaining, remaining)
         )
 
-        ExerciseSensorFallback(exerciseStatus, fallbackAllowed, "Continue without squat count", onContinueWithoutSensor)
+        ExerciseSensorFallback(exerciseStatus, fallbackAllowed, stringResource(R.string.challenge_ui_squat_fallback), onContinueWithoutSensor)
     }
 }
 
@@ -1284,11 +1284,11 @@ fun PushUpChallengeView(
             icon = Icons.Default.FitnessCenter,
             accent = AccentRed,
             progress = progress,
-            statusLabel = "$currentPushUps / ${challenge.requiredPushUps} push-ups",
-            summary = if (currentPushUps == 0) "Start your first push-up." else "$remaining push-ups remaining."
+            statusLabel = stringResource(R.string.challenge_ui_pushup_progress, currentPushUps, challenge.requiredPushUps),
+            summary = if (currentPushUps == 0) stringResource(R.string.challenge_ui_pushup_start) else "$remaining push-ups remaining."
         )
 
-        ExerciseSensorFallback(exerciseStatus, fallbackAllowed, "Continue without push-up count", onContinueWithoutSensor)
+        ExerciseSensorFallback(exerciseStatus, fallbackAllowed, stringResource(R.string.challenge_ui_pushup_fallback), onContinueWithoutSensor)
     }
 }
 
@@ -1344,8 +1344,8 @@ fun PlankHoldChallengeView(
             icon = Icons.Default.FitnessCenter,
             accent = AccentBlue,
             progress = progress,
-            statusLabel = "$heldSeconds / ${challenge.requiredSeconds} seconds",
-            summary = if (heldSeconds == 0) "Tap Start and hold position." else "$remaining seconds remaining."
+            statusLabel = stringResource(R.string.challenge_ui_plank_progress, heldSeconds, challenge.requiredSeconds),
+            summary = if (heldSeconds == 0) stringResource(R.string.challenge_ui_plank_start) else stringResource(R.string.challenge_ui_plank_remaining, remaining)
         )
 
         if (!isActive) {
@@ -1360,10 +1360,10 @@ fun PlankHoldChallengeView(
                 onClick = onBreak,
                 border = BorderStroke(1.dp, AccentRed)
             ) {
-                Text("I broke form", color = AccentRed)
+                Text(stringResource(R.string.challenge_ui_plank_broken), color = AccentRed)
             }
             Text(
-                text = "Timer is running. Hold steady.",
+                text = stringResource(R.string.challenge_ui_plank_running),
                 color = AccentBlue,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -1403,12 +1403,12 @@ fun MazeChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Tap adjacent cells only. Reach the exit without hitting the walls.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_maze_instruction))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AppStatusChip(label = "You", icon = Icons.Default.Person, color = AccentBlue)
-            AppStatusChip(label = "Start", color = DismissGreen)
-            AppStatusChip(label = "Exit", color = AccentRed)
+            AppStatusChip(label = stringResource(R.string.challenge_ui_you), icon = Icons.Default.Person, color = AccentBlue)
+            AppStatusChip(label = stringResource(R.string.challenge_ui_start), color = DismissGreen)
+            AppStatusChip(label = stringResource(R.string.challenge_ui_exit), color = AccentRed)
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1446,7 +1446,7 @@ fun MazeChallengeView(
                             contentAlignment = Alignment.Center
                         ) {
                             when {
-                                isCurrent -> Icon(Icons.Default.Person, contentDescription = "Your position", tint = TextPrimary, modifier = Modifier.size(22.dp))
+                                isCurrent -> Icon(Icons.Default.Person, contentDescription = stringResource(R.string.challenge_ui_your_position), tint = TextPrimary, modifier = Modifier.size(22.dp))
                                 isStart -> Text("S", color = DismissGreen, fontWeight = FontWeight.Bold)
                                 isEnd -> Text("E", color = AccentRed, fontWeight = FontWeight.Bold)
                             }
@@ -1458,7 +1458,7 @@ fun MazeChallengeView(
 
         if (invalidFlashIdx >= 0) {
             ChallengeNotice(
-                text = "Only adjacent cells are reachable. Tap a neighbor of your current position.",
+                text = stringResource(R.string.challenge_ui_maze_hint),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -1484,14 +1484,14 @@ fun WifiChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Reconnect to the planned Wi-Fi network before dismiss becomes available.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_wifi_instruction))
 
         ChallengeIconPanel(
             accent = if (isConnected) DismissGreen.copy(alpha = 0.12f) else AccentBlue.copy(alpha = 0.12f)
         ) {
             Icon(
                 imageVector = Icons.Default.Wifi,
-                contentDescription = "Wi-Fi",
+                contentDescription = stringResource(R.string.challenge_ui_wifi),
                 tint = if (isConnected) DismissGreen else AccentBlue,
                 modifier = Modifier.size(76.dp)
             )
@@ -1499,21 +1499,21 @@ fun WifiChallengeView(
 
         if (challenge.requiredSsid.isNotBlank()) {
             ChallengeNotice(
-                text = "Required network: ${challenge.requiredSsid}",
+                text = stringResource(R.string.challenge_ui_wifi_required, challenge.requiredSsid),
                 accent = MaterialTheme.colorScheme.primary,
                 icon = Icons.Default.Wifi
             )
         }
 
         ChallengeNotice(
-            text = if (currentSsid.isBlank()) "Not connected to Wi-Fi yet." else "Connected to: $currentSsid",
+            text = if (currentSsid.isBlank()) stringResource(R.string.challenge_ui_wifi_not_connected) else stringResource(R.string.challenge_ui_wifi_connected, currentSsid),
             accent = if (isConnected) DismissGreen else SnoozeYellow,
             icon = Icons.Default.Wifi
         )
 
         if (challenge.requiredSsid.isBlank()) {
             ChallengeNotice(
-                text = "No network is specified yet. Any Wi-Fi connection will work for now.",
+                text = stringResource(R.string.challenge_ui_wifi_no_network),
                 accent = SnoozeYellow,
                 icon = Icons.Default.Wifi
             )
@@ -1535,7 +1535,7 @@ fun WifiChallengeView(
                     .height(52.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Continue without Wi-Fi check")
+                Text(stringResource(R.string.challenge_ui_wifi_fallback))
             }
         }
     }
@@ -1674,7 +1674,7 @@ private fun ChallengeProgressHero(
 
         if (progress > 0f) {
             Text(
-                text = "${(progress * 100).toInt()}% complete",
+                text = stringResource(R.string.challenge_ui_progress_percent, (progress * 100).toInt()),
                 color = TextMuted,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -1778,12 +1778,12 @@ fun CountSheepChallengeView(
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
         ) {
             AppStatusChip(
-                label = "Sheep $tapped / ${challenge.targetCount}",
+                label = stringResource(R.string.challenge_ui_sheep_progress, tapped, challenge.targetCount),
                 color = if (progress >= 1f) DismissGreen else AccentBlue
             )
             if (wrongTaps > 0) {
                 AppStatusChip(
-                    label = "Missed $wrongTaps",
+                    label = stringResource(R.string.challenge_ui_sheep_missed, wrongTaps),
                     color = AccentRed
                 )
             }
@@ -1806,7 +1806,7 @@ fun SimonSaysChallengeView(
         AccentBlue,
         SnoozeYellow
     )
-    val names = listOf("Red", "Green", "Blue", "Yellow")
+    val names = listOf(stringResource(R.string.challenge_ui_red), stringResource(R.string.challenge_ui_green), stringResource(R.string.challenge_ui_blue), stringResource(R.string.challenge_ui_yellow))
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1814,7 +1814,7 @@ fun SimonSaysChallengeView(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         ChallengeSupportText(
-            text = "Watch the sequence, then tap it back in order. One wrong tap restarts the round.",
+            text = stringResource(R.string.challenge_ui_simon_instruction),
             accent = if (errorFlash) AccentRed else TextSecondary
         )
 
@@ -1845,7 +1845,7 @@ fun SimonSaysChallengeView(
         }
 
         AppStatusChip(
-            label = "${inputIndices.size} / ${challenge.sequence.size} correct",
+            label = stringResource(R.string.challenge_ui_simon_progress, inputIndices.size, challenge.sequence.size),
             color = if (inputIndices.size == challenge.sequence.size) DismissGreen else AccentBlue
         )
     }
@@ -1865,7 +1865,7 @@ fun DateBackwardsChallengeView(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         ChallengeSupportText(
-            "Today is ${challenge.targetDate}. Type it reversed character-by-character."
+            stringResource(R.string.challenge_ui_date_instruction, challenge.targetDate)
         )
 
         Text(
@@ -1884,7 +1884,7 @@ fun DateBackwardsChallengeView(
         OutlinedTextField(
             value = input,
             onValueChange = onInputChange,
-            placeholder = { Text("Type the reversed date", color = TextMuted) },
+            placeholder = { Text(stringResource(R.string.challenge_ui_date_placeholder), color = TextMuted) },
             singleLine = true,
             colors = appOutlinedTextFieldColors(),
             shape = AppInputShape,
@@ -1899,7 +1899,7 @@ fun DateBackwardsChallengeView(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("Check date")
+            Text(stringResource(R.string.challenge_ui_date_check))
         }
     }
 }
@@ -1916,14 +1916,14 @@ fun StroopChallengeView(
         AccentBlue,
         SnoozeYellow
     )
-    val names = listOf("Red", "Green", "Blue", "Yellow")
+    val names = listOf(stringResource(R.string.challenge_ui_red), stringResource(R.string.challenge_ui_green), stringResource(R.string.challenge_ui_blue), stringResource(R.string.challenge_ui_yellow))
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Tap the INK COLOR of the word, not the word itself.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_stroop_instruction))
 
         Box(
             modifier = Modifier
@@ -1979,7 +1979,7 @@ fun RockPaperScissorsChallengeView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "You  $playerWins",
+                text = stringResource(R.string.challenge_ui_rps_player_score, playerWins),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = DismissGreen
@@ -1990,7 +1990,7 @@ fun RockPaperScissorsChallengeView(
                 color = TextMuted
             )
             Text(
-                text = "$computerWins  CPU",
+                text = stringResource(R.string.challenge_ui_rps_cpu_score, computerWins),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = AccentRed
@@ -2000,9 +2000,9 @@ fun RockPaperScissorsChallengeView(
         val lastRound = rounds.lastOrNull()
         if (lastRound != null) {
             val outcomeText = when (lastRound.outcome) {
-                RpsOutcome.WIN  -> "You won that round!"
-                RpsOutcome.LOSE -> "Computer won that round"
-                RpsOutcome.DRAW -> "Draw"
+                RpsOutcome.WIN  -> stringResource(R.string.challenge_ui_rps_win)
+                RpsOutcome.LOSE -> stringResource(R.string.challenge_ui_rps_lose)
+                RpsOutcome.DRAW -> stringResource(R.string.challenge_ui_rps_draw)
             }
             val outcomeColor = when (lastRound.outcome) {
                 RpsOutcome.WIN  -> DismissGreen
@@ -2016,7 +2016,7 @@ fun RockPaperScissorsChallengeView(
             )
         }
 
-        ChallengeSupportText("First to ${challenge.requiredWins} wins. Pick your move:")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_rps_instruction, challenge.requiredWins))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -2085,13 +2085,13 @@ fun EmojiMemoryChallengeView(
         when (phase) {
             EmojiMemoryPhase.REVEALING ->
                 ChallengeNotice(
-                    text = "Memorise the pairs! ($displayCountdown s)",
+                    text = stringResource(R.string.challenge_ui_emoji_reveal, displayCountdown),
                     accent = SnoozeYellow,
                     icon = Icons.Default.WarningAmber
                 )
             EmojiMemoryPhase.INPUT -> {
                 val pairs = matchedIndices.size / 2
-                ChallengeSupportText("$pairs of 8 pairs found. Tap two cards to match them.")
+                ChallengeSupportText(stringResource(R.string.challenge_ui_emoji_progress, pairs))
             }
         }
 
@@ -2183,7 +2183,7 @@ fun TypingSpeedChallengeView(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         ChallengeSupportText(
-            "Type the phrase at ${challenge.minWpm}+ wpm with at most ${challenge.maxErrors} word error(s)."
+            stringResource(R.string.challenge_ui_speed_instruction, challenge.minWpm, challenge.maxErrors)
         )
 
         Box(
@@ -2205,7 +2205,7 @@ fun TypingSpeedChallengeView(
 
         if (wrongAttempts > 0) {
             ChallengeNotice(
-                text = "Too slow or too many word errors. Reset your pace and try again.",
+                text = stringResource(R.string.challenge_ui_speed_wrong),
                 accent = if (wrongFlash) AccentRed else AccentRed.copy(alpha = 0.75f),
                 icon = Icons.Default.WarningAmber
             )
@@ -2215,7 +2215,7 @@ fun TypingSpeedChallengeView(
             value = currentInput,
             onValueChange = onInputChanged,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Type the phrase") },
+            label = { Text(stringResource(R.string.challenge_ui_speed_placeholder)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             colors = appOutlinedTextFieldColors(),
@@ -2231,7 +2231,7 @@ fun TypingSpeedChallengeView(
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
         ) {
-            Text("Check speed", color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.challenge_ui_speed_check), color = TextPrimary, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -2295,11 +2295,11 @@ fun WordleChallengeView(
                         // so expose it to TalkBack / colorblind users as text instead of
                         // relying on the tile background alone.
                         val tileDescription = when {
-                            displayCh == ' ' -> "empty"
-                            state == WordleLetterState.CORRECT -> "$displayCh, correct position"
-                            state == WordleLetterState.PRESENT -> "$displayCh, in the word, wrong position"
-                            state == WordleLetterState.ABSENT -> "$displayCh, not in the word"
-                            else -> "$displayCh"
+                            displayCh == ' ' -> stringResource(R.string.challenge_ui_empty)
+                            state == WordleLetterState.CORRECT -> stringResource(R.string.challenge_ui_wordle_correct, displayCh)
+                            state == WordleLetterState.PRESENT -> stringResource(R.string.challenge_ui_wordle_present, displayCh)
+                            state == WordleLetterState.ABSENT -> stringResource(R.string.challenge_ui_wordle_absent, displayCh)
+                            else -> stringResource(R.string.challenge_ui_wordle_letter, displayCh)
                         }
                         Card(
                             modifier = Modifier
@@ -2333,7 +2333,7 @@ fun WordleChallengeView(
                 value = currentInput,
                 onValueChange = { onInputChanged(it) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("5-letter word") },
+                label = { Text(stringResource(R.string.challenge_ui_wordle_input)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { if (currentInput.length == 5) onSubmit() }),
                 colors = appOutlinedTextFieldColors(),
@@ -2347,7 +2347,7 @@ fun WordleChallengeView(
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
             ) {
-                Text("Submit guess", color = TextPrimary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.challenge_ui_wordle_submit), color = TextPrimary, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -2374,19 +2374,19 @@ fun PvtChallengeView(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            "Reaction Test",
+            stringResource(R.string.challenge_ui_pvt_title),
             style = MaterialTheme.typography.titleMedium,
             color = TextPrimary,
             fontWeight = FontWeight.Bold
         )
         Text(
-            "Trial ${trialIndex + 1} of ${challenge.totalTrials}",
+            stringResource(R.string.challenge_ui_pvt_trial, trialIndex + 1, challenge.totalTrials),
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary
         )
         if (reactionTimes.isNotEmpty()) {
             Text(
-                "Avg: ${reactionTimes.average().toLong()} ms",
+                stringResource(R.string.challenge_ui_pvt_avg, reactionTimes.average().toLong()),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
@@ -2415,11 +2415,11 @@ fun PvtChallengeView(
             Text(
                 text = when {
                     failed -> "Too slow\nTry again"
-                    stimulusShown -> "TAP!"
-                    waiting -> "Wait..."
-                    lastReaction != null && lastReaction >= 0 -> "${lastReaction} ms"
-                    lastReaction != null && lastReaction < 0 -> "Too early!"
-                    else -> "Tap to start"
+                    stimulusShown -> stringResource(R.string.challenge_ui_pvt_tap)
+                    waiting -> stringResource(R.string.challenge_ui_pvt_wait)
+                    lastReaction != null && lastReaction >= 0 -> stringResource(R.string.challenge_ui_pvt_reaction, lastReaction)
+                    lastReaction != null && lastReaction < 0 -> stringResource(R.string.challenge_ui_pvt_early)
+                    else -> stringResource(R.string.challenge_ui_pvt_start)
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 color = when {
@@ -2432,7 +2432,7 @@ fun PvtChallengeView(
             )
         }
         Text(
-            "Tap the green square as fast as you can",
+            stringResource(R.string.challenge_ui_pvt_hint),
             style = MaterialTheme.typography.bodySmall,
             color = TextMuted,
             textAlign = TextAlign.Center
@@ -2465,14 +2465,14 @@ fun SpotDifferenceChallengeView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        ChallengeSupportText("Find the one tile that changed on the right grid.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_difference_instruction))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             DifferenceGrid(
-                title = "Original",
+                title = stringResource(R.string.challenge_ui_original),
                 modifier = Modifier.weight(1f),
                 gridSize = challenge.gridSize,
                 tiles = challenge.baseTiles,
@@ -2481,7 +2481,7 @@ fun SpotDifferenceChallengeView(
                 onPick = {}
             )
             DifferenceGrid(
-                title = "Changed",
+                title = stringResource(R.string.challenge_ui_changed),
                 modifier = Modifier.weight(1f),
                 gridSize = challenge.gridSize,
                 tiles = changedTiles,
@@ -2493,7 +2493,7 @@ fun SpotDifferenceChallengeView(
 
         if (wrongAttempts > 0) {
             ChallengeNotice(
-                text = "That tile matches. Look for the single color swap.",
+                text = stringResource(R.string.challenge_ui_difference_wrong),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -2531,9 +2531,9 @@ private fun DifferenceGrid(
                                 .clickable(enabled = enabled) { onPick(index) }
                                 .semantics {
                                     contentDescription = if (enabled) {
-                                        "Changed grid tile ${index + 1}"
+                                        stringResource(R.string.challenge_ui_difference_changed_tile, index + 1)
                                     } else {
-                                        "Original grid tile ${index + 1}"
+                                        stringResource(R.string.challenge_ui_difference_original_tile, index + 1)
                                     }
                                 }
                         )
@@ -2558,7 +2558,7 @@ fun ChessMateChallengeView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        AppStatusChip(label = "${puzzle.sideToMove} to move", color = AccentBlue)
+        AppStatusChip(label = stringResource(R.string.challenge_ui_chess_turn, puzzle.sideToMove), color = AccentBlue)
         Text(
             puzzle.title,
             style = MaterialTheme.typography.titleMedium,
@@ -2595,7 +2595,7 @@ fun ChessMateChallengeView(
         }
         if (wrongAttempts > 0) {
             ChallengeNotice(
-                text = "Not mate yet. Find the move marked with checkmate.",
+                text = stringResource(R.string.challenge_ui_chess_wrong),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -2673,7 +2673,7 @@ fun RsvpReadingChallengeView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ChallengeSupportText("Read the rapid word stream, then pick the word you saw.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_rsvp_instruction))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -2684,9 +2684,9 @@ fun RsvpReadingChallengeView(
         ) {
             Text(
                 text = when {
-                    showChoices -> "Which word appeared?"
+                    showChoices -> stringResource(R.string.challenge_ui_rsvp_question)
                     wordIndex >= 0 -> challenge.words[wordIndex]
-                    else -> "Get ready"
+                    else -> stringResource(R.string.challenge_ui_rsvp_ready)
                 },
                 color = TextPrimary,
                 style = MaterialTheme.typography.headlineMedium,
@@ -2724,12 +2724,12 @@ fun RsvpReadingChallengeView(
                 }
             }
         } else {
-            AppStatusChip(label = "Rapid reading", color = SnoozeYellow)
+            AppStatusChip(label = stringResource(R.string.challenge_ui_rsvp_status), color = SnoozeYellow)
         }
 
         if (wrongAttempts > 0) {
             ChallengeNotice(
-                text = "That word was not in this stream. Pick the word you remember seeing.",
+                text = stringResource(R.string.challenge_ui_rsvp_wrong),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
