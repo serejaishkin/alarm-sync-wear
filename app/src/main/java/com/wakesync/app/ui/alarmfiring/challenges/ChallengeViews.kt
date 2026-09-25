@@ -82,6 +82,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.res.stringResource
+import com.wakesync.app.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -119,7 +121,7 @@ fun MathChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Choose the correct answer to unlock dismiss.")
+        ChallengeSupportText(stringResource(R.string.challenge_math_instruction))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -226,7 +228,7 @@ fun ShakeChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("A strong shake helps break sleepy autopilot before the alarm unlocks.")
+        ChallengeSupportText(stringResource(R.string.challenge_shake_description))
 
         ChallengeProgressHero(
             icon = Icons.Default.PhoneAndroid,
@@ -461,7 +463,7 @@ fun TypingChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Type the same words and punctuation. Letter case does not matter.")
+        ChallengeSupportText(stringResource(R.string.challenge_typing_instruction))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -483,7 +485,7 @@ fun TypingChallengeView(
         OutlinedTextField(
             value = currentInput,
             onValueChange = onInputChanged,
-            placeholder = { Text("Type the phrase above…", color = TextMuted) },
+            placeholder = { Text(stringResource(R.string.challenge_typing_placeholder), color = TextMuted) },
             colors = appOutlinedTextFieldColors(),
             shape = AppInputShape,
             modifier = Modifier.fillMaxWidth(),
@@ -691,7 +693,7 @@ fun VoicePhraseChallengeView(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Stop listening")
+                Text(stringResource(R.string.challenge_voice_stop))
             }
         }
 
@@ -717,7 +719,7 @@ fun VoicePhraseChallengeView(
         OutlinedTextField(
             value = typedFallback,
             onValueChange = { typedFallback = it },
-            placeholder = { Text("Typed fallback phrase", color = TextMuted) },
+            placeholder = { Text(stringResource(R.string.challenge_voice_fallback), color = TextMuted) },
             colors = appOutlinedTextFieldColors(),
             shape = AppInputShape,
             modifier = Modifier.fillMaxWidth(),
@@ -733,7 +735,7 @@ fun VoicePhraseChallengeView(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("Check typed phrase")
+            Text(stringResource(R.string.challenge_voice_check_fallback))
         }
     }
 }
@@ -812,7 +814,7 @@ fun HandwritingChallengeView(
                 .clip(RoundedCornerShape(14.dp))
                 .background(SurfaceDark.copy(alpha = 0.78f))
                 .semantics {
-                    contentDescription = "Drawing pad for ${challenge.targetText}"
+                    contentDescription = stringResource(R.string.challenge_handwriting_draw, challenge.targetText)
                 }
         ) {
             Canvas(
@@ -894,7 +896,7 @@ fun HandwritingChallengeView(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Clear")
+                Text(stringResource(R.string.challenge_handwriting_clear))
             }
             Button(
                 onClick = {
@@ -932,7 +934,7 @@ fun HandwritingChallengeView(
         OutlinedTextField(
             value = typedFallback,
             onValueChange = { typedFallback = it },
-            placeholder = { Text("Typed fallback word", color = TextMuted) },
+            placeholder = { Text(stringResource(R.string.challenge_handwriting_fallback), color = TextMuted) },
             colors = appOutlinedTextFieldColors(),
             shape = AppInputShape,
             modifier = Modifier.fillMaxWidth(),
@@ -948,7 +950,7 @@ fun HandwritingChallengeView(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("Check typed word")
+            Text(stringResource(R.string.challenge_handwriting_check_fallback))
         }
     }
 }
@@ -971,7 +973,7 @@ fun WalkChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Walking a few steps helps make sure you are genuinely up.")
+        ChallengeSupportText(stringResource(R.string.challenge_walk_instruction))
 
         ChallengeProgressHero(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
@@ -997,7 +999,7 @@ fun WalkChallengeView(
                     .height(52.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Continue without step count")
+                Text(stringResource(R.string.challenge_walk_continue))
             }
         }
     }
@@ -1026,7 +1028,7 @@ fun NfcScanChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Tap the saved tag against the back of your phone to clear this step.")
+        ChallengeSupportText(stringResource(R.string.challenge_nfc_instruction))
 
         ChallengeIconPanel(accent = AccentBlue.copy(alpha = 0.12f)) {
             Icon(
@@ -1080,7 +1082,7 @@ fun BarcodeScanChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Enter the saved barcode or QR payload to unlock dismiss.")
+        ChallengeSupportText(stringResource(R.string.challenge_barcode_instruction))
 
         ChallengeIconPanel(accent = AccentBlue.copy(alpha = 0.12f)) {
             Column(
@@ -1133,13 +1135,13 @@ fun BarcodeScanChallengeView(
                     .height(52.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Continue without saved code")
+                Text(stringResource(R.string.challenge_barcode_continue))
             }
         } else {
             OutlinedTextField(
                 value = codeInput,
                 onValueChange = { codeInput = it },
-                label = { Text("Barcode or QR value") },
+                label = { Text(stringResource(R.string.challenge_barcode_placeholder)) },
                 singleLine = true,
                 colors = appOutlinedTextFieldColors(),
                 shape = AppInputShape,
@@ -1161,7 +1163,7 @@ fun BarcodeScanChallengeView(
                     .height(52.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Submit code")
+                Text(stringResource(R.string.challenge_barcode_submit))
             }
         }
     }
@@ -1180,7 +1182,7 @@ fun PhotoMatchChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Take a fresh photo from the saved location or angle to prove you made it there.")
+        ChallengeSupportText(stringResource(R.string.challenge_photo_instruction))
 
         ChallengeIconPanel(accent = AccentBlue.copy(alpha = 0.12f)) {
             Icon(
@@ -1244,7 +1246,7 @@ fun SquatChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("A short movement burst makes it harder to crawl back into bed.")
+        ChallengeSupportText(stringResource(R.string.challenge_squat_instruction))
 
         ChallengeProgressHero(
             icon = Icons.Default.FitnessCenter,
@@ -1276,7 +1278,7 @@ fun PushUpChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Place the phone face-down on the floor and do push-ups over it.")
+        ChallengeSupportText(stringResource(R.string.challenge_pushup_instruction))
 
         ChallengeProgressHero(
             icon = Icons.Default.FitnessCenter,
@@ -1336,7 +1338,7 @@ fun PlankHoldChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Hold the phone level and face-down in a plank position.")
+        ChallengeSupportText(stringResource(R.string.challenge_plank_instruction))
 
         ChallengeProgressHero(
             icon = Icons.Default.FitnessCenter,
@@ -1351,7 +1353,7 @@ fun PlankHoldChallengeView(
                 onClick = onStart,
                 colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
             ) {
-                Text("Start plank")
+                Text(stringResource(R.string.challenge_plank_start_button))
             }
         } else {
             OutlinedButton(
