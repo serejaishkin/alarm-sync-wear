@@ -1,6 +1,7 @@
 package com.wakesync.app.ui.alarmfiring.challenges
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.StringRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -398,10 +400,10 @@ enum class MemoryPhase { SHOWING, INPUT, WRONG }
 enum class EmojiMemoryPhase { REVEALING, INPUT }
 
 // v1.6.0: Rock-paper-scissors support types
-enum class RpsChoice(val emoji: String, val label: String) {
-    ROCK("\uD83E\uDEA8", stringResource(R.string.challenge_ui_rps_rock)),
-    PAPER("\uD83D\uDCC4", stringResource(R.string.challenge_ui_rps_paper)),
-    SCISSORS("\u2702\uFE0F", stringResource(R.string.challenge_ui_rps_scissors))
+enum class RpsChoice(val emoji: String, @StringRes val labelRes: Int) {
+    ROCK("\uD83E\uDEA8", R.string.challenge_ui_rps_rock),
+    PAPER("\uD83D\uDCC4", R.string.challenge_ui_rps_paper),
+    SCISSORS("\u2702\uFE0F", R.string.challenge_ui_rps_scissors)
 }
 
 enum class RpsOutcome { WIN, LOSE, DRAW }
@@ -542,9 +544,9 @@ fun VoicePhraseChallengeView(
     ) { granted ->
         hasRecordPermission = granted
         localStatus = if (granted) {
-            stringResource(R.string.challenge_ui_voice_ready)
+            context.getString(R.string.challenge_ui_voice_ready)
         } else {
-            stringResource(R.string.challenge_ui_voice_permission_denied)
+            context.getString(R.string.challenge_ui_voice_permission_denied)
         }
     }
 
@@ -567,23 +569,23 @@ fun VoicePhraseChallengeView(
     DisposableEffect(speechRecognizer, listenIntent) {
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                localStatus = stringResource(R.string.challenge_ui_voice_listening_hint)
+                localStatus = context.getString(R.string.challenge_ui_voice_listening_hint)
             }
 
             override fun onBeginningOfSpeech() {
-                localStatus = stringResource(R.string.challenge_ui_voice_detected)
+                localStatus = context.getString(R.string.challenge_ui_voice_detected)
             }
 
             override fun onRmsChanged(rmsdB: Float) = Unit
             override fun onBufferReceived(buffer: ByteArray?) = Unit
 
             override fun onEndOfSpeech() {
-                localStatus = stringResource(R.string.challenge_ui_voice_checking)
+                localStatus = context.getString(R.string.challenge_ui_voice_checking)
             }
 
             override fun onError(error: Int) {
                 isListening = false
-                localStatus = speechErrorMessage(error)
+                localStatus = speechErrorMessage(context, error)
             }
 
             override fun onResults(results: Bundle?) {
@@ -601,7 +603,7 @@ fun VoicePhraseChallengeView(
                     ?.firstOrNull()
                     .orEmpty()
                 if (partial.isNotBlank()) {
-                    localStatus = stringResource(R.string.challenge_ui_voice_partial, partial)
+                    localStatus = context.getString(R.string.challenge_ui_voice_partial, partial)
                 }
             }
 
@@ -654,17 +656,17 @@ fun VoicePhraseChallengeView(
             onClick = {
                 when {
                     !speechAvailable -> {
-                        localStatus = stringResource(R.string.challenge_ui_voice_unavailable)
+                        localStatus = context.getString(R.string.challenge_ui_voice_unavailable)
                     }
                     !hasRecordPermission -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     else -> {
                         runCatching {
                             isListening = true
-                            localStatus = stringResource(R.string.challenge_ui_voice_starting)
+                            localStatus = context.getString(R.string.challenge_ui_voice_starting)
                             speechRecognizer?.startListening(listenIntent)
                         }.onFailure {
                             isListening = false
-                            localStatus = stringResource(R.string.challenge_ui_voice_start_error)
+                            localStatus = context.getString(R.string.challenge_ui_voice_start_error)
                         }
                     }
                 }
@@ -688,7 +690,7 @@ fun VoicePhraseChallengeView(
                 onClick = {
                     runCatching { speechRecognizer?.stopListening() }
                     isListening = false
-                    localStatus = stringResource(R.string.challenge_ui_voice_stopped)
+                    localStatus = context.getString(R.string.challenge_ui_voice_stopped)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
@@ -740,17 +742,17 @@ fun VoicePhraseChallengeView(
     }
 }
 
-private fun speechErrorMessage(error: Int): String = when (error) {
-    SpeechRecognizer.ERROR_AUDIO -> stringResource(R.string.challenge_ui_voice_audio_error)
-    SpeechRecognizer.ERROR_CLIENT -> stringResource(R.string.challenge_ui_voice_stopped_error)
+private fun speechErrorMessage(context: Context, error: Int): String = when (error) {
+    SpeechRecognizer.ERROR_AUDIO -> context.getString(R.string.challenge_ui_voice_audio_error)
+    SpeechRecognizer.ERROR_CLIENT -> context.getString(R.string.challenge_ui_voice_stopped_error)
     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
         stringResource(R.string.challenge_ui_voice_permission_missing)
-    SpeechRecognizer.ERROR_NETWORK -> stringResource(R.string.challenge_ui_voice_network_error)
-    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> stringResource(R.string.challenge_ui_voice_timeout)
-    SpeechRecognizer.ERROR_NO_MATCH -> stringResource(R.string.challenge_ui_voice_no_match)
-    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> stringResource(R.string.challenge_ui_voice_busy)
-    SpeechRecognizer.ERROR_SERVER -> stringResource(R.string.challenge_ui_voice_service_error)
-    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> stringResource(R.string.challenge_ui_voice_no_speech)
+    SpeechRecognizer.ERROR_NETWORK -> context.getString(R.string.challenge_ui_voice_network_error)
+    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> context.getString(R.string.challenge_ui_voice_timeout)
+    SpeechRecognizer.ERROR_NO_MATCH -> context.getString(R.string.challenge_ui_voice_no_match)
+    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> context.getString(R.string.challenge_ui_voice_busy)
+    SpeechRecognizer.ERROR_SERVER -> context.getString(R.string.challenge_ui_voice_service_error)
+    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> context.getString(R.string.challenge_ui_voice_no_speech)
     else -> stringResource(R.string.challenge_ui_voice_failed)
 }
 
@@ -2032,7 +2034,7 @@ fun RockPaperScissorsChallengeView(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = choice.emoji, fontSize = 24.sp)
                         Text(
-                            text = choice.label,
+                            text = stringResource(choice.labelRes),
                             style = MaterialTheme.typography.labelSmall,
                             color = TextSecondary
                         )
