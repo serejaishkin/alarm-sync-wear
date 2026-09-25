@@ -2329,7 +2329,7 @@ Try again</string>
     <string name="challenge_ui_color_choice">%1$s choice</string>
     <string name="challenge_ui_date_expected">→  %1$s</string>
     <string name="challenge_ui_speed_phrase">“%1$s”</string>
-    <string name="challenge_ui_wordle_instruction">Guess the 5-letter word — %1$d tr%2$s left.</string>
+    <string name="challenge_ui_wordle_instruction">Guess the 5-letter word — %1$d attempts left.</string>
 </resources>
 
     <string name="challenge_math_instruction">Choose the correct answer to unlock dismiss.</string>
