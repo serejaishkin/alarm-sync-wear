@@ -555,6 +555,12 @@ class AlarmScheduler @Inject constructor(
     }
 
     private fun scheduleSupportingWork(alarm: Alarm, triggerTime: Long) {
+        // Retired integrations may have queued work from an older app build.
+        // Always cancel those unique jobs when an alarm is (re)scheduled.
+        val workManager = WorkManager.getInstance(context)
+        workManager.cancelUniqueWork("hue_sunrise_\${alarm.id}")
+        workManager.cancelUniqueWork("guardian_\${alarm.id}")
+
         scheduleSmartAlarmStart(alarm, triggerTime)
         scheduleFireWatchdog(alarm, triggerTime)
     }
