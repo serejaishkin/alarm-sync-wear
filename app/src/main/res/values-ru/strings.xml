@@ -2337,7 +2337,7 @@
     <string name="challenge_voice_stop">Остановить прослушивание</string>
     <string name="challenge_voice_fallback">Фраза для ввода</string>
     <string name="challenge_voice_check_fallback">Проверить введённую фразу</string>
-    <string name="challenge_handwriting_draw">Поле для рисования слова ${challenge.targetText}</string>
+    <string name="challenge_handwriting_draw">Поле для рисования слова %1$s</string>
     <string name="challenge_handwriting_clear">Очистить</string>
     <string name="challenge_handwriting_fallback">Слово для ввода</string>
     <string name="challenge_handwriting_check_fallback">Проверить введённое слово</string>
