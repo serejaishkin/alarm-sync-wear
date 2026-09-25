@@ -2337,7 +2337,7 @@ Try again</string>
     <string name="challenge_voice_stop">Stop listening</string>
     <string name="challenge_voice_fallback">Typed fallback phrase</string>
     <string name="challenge_voice_check_fallback">Check typed phrase</string>
-    <string name="challenge_handwriting_draw">Drawing pad for ${challenge.targetText}</string>
+    <string name="challenge_handwriting_draw">Drawing pad for %1$s</string>
     <string name="challenge_handwriting_clear">Clear</string>
     <string name="challenge_handwriting_fallback">Typed fallback word</string>
     <string name="challenge_handwriting_check_fallback">Check typed word</string>
