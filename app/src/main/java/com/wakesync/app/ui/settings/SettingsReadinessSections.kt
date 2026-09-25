@@ -156,8 +156,6 @@ import com.wakesync.app.ui.theme.SurfaceLight
 import com.wakesync.app.ui.theme.TextMuted
 import com.wakesync.app.ui.theme.TextPrimary
 import com.wakesync.app.ui.theme.TextSecondary
-import com.wakesync.app.worker.GuardianReadiness
-import com.wakesync.app.worker.GuardianSmsPath
 import com.wakesync.app.util.LocalNetworkPermission
 import java.time.DayOfWeek
 import java.time.Instant
@@ -410,9 +408,6 @@ internal fun WakeReadinessSection(
         // it surfaces as a warning without permanently changing the X/Y count.
         if (state.alarmMutedByDnd) add(false)
         if (standbyRowVisible) add(standbyReady)
-        if (state.guardianReadiness.hasEnabledAlarms) {
-            add(!state.guardianReadiness.needsUserAction)
-        }
     }
     val readyCount = checks.count { it }
     val total = checks.size
@@ -574,44 +569,6 @@ private fun testAlarmDeliveryPath(proof: TestAlarmProof): String {
     }
     return parts.joinToString(" + ").ifBlank { stringResource(R.string.settings_delivery_alarm_screen) }
 }
-
-@Composable
-private fun guardianReadinessDescription(readiness: GuardianReadiness): String {
-    val alarmCount = pluralStringResource(
-        R.plurals.settings_guardian_alarms,
-        readiness.enabledAlarmCount,
-        readiness.enabledAlarmCount
-    )
-    val callPath = if (readiness.hasCallPhonePermission) {
-        stringResource(R.string.settings_guardian_call_granted)
-    } else {
-        stringResource(R.string.settings_guardian_call_dialer)
-    }
-    return when (readiness.smsPath) {
-        GuardianSmsPath.INACTIVE -> stringResource(R.string.settings_guardian_none)
-        GuardianSmsPath.DIRECT_SMS ->
-            stringResource(R.string.settings_guardian_direct, alarmCount, callPath)
-        GuardianSmsPath.NEEDS_SEND_SMS_PERMISSION ->
-            stringResource(R.string.settings_guardian_needs_sms, alarmCount, callPath)
-        GuardianSmsPath.SMS_COMPOSER ->
-            stringResource(R.string.settings_guardian_composer, alarmCount, callPath)
-    }
-}
-
-@Composable
-private fun guardianReadinessStatusLabel(readiness: GuardianReadiness): String = stringResource(
-    if (readiness.needsUserAction) R.string.settings_review else when (readiness.smsPath) {
-        GuardianSmsPath.INACTIVE -> R.string.settings_off
-        GuardianSmsPath.DIRECT_SMS -> R.string.settings_direct_sms
-        GuardianSmsPath.NEEDS_SEND_SMS_PERMISSION -> R.string.settings_review
-        GuardianSmsPath.SMS_COMPOSER -> R.string.settings_composer
-    }
-)
-
-@Composable
-private fun guardianReadinessActionLabel(readiness: GuardianReadiness): String = stringResource(
-    if (readiness.needsSmsPermission) R.string.settings_allow_sms else R.string.settings_allow_calls
-)
 
 @Composable
 private fun WakeReadinessRow(
