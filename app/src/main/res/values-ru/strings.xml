@@ -2342,4 +2342,19 @@
     <string name="challenge_handwriting_fallback">Слово для ввода</string>
     <string name="challenge_handwriting_check_fallback">Проверить введённое слово</string>
     <string name="challenge_walk_instruction">Несколько шагов помогут убедиться, что Вы действительно проснулись.</string>
+
+    <!-- Restored Russian plural resources -->
+    <plurals name="notif_snooze_countdown_minutes"><item quantity="one">1 минута</item><item quantity="other">%1$d минут</item></plurals>
+    <plurals name="notif_timers_finished_count"><item quantity="one">Завершён %1$d таймер</item><item quantity="other">Завершено таймеров: %1$d</item></plurals>
+    <plurals name="notif_timers_canceled_text"><item quantity="one">Запущенный таймер не пережил перезапуск устройства.</item><item quantity="other">%1$d запущенных таймеров не пережили перезапуск устройства.</item></plurals>
+    <plurals name="firing_retry_count"><item quantity="one">%1$d повтор</item><item quantity="other">%1$d повторов</item></plurals>
+    <plurals name="alarm_edit_minutes"><item quantity="one">%1$d минута</item><item quantity="other">%1$d минут</item></plurals>
+    <plurals name="alarm_edit_seconds"><item quantity="one">%1$d секунда</item><item quantity="other">%1$d секунд</item></plurals>
+    <plurals name="alarm_edit_steps"><item quantity="one">%1$d шаг</item><item quantity="other">%1$d шагов</item></plurals>
+    <plurals name="alarm_edit_squats"><item quantity="one">%1$d приседание</item><item quantity="other">%1$d приседаний</item></plurals>
+    <plurals name="alarm_edit_meters"><item quantity="one">%1$d метр</item><item quantity="other">%1$d метров</item></plurals>
+    <plurals name="alarm_edit_challenges"><item quantity="one">%1$d задание</item><item quantity="other">%1$d заданий</item></plurals>
+    <plurals name="alarm_edit_step_chain"><item quantity="one">Цепочка из %1$d шага</item><item quantity="other">Цепочка из %1$d шагов</item></plurals>
+    <plurals name="settings_minutes"><item quantity="one">%1$d минута</item><item quantity="other">%1$d минут</item></plurals>
+    <plurals name="settings_recent_diagnostics"><item quantity="one">Сохранено локально %1$d недавнее диагностическое событие.</item><item quantity="other">Сохранено локально недавних диагностических событий: %1$d.</item></plurals>
 </resources>
