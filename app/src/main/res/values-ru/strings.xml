@@ -2325,6 +2325,11 @@
     <string name="challenge_ui_rsvp_ready">Приготовьтесь</string>
     <string name="challenge_ui_rsvp_status">Быстрое чтение</string>
     <string name="challenge_ui_rsvp_wrong">Этого слова не было в потоке. Выберите слово, которое вы запомнили.</string>
+    <string name="challenge_ui_color_pad">Панель %1$s</string>
+    <string name="challenge_ui_color_choice">Выбор %1$s</string>
+    <string name="challenge_ui_date_expected">→  %1$s</string>
+    <string name="challenge_ui_speed_phrase">«%1$s»</string>
+    <string name="challenge_ui_wordle_instruction">Угадайте слово из 5 букв — осталось попыток: %1$d.</string>
 </resources>
 
     <string name="challenge_math_instruction">Выберите правильный ответ, чтобы разблокировать отключение будильника.</string>
