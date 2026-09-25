@@ -334,36 +334,37 @@ dependencies {
     // shrinking; keep the support library Play-only with the downloader graph.
     // "playImplementation"("org.tukaani:xz:1.10") — Play flavor disabled; F-Droid is the sole shipped flavor.
 
-    constraints {
-        // v1.13.2+ (R5): youtubedl-android 0.18.1 and NewPipeExtractor 0.26.x
-        // still resolve stale parser/archive transitives. Keep these as
-        // constraints, not direct feature dependencies, so F-Droid remains free
-        // of the Play-only downloader graph.
-        "playImplementation"("com.fasterxml.jackson.core:jackson-databind:2.18.9") {
-            because("CVE-2026-54512/54513 bypasses, CVE-2026-54514 SSRF, CVE-2026-54515 DoS")
-        }
-        "playImplementation"("com.fasterxml.jackson.core:jackson-core:2.18.9") {
-            because("Keep Jackson modules aligned with constrained jackson-databind")
-        }
-        "playImplementation"("com.fasterxml.jackson.core:jackson-annotations:2.18.9") {
-            because("Keep Jackson modules aligned with constrained jackson-databind")
-        }
-        "playImplementation"("org.apache.commons:commons-compress:1.28.0") {
-            because("OSV reports multiple advisories against the youtubedl-android transitive 1.12")
-        }
-        "playImplementation"("commons-io:commons-io:2.20.0") {
-            because("OSV reports advisories against the youtubedl-android transitive 2.5")
-        }
-        "playImplementation"("org.mozilla:rhino:1.8.1") {
-            because("OSV GHSA-3w8q-xq97-5j7x fixes the NewPipe transitive 1.8.0 in 1.8.1")
-        }
-        "playImplementation"("org.mozilla:rhino-engine:1.8.1") {
-            because("Keep Rhino engine aligned with constrained Rhino runtime")
-        }
-        "playImplementation"("com.google.guava:guava:33.6.0-android") {
-            because("OSV reports advisories against the Health Connect transitive 31.1-android")
-        }
-    }
+    // Play-only dependency constraints are disabled together with the Play flavor.
+    // constraints {
+    //         // v1.13.2+ (R5): youtubedl-android 0.18.1 and NewPipeExtractor 0.26.x
+    //         // still resolve stale parser/archive transitives. Keep these as
+    //         // constraints, not direct feature dependencies, so F-Droid remains free
+    //         // of the Play-only downloader graph.
+    //         "playImplementation"("com.fasterxml.jackson.core:jackson-databind:2.18.9") {
+    //             because("CVE-2026-54512/54513 bypasses, CVE-2026-54514 SSRF, CVE-2026-54515 DoS")
+    //         }
+    //         "playImplementation"("com.fasterxml.jackson.core:jackson-core:2.18.9") {
+    //             because("Keep Jackson modules aligned with constrained jackson-databind")
+    //         }
+    //         "playImplementation"("com.fasterxml.jackson.core:jackson-annotations:2.18.9") {
+    //             because("Keep Jackson modules aligned with constrained jackson-databind")
+    //         }
+    //         "playImplementation"("org.apache.commons:commons-compress:1.28.0") {
+    //             because("OSV reports multiple advisories against the youtubedl-android transitive 1.12")
+    //         }
+    //         "playImplementation"("commons-io:commons-io:2.20.0") {
+    //             because("OSV reports advisories against the youtubedl-android transitive 2.5")
+    //         }
+    //         "playImplementation"("org.mozilla:rhino:1.8.1") {
+    //             because("OSV GHSA-3w8q-xq97-5j7x fixes the NewPipe transitive 1.8.0 in 1.8.1")
+    //         }
+    //         "playImplementation"("org.mozilla:rhino-engine:1.8.1") {
+    //             because("Keep Rhino engine aligned with constrained Rhino runtime")
+    //         }
+    //         "playImplementation"("com.google.guava:guava:33.6.0-android") {
+    //             because("OSV reports advisories against the Health Connect transitive 31.1-android")
+    //         }
+    //     }
 
     // Testing
     testImplementation("junit:junit:4.13.2")
