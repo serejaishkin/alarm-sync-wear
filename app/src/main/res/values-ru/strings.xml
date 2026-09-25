@@ -2357,4 +2357,17 @@
     <plurals name="alarm_edit_step_chain"><item quantity="one">Цепочка из %1$d шага</item><item quantity="other">Цепочка из %1$d шагов</item></plurals>
     <plurals name="settings_minutes"><item quantity="one">%1$d минута</item><item quantity="other">%1$d минут</item></plurals>
     <plurals name="settings_recent_diagnostics"><item quantity="one">Сохранено локально %1$d недавнее диагностическое событие.</item><item quantity="other">Сохранено локально недавних диагностических событий: %1$d.</item></plurals>
+
+    <string name="challenge_walk_continue">Продолжить без датчика шагов</string>
+    <string name="challenge_nfc_instruction">Приложите зарегистрированную NFC-метку, чтобы продолжить.</string>
+    <string name="challenge_barcode_instruction">Отсканируйте зарегистрированный штрихкод или QR-код.</string>
+    <string name="challenge_barcode_continue">Продолжить без сканирования</string>
+    <string name="challenge_barcode_placeholder">Введите штрихкод или QR-код</string>
+    <string name="challenge_barcode_submit">Проверить код</string>
+    <string name="challenge_photo_instruction">Сделайте фото, соответствующее сохранённому образцу.</string>
+    <string name="challenge_squat_instruction">Выполните нужное количество приседаний.</string>
+    <string name="challenge_pushup_instruction">Выполните нужное количество отжиманий.</string>
+    <string name="challenge_plank_instruction">Удерживайте планку необходимое время.</string>
+    <string name="challenge_plank_start_button">Начать планку</string>
+    <string name="challenge_sheep_instruction">Нажимайте на овец. Не нажимайте на коз — они уменьшают счётчик.</string>
 </resources>
