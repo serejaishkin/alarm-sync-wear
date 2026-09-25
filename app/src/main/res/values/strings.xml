@@ -2342,4 +2342,17 @@ Try again</string>
     <string name="challenge_handwriting_fallback">Typed fallback word</string>
     <string name="challenge_handwriting_check_fallback">Check typed word</string>
     <string name="challenge_walk_instruction">Walking a few steps helps make sure you are genuinely up.</string>
+
+    <string name="challenge_walk_continue">Continue without step sensor</string>
+    <string name="challenge_nfc_instruction">Tap the registered NFC tag to continue.</string>
+    <string name="challenge_barcode_instruction">Scan the registered barcode or QR code.</string>
+    <string name="challenge_barcode_continue">Continue without scan</string>
+    <string name="challenge_barcode_placeholder">Enter barcode or QR code</string>
+    <string name="challenge_barcode_submit">Submit code</string>
+    <string name="challenge_photo_instruction">Take a photo matching the saved reference.</string>
+    <string name="challenge_squat_instruction">Complete the required number of squats.</string>
+    <string name="challenge_pushup_instruction">Complete the required push-ups.</string>
+    <string name="challenge_plank_instruction">Hold the plank for the required time.</string>
+    <string name="challenge_plank_start_button">Start plank</string>
+    <string name="challenge_sheep_instruction">Tap every sheep. Skip the goats — they subtract from your count.</string>
 </resources>
