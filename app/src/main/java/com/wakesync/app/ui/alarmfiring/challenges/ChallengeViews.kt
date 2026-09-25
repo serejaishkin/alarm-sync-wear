@@ -1285,7 +1285,7 @@ fun PushUpChallengeView(
             accent = AccentRed,
             progress = progress,
             statusLabel = stringResource(R.string.challenge_ui_pushup_progress, currentPushUps, challenge.requiredPushUps),
-            summary = if (currentPushUps == 0) stringResource(R.string.challenge_ui_pushup_start) else "$remaining push-ups remaining."
+            summary = if (currentPushUps == 0) stringResource(R.string.challenge_ui_pushup_start) else stringResource(R.string.challenge_ui_pushup_remaining, remaining)
         )
 
         ExerciseSensorFallback(exerciseStatus, fallbackAllowed, stringResource(R.string.challenge_ui_pushup_fallback), onContinueWithoutSensor)
@@ -2255,7 +2255,7 @@ fun WordleChallengeView(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         val triesLeft = challenge.maxGuesses - guesses.size
-        ChallengeSupportText(stringResource(R.string.challenge_ui_wordle_instruction, triesLeft, if (triesLeft == 1) "y" else "ies")) "y" else "ies"} left.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_wordle_instruction, triesLeft))
 
         if (gameOver) {
             ChallengeNotice(
