@@ -1737,7 +1737,7 @@ fun CountSheepChallengeView(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
-        ChallengeSupportText("Tap every sheep. Skip the goats \u2014 they subtract from your count.")
+        ChallengeSupportText(stringResource(R.string.challenge_sheep_instruction))
 
         Box(
             modifier = Modifier
