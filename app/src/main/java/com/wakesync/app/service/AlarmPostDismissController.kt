@@ -54,7 +54,7 @@ internal object AlarmPostDismissController {
         today: LocalDate = LocalDate.now()
     ): MorningBriefingPayload {
         val time = "${if (now.hour % 12 == 0) 12 else now.hour % 12}:${String.format("%02d", now.minute)} ${if (now.hour < 12) "AM" else "PM"}"
-        val date = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.US))
+        val date = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault()))
         return MorningBriefingPayload(
             time = time,
             date = date,

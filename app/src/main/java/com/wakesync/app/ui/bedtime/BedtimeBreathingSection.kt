@@ -1,5 +1,6 @@
 package com.wakesync.app.ui.bedtime
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,11 +18,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.domain.BreathingPattern
-import com.wakesync.app.domain.formatBreathingDuration
+import com.wakesync.app.domain.BreathingPhaseKind
 import com.wakesync.app.ui.components.AppFilterChip
 import com.wakesync.app.ui.components.AppSectionTitle
 import com.wakesync.app.ui.components.AppStatusChip
@@ -32,6 +35,30 @@ import com.wakesync.app.ui.theme.SurfaceCard
 import com.wakesync.app.ui.theme.TextMuted
 import com.wakesync.app.ui.theme.TextPrimary
 import com.wakesync.app.ui.theme.TextSecondary
+
+@StringRes
+private fun breathingPhaseLabelRes(kind: BreathingPhaseKind): Int = when (kind) {
+    BreathingPhaseKind.INHALE -> R.string.bedtime_breathing_inhale
+    BreathingPhaseKind.HOLD -> R.string.bedtime_breathing_hold
+    BreathingPhaseKind.SETTLE -> R.string.bedtime_breathing_hold
+    BreathingPhaseKind.EXHALE -> R.string.bedtime_breathing_exhale
+    BreathingPhaseKind.COMPLETE -> R.string.bedtime_breathing_complete
+}
+
+@StringRes
+private fun breathingPhaseCueRes(kind: BreathingPhaseKind): Int = when (kind) {
+    BreathingPhaseKind.INHALE -> R.string.bedtime_breathing_cue_inhale
+    BreathingPhaseKind.HOLD -> R.string.bedtime_breathing_cue_hold
+    BreathingPhaseKind.SETTLE -> R.string.bedtime_breathing_cue_hold_soft
+    BreathingPhaseKind.EXHALE -> R.string.bedtime_breathing_cue_exhale
+    BreathingPhaseKind.COMPLETE -> R.string.bedtime_breathing_cue_done
+}
+
+@Composable
+private fun breathingPatternLabel(option: BreathingPattern): String = when (option) {
+    BreathingPattern.FOUR_SEVEN_EIGHT -> "4-7-8"
+    BreathingPattern.BOX -> stringResource(R.string.bedtime_breathing_pattern_box)
+}
 
 @Composable
 internal fun BreathingExerciseSection(
@@ -51,11 +78,11 @@ internal fun BreathingExerciseSection(
         highlighted = running
     ) {
         AppSectionTitle(
-            title = "Guided breathing",
+            title = stringResource(R.string.bedtime_breathing_title),
             description = if (running) {
-                "Follow the count and keep the phone nearby while you settle down."
+                stringResource(R.string.bedtime_breathing_desc_running)
             } else {
-                "Run a short 4-7-8 or box-breathing reset before sleep."
+                stringResource(R.string.bedtime_breathing_desc_idle)
             }
         )
 
@@ -65,7 +92,7 @@ internal fun BreathingExerciseSection(
         ) {
             BreathingPattern.entries.forEach { option ->
                 AppFilterChip(
-                    label = option.displayName,
+                    label = breathingPatternLabel(option),
                     selected = option == pattern,
                     onClick = { onPatternSelected(option) },
                     selectionSemantics = true
@@ -84,29 +111,40 @@ internal fun BreathingExerciseSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AppStatusChip(
-                    label = "Cycle ${phase.cycleNumber}/${phase.cycleCount}",
+                    label = stringResource(R.string.bedtime_breathing_cycle, phase.cycleNumber, phase.cycleCount),
                     icon = Icons.Default.Schedule,
                     color = if (phase.completed) DismissGreen else MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = phase.label,
+                    text = stringResource(breathingPhaseLabelRes(phase.kind)),
                     color = TextPrimary,
                     style = MaterialTheme.typography.headlineMedium
                 )
                 Text(
-                    text = if (phase.completed) "Done" else "${phase.remainingSeconds}",
+                    text = if (phase.completed) {
+                        stringResource(R.string.bedtime_breathing_done)
+                    } else {
+                        "${phase.remainingSeconds}"
+                    },
                     color = if (phase.completed) DismissGreen else SnoozeYellow,
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = phase.cue,
+                    text = stringResource(breathingPhaseCueRes(phase.kind)),
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
+                val remainingLabel = if (remainingSessionSeconds >= 60) {
+                    val m = remainingSessionSeconds / 60
+                    val s = remainingSessionSeconds % 60
+                    "${m}:${s.toString().padStart(2, '0')}"
+                } else {
+                    stringResource(R.string.bedtime_seconds_short, remainingSessionSeconds)
+                }
                 Text(
-                    text = "${formatBreathingDuration(remainingSessionSeconds)} left",
+                    text = stringResource(R.string.bedtime_breathing_left, remainingLabel),
                     color = TextMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -119,14 +157,22 @@ internal fun BreathingExerciseSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppFilterChip(
-                label = if (running) "Pause" else if (phase.completed) "Restart" else "Start",
+                label = when {
+                    running -> stringResource(R.string.bedtime_breathing_pause)
+                    phase.completed -> stringResource(R.string.bedtime_breathing_restart)
+                    else -> stringResource(R.string.bedtime_breathing_start)
+                },
                 selected = running,
                 onClick = onToggleRunning,
                 selectionSemantics = false,
-                accessibilityLabel = if (running) "Pause guided breathing" else "Start guided breathing"
+                accessibilityLabel = if (running) {
+                    stringResource(R.string.bedtime_breathing_accessibility_pause)
+                } else {
+                    stringResource(R.string.bedtime_breathing_accessibility_start)
+                }
             )
             TextButton(onClick = onReset) {
-                Text("Reset", color = TextSecondary)
+                Text(stringResource(R.string.bedtime_breathing_reset), color = TextSecondary)
             }
         }
     }

@@ -1,7 +1,9 @@
 package com.wakesync.app.ui.share
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.wakesync.app.R
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.repository.AlarmRepository
 import com.wakesync.app.data.share.AlarmShareCodec
@@ -19,8 +21,9 @@ data class SharedAlarmImportUiState(
 
 @HiltViewModel
 class SharedAlarmImportViewModel @Inject constructor(
+    application: Application,
     private val repository: AlarmRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(SharedAlarmImportUiState())
     val uiState: StateFlow<SharedAlarmImportUiState> = _uiState.asStateFlow()
@@ -45,7 +48,7 @@ class SharedAlarmImportViewModel @Inject constructor(
                 onSaved(id)
             } catch (_: Exception) {
                 _uiState.value = SharedAlarmImportUiState(
-                    error = "Could not save this shared alarm. Check the link and try again."
+                    error = getApplication<Application>().getString(R.string.share_import_save_error)
                 )
             }
         }

@@ -14,8 +14,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.domain.ChronotypeEstimator
 import com.wakesync.app.ui.components.AppFilterChip
 import com.wakesync.app.ui.components.AppSectionTitle
@@ -26,6 +29,35 @@ import com.wakesync.app.ui.theme.SnoozeYellow
 import com.wakesync.app.ui.theme.TextMuted
 import com.wakesync.app.ui.theme.TextPrimary
 import com.wakesync.app.ui.theme.TextSecondary
+
+private data class LocalizedChronotypeQuestion(
+    val prompt: String,
+    val options: List<String>
+)
+
+@Composable
+private fun localizedChronotypeQuestions(): List<LocalizedChronotypeQuestion> = listOf(
+    LocalizedChronotypeQuestion(
+        stringResource(R.string.chronotype_prompt_0),
+        stringArrayResource(R.array.chronotype_options_0).toList()
+    ),
+    LocalizedChronotypeQuestion(
+        stringResource(R.string.chronotype_prompt_1),
+        stringArrayResource(R.array.chronotype_options_1).toList()
+    ),
+    LocalizedChronotypeQuestion(
+        stringResource(R.string.chronotype_prompt_2),
+        stringArrayResource(R.array.chronotype_options_2).toList()
+    ),
+    LocalizedChronotypeQuestion(
+        stringResource(R.string.chronotype_prompt_3),
+        stringArrayResource(R.array.chronotype_options_3).toList()
+    ),
+    LocalizedChronotypeQuestion(
+        stringResource(R.string.chronotype_prompt_4),
+        stringArrayResource(R.array.chronotype_options_4).toList()
+    )
+)
 
 @Composable
 internal fun ChronotypeSection(
@@ -38,11 +70,11 @@ internal fun ChronotypeSection(
         highlighted = state.chronotypeComplete
     ) {
         AppSectionTitle(
-            title = "Chronotype estimate",
+            title = stringResource(R.string.bedtime_chronotype_title),
             description = if (state.chronotypeComplete) {
-                "Your natural timing preference is folded into the sleep target."
+                stringResource(R.string.bedtime_chronotype_desc_complete)
             } else {
-                "Estimate your morning/evening tilt for a calmer target window."
+                stringResource(R.string.bedtime_chronotype_desc_idle)
             }
         )
 
@@ -73,7 +105,7 @@ internal fun ChronotypeSection(
             style = MaterialTheme.typography.bodyMedium
         )
 
-        ChronotypeEstimator.questions.forEachIndexed { questionIndex, question ->
+        localizedChronotypeQuestions().forEachIndexed { questionIndex, question ->
             if (questionIndex > 0) {
                 HorizontalDivider(color = TextMuted.copy(alpha = 0.12f))
             }

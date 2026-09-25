@@ -1,8 +1,11 @@
 package com.wakesync.app.ui.alarmfiring
 
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wakesync.app.R
 import com.wakesync.app.data.model.Alarm
 import com.wakesync.app.data.repository.AlarmRepository
 import com.wakesync.app.domain.AlarmScheduler
@@ -162,12 +165,14 @@ internal fun buildChallenge(
 
 @HiltViewModel
 class AlarmFiringViewModel @Inject constructor(
+    application: Application,
     savedStateHandle: SavedStateHandle,
     private val repository: AlarmRepository,
     private val preferencesManager: com.wakesync.app.data.preferences.PreferencesManager,
     private val digitalInkChallengeRecognizer: DigitalInkChallengeRecognizer
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
+    private val appContext: Context = application
     private val alarmId: Long = savedStateHandle.get<Long>(AlarmScheduler.EXTRA_ALARM_ID) ?: -1
 
     private val _uiState = MutableStateFlow(FiringUiState())
@@ -295,8 +300,11 @@ class AlarmFiringViewModel @Inject constructor(
             locationDismissReady = !locationDismissActive,
             locationDismissStatus = when {
                 !alarm.locationDismissEnabled -> ""
-                !hasLocationDismissTarget -> "No saved place is set, so location dismissal is not locked."
-                else -> "Waiting for a location fix. Leave the saved ${LocationDismissPolicy.coerceRadius(alarm.locationDismissRadius)} m area to unlock dismiss."
+                !hasLocationDismissTarget -> appContext.getString(R.string.firing_location_saved_place_none)
+                else -> appContext.getString(
+                    R.string.firing_location_waiting,
+                    LocationDismissPolicy.coerceRadius(alarm.locationDismissRadius)
+                )
             }
         )
         // Start Simon sequence playback when Simon is the very first challenge.
@@ -485,16 +493,16 @@ class AlarmFiringViewModel @Inject constructor(
         if (VoicePhraseMatcher.matches(challenge.phrase, cleanTranscript)) {
             _uiState.value = _uiState.value.copy(
                 voiceTranscript = cleanTranscript,
-                voiceStatus = "Voice phrase matched."
+                voiceStatus = appContext.getString(R.string.firing_voice_matched)
             )
             proceedToNextChallenge()
         } else {
             _uiState.value = _uiState.value.copy(
                 voiceTranscript = cleanTranscript,
                 voiceStatus = if (cleanTranscript.isBlank()) {
-                    "No phrase was detected. Try again or use the typed fallback."
+                    appContext.getString(R.string.firing_voice_not_detected)
                 } else {
-                    "Heard \"$cleanTranscript\". Say the phrase shown below."
+                    appContext.getString(R.string.firing_voice_heard, cleanTranscript)
                 },
                 wrongAttempts = _uiState.value.wrongAttempts + 1,
                 totalWrongAttempts = _uiState.value.totalWrongAttempts + 1
@@ -505,13 +513,13 @@ class AlarmFiringViewModel @Inject constructor(
     fun submitHandwriting(strokes: List<InkStroke>, width: Float, height: Float) {
         val challenge = _uiState.value.challenge as? Challenge.HandwritingChallenge ?: return
         if (strokes.none { it.points.size >= 2 }) {
-            markHandwritingWrong("Draw the word before checking it.")
+            markHandwritingWrong(appContext.getString(R.string.firing_handwriting_draw_first))
             return
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 handwritingBusy = true,
-                handwritingStatus = "Checking handwriting..."
+                handwritingStatus = appContext.getString(R.string.firing_handwriting_checking)
             )
             val result = digitalInkChallengeRecognizer.recognize(
                 DigitalInkRecognitionRequest(
@@ -525,19 +533,19 @@ class AlarmFiringViewModel @Inject constructor(
                 !result.isAvailable -> _uiState.value = _uiState.value.copy(
                     handwritingBusy = false,
                     handwritingStatus = result.unavailableReason
-                        ?: "Handwriting recognition is unavailable. Type the word instead."
+                        ?: appContext.getString(R.string.firing_handwriting_unavailable)
                 )
                 HandwritingChallengeMatcher.matches(challenge.targetText, result.candidates) -> {
                     _uiState.value = _uiState.value.copy(
                         handwritingBusy = false,
-                        handwritingStatus = "Handwriting matched."
+                        handwritingStatus = appContext.getString(R.string.firing_handwriting_matched)
                     )
                     proceedToNextChallenge()
                 }
                 else -> markHandwritingWrong(
                     message = result.candidates.firstOrNull()?.let { candidate ->
-                        "Recognized \"$candidate\". Draw ${challenge.targetText} again."
-                    } ?: "No handwriting match. Draw ${challenge.targetText} again."
+                        appContext.getString(R.string.firing_handwriting_recognized, candidate)
+                    } ?: appContext.getString(R.string.firing_handwriting_no_match)
                 )
             }
         }
@@ -547,14 +555,14 @@ class AlarmFiringViewModel @Inject constructor(
         val challenge = _uiState.value.challenge as? Challenge.HandwritingChallenge ?: return
         val cleanText = text.trim()
         if (HandwritingChallengeMatcher.matches(challenge.targetText, listOf(cleanText))) {
-            _uiState.value = _uiState.value.copy(handwritingStatus = "Typed word matched.")
+            _uiState.value = _uiState.value.copy(handwritingStatus = appContext.getString(R.string.firing_typing_matched))
             proceedToNextChallenge()
         } else {
             markHandwritingWrong(
                 if (cleanText.isBlank()) {
-                    "Type the displayed word or draw it again."
+                    appContext.getString(R.string.firing_typing_draw_or_type)
                 } else {
-                    "Typed \"$cleanText\". Match ${challenge.targetText} exactly."
+                    appContext.getString(R.string.firing_typing_mismatch, cleanText)
                 }
             )
         }
@@ -605,7 +613,7 @@ class AlarmFiringViewModel @Inject constructor(
             proceedToNextChallenge()
         } else {
             _uiState.value = _uiState.value.copy(
-                nfcScanStatus = "Wrong tag - try the registered tag",
+                nfcScanStatus = appContext.getString(R.string.firing_nfc_wrong_tag),
                 wrongAttempts = _uiState.value.wrongAttempts + 1,
                 totalWrongAttempts = _uiState.value.totalWrongAttempts + 1
             )
@@ -623,7 +631,7 @@ class AlarmFiringViewModel @Inject constructor(
             proceedToNextChallenge()
         } else {
             _uiState.value = _uiState.value.copy(
-                barcodeScanStatus = "Wrong code - scan the registered barcode",
+                barcodeScanStatus = appContext.getString(R.string.firing_barcode_wrong_code),
                 wrongAttempts = _uiState.value.wrongAttempts + 1,
                 totalWrongAttempts = _uiState.value.totalWrongAttempts + 1
             )
@@ -694,7 +702,7 @@ class AlarmFiringViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 locationDismissReady = true,
                 locationDismissDistanceMeters = null,
-                locationDismissStatus = "No saved place is set, so location dismissal is not locked."
+                locationDismissStatus = appContext.getString(R.string.firing_location_saved_place_none)
             )
             return
         }
@@ -705,9 +713,9 @@ class AlarmFiringViewModel @Inject constructor(
             locationDismissReady = result.outsideFence,
             locationDismissDistanceMeters = result.distanceMeters,
             locationDismissStatus = if (result.outsideFence) {
-                "Location confirmed: ${distance} m from the saved place. Dismiss is unlocked."
+                appContext.getString(R.string.firing_location_confirmed_outside, distance)
             } else {
-                "Still inside the saved area: ${distance} m away. Move about ${remaining} m farther to unlock dismiss."
+                appContext.getString(R.string.firing_location_still_inside, distance, remaining)
             }
         )
     }
@@ -1044,7 +1052,10 @@ class AlarmFiringViewModel @Inject constructor(
             proceedToNextChallenge()
         } else {
             _uiState.value = _uiState.value.copy(
-                photoMatchStatus = "Not a match — try again (${(similarityScore * 100).toInt()}% similar)",
+                photoMatchStatus = appContext.getString(
+                    R.string.firing_photo_no_match,
+                    (similarityScore * 100).toInt()
+                ),
                 wrongAttempts = _uiState.value.wrongAttempts + 1,
                 totalWrongAttempts = _uiState.value.totalWrongAttempts + 1
             )

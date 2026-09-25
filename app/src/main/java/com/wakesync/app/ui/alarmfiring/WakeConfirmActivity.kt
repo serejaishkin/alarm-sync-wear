@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.wakesync.app.R
 import androidx.compose.runtime.LaunchedEffect
@@ -240,9 +241,9 @@ private fun WakeConfirmScreen(
                     )
                     Text(
                         text = if (secondsLeft > 0) {
-                            "Confirm within ${secondsLeft}s or the alarm will ring again."
+                            stringResource(R.string.wake_confirm_countdown_desc, secondsLeft)
                         } else {
-                            "Time's up — the alarm is ringing again."
+                            stringResource(R.string.wake_confirm_times_up)
                         },
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodyMedium,
@@ -252,7 +253,7 @@ private fun WakeConfirmScreen(
 
                 AppSectionTitle(
                     title = stringResource(R.string.wake_confirm_title),
-                    description = "A quick second check for alarms that need extra accountability."
+                    description = stringResource(R.string.wake_confirm_desc)
                 )
 
                 Row(
@@ -266,7 +267,11 @@ private fun WakeConfirmScreen(
                     )
                     if (remainingRefires > 0) {
                         AppStatusChip(
-                            label = "$remainingRefires re-fire${if (remainingRefires != 1) "s" else ""} left",
+                            label = pluralStringResource(
+                                R.plurals.wake_confirm_refires_left,
+                                remainingRefires,
+                                remainingRefires
+                            ),
                             icon = Icons.Default.WarningAmber,
                             color = AccentRed
                         )
@@ -309,7 +314,11 @@ private fun WakeConfirmScreen(
                 }
 
                 Text(
-                    text = "Closing this screen keeps wake-check protection active. The alarm can ring up to ${WakeConfirmWorker.MAX_REFIRES} more time${if (WakeConfirmWorker.MAX_REFIRES != 1) "s" else ""} if you don't confirm.",
+                    text = pluralStringResource(
+                        R.plurals.wake_confirm_protection_footer,
+                        WakeConfirmWorker.MAX_REFIRES,
+                        WakeConfirmWorker.MAX_REFIRES
+                    ),
                     color = TextMuted,
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,

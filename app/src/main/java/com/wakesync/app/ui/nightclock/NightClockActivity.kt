@@ -38,10 +38,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.ui.theme.WakeSyncTheme
 import com.wakesync.app.ui.theme.BlueLight
 import com.wakesync.app.ui.theme.SnoozeYellow
@@ -53,6 +55,7 @@ import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -112,7 +115,7 @@ fun NightClockScreen(onExit: () -> Unit) {
     } else {
         0.24f
     }
-    val amPm = if (is24Hour) "" else currentTime.format(DateTimeFormatter.ofPattern("a"))
+    val amPm = if (is24Hour) "" else currentTime.format(DateTimeFormatter.ofPattern("a", Locale.getDefault()))
 
     // Burn-in drift is a hardware safeguard (imperceptibly slow pixel shifting), not
     // decorative motion, so it deliberately ignores the reduce-motion gate. Only the
@@ -180,7 +183,7 @@ fun NightClockScreen(onExit: () -> Unit) {
                 color = SnoozeYellow.copy(alpha = 0.09f)
             ) {
                 Text(
-                    text = "Bedside mode",
+                    text = stringResource(R.string.night_clock_bedside),
                     color = SnoozeYellow.copy(alpha = 0.74f),
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
@@ -216,7 +219,7 @@ fun NightClockScreen(onExit: () -> Unit) {
                     color = Color.White.copy(alpha = 0.04f)
                 ) {
                     Text(
-                        text = currentDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                        text = currentDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault())),
                         color = TextMuted.copy(alpha = 0.74f),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
@@ -247,7 +250,7 @@ fun NightClockScreen(onExit: () -> Unit) {
                     color = Color.White.copy(alpha = 0.04f)
                 ) {
                     Text(
-                        text = "Long press anywhere to exit",
+                        text = stringResource(R.string.night_clock_long_press_exit),
                         color = TextMuted.copy(alpha = 0.58f),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,

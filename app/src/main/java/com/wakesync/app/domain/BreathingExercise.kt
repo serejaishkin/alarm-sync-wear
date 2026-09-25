@@ -3,11 +3,14 @@ package com.wakesync.app.domain
 data class BreathingPhase(
     val label: String,
     val cue: String,
+    val kind: BreathingPhaseKind,
     val remainingSeconds: Int,
     val cycleNumber: Int,
     val cycleCount: Int,
     val completed: Boolean = false
 )
+
+enum class BreathingPhaseKind { INHALE, HOLD, SETTLE, EXHALE, COMPLETE }
 
 enum class BreathingPattern(
     val displayName: String,
@@ -46,6 +49,7 @@ enum class BreathingPattern(
             return BreathingPhase(
                 label = "Complete",
                 cue = "Let your breathing return to normal.",
+                kind = BreathingPhaseKind.COMPLETE,
                 remainingSeconds = 0,
                 cycleNumber = cycleCount,
                 cycleCount = cycleCount,
@@ -58,11 +62,12 @@ enum class BreathingPattern(
         val cycleNumber = cycleIndex + 1
         var phaseStart = 0
 
-        fun phase(label: String, cue: String, duration: Int): BreathingPhase {
+        fun phase(kind: BreathingPhaseKind, label: String, cue: String, duration: Int): BreathingPhase {
             val remaining = phaseStart + duration - intoCycle
             return BreathingPhase(
                 label = label,
                 cue = cue,
+                kind = kind,
                 remainingSeconds = remaining.coerceAtLeast(1),
                 cycleNumber = cycleNumber,
                 cycleCount = cycleCount
@@ -70,21 +75,21 @@ enum class BreathingPattern(
         }
 
         if (intoCycle < phaseStart + inhaleSeconds) {
-            return phase("Inhale", "Breathe in slowly through your nose.", inhaleSeconds)
+            return phase(BreathingPhaseKind.INHALE, "Inhale", "Breathe in slowly through your nose.", inhaleSeconds)
         }
         phaseStart += inhaleSeconds
 
         if (holdAfterInhaleSeconds > 0 && intoCycle < phaseStart + holdAfterInhaleSeconds) {
-            return phase("Hold", "Keep your chest relaxed and still.", holdAfterInhaleSeconds)
+            return phase(BreathingPhaseKind.HOLD, "Hold", "Keep your chest relaxed and still.", holdAfterInhaleSeconds)
         }
         phaseStart += holdAfterInhaleSeconds
 
         if (intoCycle < phaseStart + exhaleSeconds) {
-            return phase("Exhale", "Release the breath slowly.", exhaleSeconds)
+            return phase(BreathingPhaseKind.EXHALE, "Exhale", "Release the breath slowly.", exhaleSeconds)
         }
         phaseStart += exhaleSeconds
 
-        return phase("Hold", "Stay soft before the next breath.", holdAfterExhaleSeconds)
+        return phase(BreathingPhaseKind.SETTLE, "Hold", "Stay soft before the next breath.", holdAfterExhaleSeconds)
     }
 }
 

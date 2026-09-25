@@ -5,18 +5,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wakesync.app.R
 import com.wakesync.app.data.health.HealthConnectSleepRepository
 import com.wakesync.app.data.health.HealthConnectSleepSummary
 import com.wakesync.app.data.local.entity.SnoreEvent
 import com.wakesync.app.data.preferences.PreferencesManager
+import com.wakesync.app.domain.ChronotypeCategory
 import com.wakesync.app.domain.ChronotypeEstimator
 import com.wakesync.app.data.repository.AlarmRepository
 import com.wakesync.app.data.repository.PreSleepTagRepository
 import com.wakesync.app.data.repository.SnoreEventRepository
-import com.wakesync.app.domain.EnvironmentalNoiseBaselinePolicy
+import com.wakesync.app.domain.EnvironmentalNoiseLevel
 import com.wakesync.app.domain.JetLagDirection
 import com.wakesync.app.domain.JetLagPlan
 import com.wakesync.app.domain.JetLagPlanner
@@ -42,8 +45,41 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.roundToInt
+
+@StringRes
+private fun chronotypeCategoryLabelRes(category: ChronotypeCategory): Int = when (category) {
+    ChronotypeCategory.EARLY -> R.string.bedtime_chronotype_early
+    ChronotypeCategory.BALANCED -> R.string.bedtime_chronotype_balanced
+    ChronotypeCategory.LATE -> R.string.bedtime_chronotype_late
+}
+
+@StringRes
+private fun noiseLevelLabelRes(level: EnvironmentalNoiseLevel): Int = when (level) {
+    EnvironmentalNoiseLevel.QUIET -> R.string.bedtime_noise_quiet
+    EnvironmentalNoiseLevel.MODERATE -> R.string.bedtime_noise_moderate
+    EnvironmentalNoiseLevel.LOUD -> R.string.bedtime_noise_loud
+}
+
+@StringRes
+private fun preSleepTagLabelRes(key: String): Int = when (key) {
+    PreSleepTags.CAFFEINE -> R.string.pre_sleep_tag_caffeine
+    PreSleepTags.EXERCISE -> R.string.pre_sleep_tag_exercise
+    PreSleepTags.ALCOHOL -> R.string.pre_sleep_tag_alcohol
+    PreSleepTags.STRESS -> R.string.pre_sleep_tag_stress
+    else -> R.string.pre_sleep_tag_caffeine
+}
+
+@StringRes
+private fun preSleepTagHelperRes(key: String): Int = when (key) {
+    PreSleepTags.CAFFEINE -> R.string.pre_sleep_tag_caffeine_helper
+    PreSleepTags.EXERCISE -> R.string.pre_sleep_tag_exercise_helper
+    PreSleepTags.ALCOHOL -> R.string.pre_sleep_tag_alcohol_helper
+    PreSleepTags.STRESS -> R.string.pre_sleep_tag_stress_helper
+    else -> R.string.pre_sleep_tag_caffeine_helper
+}
 
 data class BedtimeUiState(
     val isEnabled: Boolean = false,
@@ -193,7 +229,11 @@ class BedtimeViewModel @Inject constructor(
                 sleepGoalMinutes = settings.sleepGoalMinutes,
                 reminderMinutesBefore = settings.bedtimeReminderMinutes,
                 bedtimeFormatted = formatTime(settings.bedtimeHour, settings.bedtimeMinute, settings.is24HourFormat),
-                sleepDurationFormatted = "${settings.sleepGoalHours}h ${settings.sleepGoalMinutes}m",
+                sleepDurationFormatted = context.getString(
+                    R.string.bedtime_duration_h_m,
+                    settings.sleepGoalHours,
+                    settings.sleepGoalMinutes
+                ),
                 is24HourFormat = settings.is24HourFormat,
                 sleepSoundFadeMinutes = if (settings.sleepSoundTimerMinutes > 0) settings.sleepSoundTimerMinutes else 30,
                 sleepSoundFadeSeconds = settings.sleepSoundFadeSeconds.coerceIn(5, 600),
@@ -249,7 +289,7 @@ class BedtimeViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    nextAlarmTime = "Next alarm: $wakeFormatted",
+                    nextAlarmTime = context.getString(R.string.bedtime_next_alarm, wakeFormatted),
                     wakeTimeFormatted = wakeFormatted,
                     suggestedBedtime = suggestedFormatted,
                     sleepCycleOptions = cycles
@@ -258,7 +298,7 @@ class BedtimeViewModel @Inject constructor(
         } else {
             _uiState.update {
                 it.copy(
-                    nextAlarmTime = "No alarm set",
+                    nextAlarmTime = context.getString(R.string.bedtime_no_alarm_set),
                     wakeTimeFormatted = "",
                     suggestedBedtime = "",
                     sleepCycleOptions = emptyList()
@@ -275,11 +315,16 @@ class BedtimeViewModel @Inject constructor(
      */
     private fun computeSleepCycles(wakeTime: LocalTime, is24h: Boolean): List<String> {
         val pattern = if (is24h) "HH:mm" else "h:mm a"
-        val formatter = DateTimeFormatter.ofPattern(pattern)
+        val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
         return (5 downTo 2).map { cycles ->
             val totalMinutes = cycles * 90 + 15
             val sleepTime = wakeTime.minusMinutes(totalMinutes.toLong())
-            "${sleepTime.format(formatter)} (${cycles * 90 / 60}h ${cycles * 90 % 60}m)"
+            context.getString(
+                R.string.bedtime_sleep_cycle_option,
+                sleepTime.format(formatter),
+                cycles * 90 / 60,
+                cycles * 90 % 60
+            )
         }
     }
 
@@ -307,7 +352,7 @@ class BedtimeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             sleepGoalHours = hours,
             sleepGoalMinutes = minutes,
-            sleepDurationFormatted = "${hours}h ${minutes}m"
+            sleepDurationFormatted = context.getString(R.string.bedtime_duration_h_m, hours, minutes)
         ).withJetLagPlan(linkedWake)
         refreshChronotypeRecommendation()
         viewModelScope.launch {
@@ -499,7 +544,7 @@ class BedtimeViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     sonarTrackingActive = false,
-                    sonarTrackingStatus = "Grant microphone permission to use local sonar sleep tracking."
+                    sonarTrackingStatus = context.getString(R.string.bedtime_sonar_perm_needed)
                 )
             }
             return
@@ -517,7 +562,7 @@ class BedtimeViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     sonarTrackingActive = false,
-                    sonarTrackingStatus = "Starting sonar and confirming microphone monitoring."
+                    sonarTrackingStatus = context.getString(R.string.bedtime_sonar_starting)
                 )
             }
             confirmSonarTrackingStarted()
@@ -525,7 +570,10 @@ class BedtimeViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     sonarTrackingActive = false,
-                    sonarTrackingStatus = "Sonar could not start: ${error.message ?: "service unavailable"}"
+                    sonarTrackingStatus = context.getString(
+                        R.string.bedtime_sonar_start_failed,
+                        error.message ?: context.getString(R.string.bedtime_sonar_service_unavailable)
+                    )
                 )
             }
         }
@@ -540,7 +588,7 @@ class BedtimeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         sonarTrackingActive = false,
-                        sonarTrackingStatus = "Stopping sonar tracking and saving a local summary."
+                        sonarTrackingStatus = context.getString(R.string.bedtime_sonar_stopping)
                     )
                 }
                 refreshSonarTrackingStatusAfterStop()
@@ -548,7 +596,10 @@ class BedtimeViewModel @Inject constructor(
             .onFailure { error ->
                 _uiState.update {
                     it.copy(
-                        sonarTrackingStatus = "Sonar could not stop cleanly: ${error.message ?: "service unavailable"}"
+                        sonarTrackingStatus = context.getString(
+                            R.string.bedtime_sonar_stop_failed,
+                            error.message ?: context.getString(R.string.bedtime_sonar_service_unavailable)
+                        )
                     )
                 }
             }
@@ -559,7 +610,7 @@ class BedtimeViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 sonarTrackingActive = false,
-                sonarTrackingStatus = "Microphone permission was denied. Sonar stays off."
+                sonarTrackingStatus = context.getString(R.string.bedtime_sonar_perm_denied)
             )
         }
     }
@@ -570,9 +621,9 @@ class BedtimeViewModel @Inject constructor(
             it.copy(
                 sonarTrackingActive = snapshot.active,
                 sonarTrackingStatus = when {
-                    snapshot.active -> "Monitoring movement and loud sleep sounds. No raw audio is recorded."
-                    snapshot.lastEndedAt > 0L -> "Last sonar session saved locally."
-                    else -> "Ready to monitor local movement during sleep."
+                    snapshot.active -> context.getString(R.string.bedtime_sonar_monitoring)
+                    snapshot.lastEndedAt > 0L -> context.getString(R.string.bedtime_sonar_last_saved)
+                    else -> context.getString(R.string.bedtime_sonar_ready)
                 },
                 sonarLastSessionLabel = sonarLastSessionLabel(snapshot)
             )
@@ -594,7 +645,9 @@ class BedtimeViewModel @Inject constructor(
             repeat(3) {
                 delay(1_000L)
                 refreshSonarTrackingStatus()
-                if (!_uiState.value.sonarTrackingStatus.startsWith("Stopping sonar")) return@launch
+                if (!_uiState.value.sonarTrackingStatus.startsWith(
+                        context.getString(R.string.bedtime_sonar_stopping)
+                    )) return@launch
             }
         }
     }
@@ -614,7 +667,7 @@ class BedtimeViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 sonarTrackingActive = true,
-                                sonarTrackingStatus = "Monitoring movement and loud sleep sounds. No raw audio is recorded.",
+                                sonarTrackingStatus = context.getString(R.string.bedtime_sonar_monitoring),
                                 sonarLastSessionLabel = sonarLastSessionLabel(snapshot)
                             )
                         }
@@ -625,7 +678,7 @@ class BedtimeViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 sonarTrackingActive = false,
-                                sonarTrackingStatus = "Sonar could not confirm microphone monitoring. Try again."
+                                sonarTrackingStatus = context.getString(R.string.bedtime_sonar_confirm_failed)
                             )
                         }
                         return@launch
@@ -656,8 +709,8 @@ class BedtimeViewModel @Inject constructor(
                         preSleepTags = PreSleepTags.all.map { tag ->
                             PreSleepTagTile(
                                 key = tag.key,
-                                label = tag.label,
-                                helper = tag.helper,
+                                label = context.getString(preSleepTagLabelRes(tag.key)),
+                                helper = context.getString(preSleepTagHelperRes(tag.key)),
                                 selected = tag.key in selected
                             )
                         }
@@ -758,13 +811,9 @@ class BedtimeViewModel @Inject constructor(
     }
 
     private fun formatTime(hour: Int, minute: Int, is24h: Boolean = false): String {
-        return if (is24h) {
-            "${String.format("%02d", hour)}:${String.format("%02d", minute)}"
-        } else {
-            val h = if (hour % 12 == 0) 12 else hour % 12
-            val amPm = if (hour < 12) "AM" else "PM"
-            "$h:${String.format("%02d", minute)} $amPm"
-        }
+        val pattern = if (is24h) "HH:mm" else "h:mm a"
+        val time = java.time.LocalTime.of(hour.coerceIn(0, 23), minute.coerceIn(0, 59))
+        return time.format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
     }
 
     private fun getBatteryPercent(): Int {
@@ -777,7 +826,7 @@ class BedtimeViewModel @Inject constructor(
         if (untilMillis <= System.currentTimeMillis()) return ""
         val time = java.time.Instant.ofEpochMilli(untilMillis)
             .atZone(ZoneId.systemDefault()).toLocalTime()
-        return "Delayed until ${formatTime(time.hour, time.minute, is24h)}"
+        return context.getString(R.string.bedtime_stay_up_title, formatTime(time.hour, time.minute, is24h))
     }
 
     private fun BedtimeUiState.withJetLagPlan(currentWakeMinutes: Int? = null): BedtimeUiState {
@@ -804,15 +853,21 @@ class BedtimeViewModel @Inject constructor(
     private fun sonarLastSessionLabel(snapshot: SonarSleepSnapshot): String {
         if (snapshot.lastEndedAt <= 0L || snapshot.lastTotalMinutes <= 0) return ""
         val snore = if (snapshot.lastSnoreEventCount > 0) {
-            "; ${snapshot.lastSnoreEventCount} loud bursts, peak ${snapshot.lastSnorePeakDb.roundToInt()} dB est."
+            context.getString(
+                R.string.bedtime_sonar_bursts,
+                snapshot.lastSnoreEventCount,
+                snapshot.lastSnorePeakDb.roundToInt()
+            )
         } else {
-            "; no loud bursts"
+            context.getString(R.string.bedtime_sonar_no_bursts)
         }
-        return "Last session: ${snapshot.lastTotalMinutes}m, " +
-            "${snapshot.lastAwakeMinutes}m movement, " +
-            "${snapshot.lastLightMinutes}m restless, " +
-            "${snapshot.lastDeepMinutes}m still" +
-            snore
+        return context.getString(
+            R.string.bedtime_sonar_last_session,
+            snapshot.lastTotalMinutes,
+            snapshot.lastAwakeMinutes,
+            snapshot.lastLightMinutes,
+            snapshot.lastDeepMinutes
+        ) + snore
     }
 
     private fun snoreTimelineItem(event: SnoreEvent): SnoreTimelineItem {
@@ -822,17 +877,25 @@ class BedtimeViewModel @Inject constructor(
         return SnoreTimelineItem(
             id = event.id,
             timeLabel = formatTime(start.hour, start.minute, _uiState.value.is24HourFormat),
-            intensityLabel = "Peak ${event.peakDb.roundToInt()} dB est. / avg ${event.averageDb.roundToInt()}",
+            intensityLabel = context.getString(
+                R.string.bedtime_snore_intensity,
+                event.peakDb.roundToInt(),
+                event.averageDb.roundToInt()
+            ),
             durationLabel = formatDurationMillis(event.durationMillis)
         )
     }
 
     private fun formatDurationMillis(durationMillis: Long): String {
         val seconds = ((durationMillis + 999L) / 1_000L).coerceAtLeast(1L)
-        if (seconds < 60L) return "${seconds}s"
+        if (seconds < 60L) return context.getString(R.string.bedtime_seconds_short, seconds.toInt())
         val minutes = seconds / 60L
         val remainder = seconds % 60L
-        return if (remainder == 0L) "${minutes}m" else "${minutes}m ${remainder}s"
+        return if (remainder == 0L) {
+            context.getString(R.string.bedtime_duration_m, minutes.toInt())
+        } else {
+            context.getString(R.string.bedtime_duration_m_s, minutes.toInt(), remainder.toInt())
+        }
     }
 
     private suspend fun refreshPreSleepCorrelations(today: LocalDate) {
@@ -844,20 +907,25 @@ class BedtimeViewModel @Inject constructor(
 
     private fun preSleepCorrelationItem(correlation: PreSleepTagCorrelation): PreSleepCorrelationItem {
         val nightsLabel = when {
-            correlation.loggedNights == 0 -> "No tagged nights yet"
-            correlation.nightsWithSessions == 0 -> "${correlation.loggedNights} tagged; waiting for sleep sessions"
-            else -> "${correlation.nightsWithSessions}/${correlation.loggedNights} tagged nights with local sleep data"
+            correlation.loggedNights == 0 -> context.getString(R.string.bedtime_corr_no_nights)
+            correlation.nightsWithSessions == 0 ->
+                context.getString(R.string.bedtime_corr_wait_sessions, correlation.loggedNights)
+            else -> context.getString(
+                R.string.bedtime_corr_with_sessions,
+                correlation.nightsWithSessions,
+                correlation.loggedNights
+            )
         }
         val delta = correlation.deltaRestlessMinutes
         val deltaLabel = when {
-            delta == null -> "Start Sonar or smart wake to compare restlessness"
-            delta > 0 -> "+${delta}m restless vs baseline"
-            delta < 0 -> "${delta}m restless vs baseline"
-            else -> "Matches baseline restlessness"
+            delta == null -> context.getString(R.string.bedtime_corr_delta_none)
+            delta > 0 -> context.getString(R.string.bedtime_corr_delta_positive, delta)
+            delta < 0 -> context.getString(R.string.bedtime_corr_delta_negative, delta)
+            else -> context.getString(R.string.bedtime_corr_delta_equal)
         }
         return PreSleepCorrelationItem(
             key = correlation.key,
-            label = correlation.label,
+            label = context.getString(preSleepTagLabelRes(correlation.key)),
             nightsLabel = nightsLabel,
             deltaLabel = deltaLabel,
             deltaMinutes = delta,
@@ -872,15 +940,15 @@ class BedtimeViewModel @Inject constructor(
     private fun preSleepDateLabel(tagDate: LocalDate): String {
         val today = LocalDate.now(ZoneId.systemDefault())
         return when (tagDate) {
-            today -> "Tonight"
-            today.minusDays(1) -> "Last night"
-            else -> tagDate.format(DateTimeFormatter.ofPattern("MMM d"))
+            today -> context.getString(R.string.bedtime_tag_tonight)
+            today.minusDays(1) -> context.getString(R.string.bedtime_tag_last_night)
+            else -> tagDate.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
         }
     }
 
     private fun noiseBaselineLabel(snapshot: BedtimeNoiseBaselineSnapshot): String {
-        val baseline = snapshot.baseline ?: return "No baseline"
-        return EnvironmentalNoiseBaselinePolicy.levelLabel(baseline.level)
+        val baseline = snapshot.baseline ?: return context.getString(R.string.bedtime_noise_none)
+        return context.getString(noiseLevelLabelRes(baseline.level))
     }
 
     private fun noiseBaselineHelper(
@@ -888,14 +956,17 @@ class BedtimeViewModel @Inject constructor(
         is24h: Boolean
     ): String {
         val baseline = snapshot.baseline ?: return if (hasRecordAudioPermission()) {
-            "Checks at reminder"
+            context.getString(R.string.bedtime_noise_checks_reminder)
         } else {
-            "Mic permission needed"
+            context.getString(R.string.bedtime_noise_mic_needed)
         }
         val measured = java.time.Instant.ofEpochMilli(snapshot.measuredAtMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalTime()
-        return "Last ${formatTime(measured.hour, measured.minute, is24h)}; no audio saved"
+        return context.getString(
+            R.string.bedtime_noise_last_checked,
+            formatTime(measured.hour, measured.minute, is24h)
+        )
     }
 
     private fun refreshChronotypeRecommendation() {
@@ -923,19 +994,30 @@ class BedtimeViewModel @Inject constructor(
         return ChronotypeUiModel(
             answers = estimate.answers,
             answeredCount = estimate.answeredCount,
-            categoryLabel = category?.let(ChronotypeEstimator::categoryLabel) ?: "Not set",
+            categoryLabel = category?.let { context.getString(chronotypeCategoryLabelRes(it)) }
+                ?: context.getString(R.string.bedtime_chronotype_not_set),
             timingLabel = if (
                 estimate.idealBedtimeMinutes != null &&
                 estimate.idealWakeMinutes != null
             ) {
-                "${formatMinuteOfDay(estimate.idealBedtimeMinutes, is24h)} - " +
-                    "${formatMinuteOfDay(estimate.idealWakeMinutes, is24h)}"
+                context.getString(
+                    R.string.bedtime_chronotype_range,
+                    formatMinuteOfDay(estimate.idealBedtimeMinutes, is24h),
+                    formatMinuteOfDay(estimate.idealWakeMinutes, is24h)
+                )
             } else {
-                "${estimate.answeredCount}/${ChronotypeEstimator.QUESTION_COUNT} answered"
+                context.getString(
+                    R.string.bedtime_chronotype_answered,
+                    estimate.answeredCount,
+                    ChronotypeEstimator.QUESTION_COUNT
+                )
             },
             helper = when (category) {
-                null -> "Local estimate"
-                else -> "Fits ${formatSleepGoal(sleepGoalHours, sleepGoalMinutes)} sleep target"
+                null -> context.getString(R.string.bedtime_chronotype_local_estimate)
+                else -> context.getString(
+                    R.string.bedtime_chronotype_fits_target,
+                    formatSleepGoal(sleepGoalHours, sleepGoalMinutes)
+                )
             },
             complete = estimate.isComplete
         )
@@ -961,8 +1043,8 @@ class BedtimeViewModel @Inject constructor(
 
     private fun formatSleepGoal(hours: Int, minutes: Int): String {
         return when {
-            minutes == 0 -> "${hours}h"
-            else -> "${hours}h ${minutes}m"
+            minutes == 0 -> context.getString(R.string.bedtime_duration_h, hours)
+            else -> context.getString(R.string.bedtime_duration_h_m, hours, minutes)
         }
     }
 

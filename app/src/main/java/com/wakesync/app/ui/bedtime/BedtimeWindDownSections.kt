@@ -19,8 +19,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.ui.components.AppSectionTitle
 import com.wakesync.app.ui.components.AppStatusChip
 import com.wakesync.app.ui.components.AppSurfaceCard
@@ -45,7 +47,11 @@ internal fun SleepCycleOptionRow(index: Int, option: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppStatusChip(
-                label = if (index == 0) "Best match" else "${index + 1}",
+                label = if (index == 0) {
+                    stringResource(R.string.bedtime_cycle_best_match)
+                } else {
+                    "${index + 1}"
+                },
                 color = if (index == 0) DismissGreen else MaterialTheme.colorScheme.primary
             )
             Text(
@@ -66,11 +72,15 @@ internal fun WindDownChecklistSection(
 ) {
     AppSurfaceCard(modifier = modifier) {
         AppSectionTitle(
-            title = "Wind-down checklist",
-            description = "Tick each step as you settle in for the night.",
+            title = stringResource(R.string.bedtime_checklist_title),
+            description = stringResource(R.string.bedtime_checklist_desc),
             action = {
                 AppStatusChip(
-                    label = "${state.bedtimeChecklistDone.size}/${state.bedtimeChecklist.size} done",
+                    label = stringResource(
+                        R.string.bedtime_checklist_done_count,
+                        state.bedtimeChecklistDone.size,
+                        state.bedtimeChecklist.size
+                    ),
                     icon = Icons.Default.CheckCircle,
                     color = if (state.bedtimeChecklistDone.isEmpty()) TextMuted else DismissGreen
                 )
@@ -93,7 +103,11 @@ internal fun WindDownChecklistSection(
                 ) {
                     Icon(
                         imageVector = if (done) Icons.Default.CheckCircle else Icons.Default.Bedtime,
-                        contentDescription = if (done) "Completed" else "Not done",
+                        contentDescription = if (done) {
+                            stringResource(R.string.bedtime_checklist_completed)
+                        } else {
+                            stringResource(R.string.bedtime_checklist_not_done)
+                        },
                         tint = if (done) DismissGreen else TextMuted,
                         modifier = Modifier.size(22.dp)
                     )
@@ -104,7 +118,11 @@ internal fun WindDownChecklistSection(
                         modifier = Modifier.weight(1f)
                     )
                     AppStatusChip(
-                        label = if (done) "Done" else "Up next",
+                        label = if (done) {
+                            stringResource(R.string.bedtime_checklist_done)
+                        } else {
+                            stringResource(R.string.bedtime_checklist_up_next)
+                        },
                         color = if (done) DismissGreen else MaterialTheme.colorScheme.primary
                     )
                 }
@@ -116,7 +134,7 @@ internal fun WindDownChecklistSection(
                 onClick = onReset,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("Reset checklist", color = TextSecondary)
+                Text(stringResource(R.string.bedtime_checklist_reset), color = TextSecondary)
             }
         }
     }

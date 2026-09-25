@@ -39,11 +39,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wakesync.app.R
 import com.wakesync.app.ui.components.AlarmClockHeroHeader
 import com.wakesync.app.ui.components.AppEmptyState
 import com.wakesync.app.ui.components.AppSectionTitle
@@ -73,19 +75,19 @@ fun StopwatchScreen(
             .background(SurfaceDark)
     ) {
         AlarmClockHeroHeader(
-            title = "Stopwatch",
+            title = stringResource(R.string.stopwatch_title),
             subtitle = when (state.state) {
-                StopwatchState.IDLE -> "Start a precise running timer and mark laps whenever you need a split."
-                StopwatchState.RUNNING -> "Timing live. Mark laps as the session unfolds."
-                StopwatchState.PAUSED -> "Paused in place. Resume when you are ready or reset for a clean run."
+                StopwatchState.IDLE -> stringResource(R.string.stopwatch_subtitle_idle)
+                StopwatchState.RUNNING -> stringResource(R.string.stopwatch_subtitle_running)
+                StopwatchState.PAUSED -> stringResource(R.string.stopwatch_subtitle_paused)
             },
-            overline = "Timing",
+            overline = stringResource(R.string.stopwatch_overline),
             badge = {
                 AppStatusChip(
                     label = when (state.state) {
-                        StopwatchState.IDLE -> "Ready"
-                        StopwatchState.RUNNING -> "Running"
-                        StopwatchState.PAUSED -> "Paused"
+                        StopwatchState.IDLE -> stringResource(R.string.stopwatch_status_ready)
+                        StopwatchState.RUNNING -> stringResource(R.string.stopwatch_status_running)
+                        StopwatchState.PAUSED -> stringResource(R.string.stopwatch_status_paused)
                     },
                     icon = when (state.state) {
                         StopwatchState.IDLE -> Icons.Default.Speed
@@ -99,14 +101,14 @@ fun StopwatchScreen(
                     }
                 )
                 AppStatusChip(
-                    label = "${state.laps.size} laps",
+                    label = stringResource(R.plurals.stopwatch_laps_count, state.laps.size, state.laps.size),
                     icon = Icons.Default.Flag,
                     color = if (state.laps.isEmpty()) TextMuted else MaterialTheme.colorScheme.primary
                 )
             },
             actions = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.Close, contentDescription = "Close stopwatch", tint = TextMuted)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.stopwatch_close), tint = TextMuted)
                 }
             }
         )
@@ -119,8 +121,8 @@ fun StopwatchScreen(
         ) {
             AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                 AppSectionTitle(
-                    title = "Current run",
-                    description = "A high-contrast display built for quick glances."
+                    title = stringResource(R.string.stopwatch_current_run),
+                    description = stringResource(R.string.stopwatch_current_run_desc)
                 )
 
                 StopwatchDial(state = state)
@@ -132,8 +134,8 @@ fun StopwatchScreen(
                 AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                     AppEmptyState(
                         icon = Icons.Default.Flag,
-                        title = "No laps recorded yet",
-                        description = "Tap Lap while the stopwatch is running to capture split times and compare pace."
+                        title = stringResource(R.string.stopwatch_no_laps_title),
+                        description = stringResource(R.string.stopwatch_no_laps_desc)
                     )
                 }
             } else {
@@ -143,8 +145,8 @@ fun StopwatchScreen(
                         .weight(1f, fill = false)
                 ) {
                     AppSectionTitle(
-                        title = "Lap history",
-                        description = "Best and slowest splits are highlighted automatically."
+                        title = stringResource(R.string.stopwatch_lap_history),
+                        description = stringResource(R.string.stopwatch_lap_history_desc)
                     )
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth()
@@ -270,12 +272,12 @@ private fun ControlsRow(state: StopwatchUiState, viewModel: StopwatchViewModel) 
             ) {
                 Icon(
                     Icons.Default.PlayArrow,
-                    contentDescription = "Start stopwatch",
+                    contentDescription = stringResource(R.string.stopwatch_start),
                     modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Start stopwatch",
+                    text = stringResource(R.string.stopwatch_start),
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -288,13 +290,13 @@ private fun ControlsRow(state: StopwatchUiState, viewModel: StopwatchViewModel) 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StopwatchSecondaryButton(
-                    label = "Lap",
+                    label = stringResource(R.string.stopwatch_lap),
                     icon = Icons.Default.Flag,
                     onClick = viewModel::lap,
                     modifier = Modifier.weight(1f)
                 )
                 StopwatchPrimaryButton(
-                    label = "Pause",
+                    label = stringResource(R.string.stopwatch_pause),
                     icon = Icons.Default.Pause,
                     onClick = viewModel::pause,
                     modifier = Modifier.weight(1.35f)
@@ -309,14 +311,14 @@ private fun ControlsRow(state: StopwatchUiState, viewModel: StopwatchViewModel) 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StopwatchSecondaryButton(
-                    label = "Reset",
+                    label = stringResource(R.string.stopwatch_reset),
                     icon = Icons.Default.Refresh,
                     onClick = viewModel::reset,
                     accent = AccentRed,
                     modifier = Modifier.weight(1f)
                 )
                 StopwatchPrimaryButton(
-                    label = "Resume",
+                    label = stringResource(R.string.stopwatch_resume),
                     icon = Icons.Default.PlayArrow,
                     onClick = viewModel::resume,
                     modifier = Modifier.weight(1.35f)
@@ -354,15 +356,15 @@ private fun LapRow(lap: Lap) {
         ) {
             Column(modifier = Modifier.width(84.dp)) {
                 Text(
-                    text = "Lap ${lap.number}",
+                    text = stringResource(R.string.stopwatch_lap_number, lap.number),
                     color = TextPrimary,
                     style = MaterialTheme.typography.titleSmall
                 )
                 Text(
                     text = when {
-                        lap.isBest -> "Best split"
-                        lap.isWorst -> "Slowest split"
-                        else -> "Split"
+                        lap.isBest -> stringResource(R.string.stopwatch_split_best)
+                        lap.isWorst -> stringResource(R.string.stopwatch_split_worst)
+                        else -> stringResource(R.string.stopwatch_split)
                     },
                     color = when {
                         lap.isBest -> DismissGreen
@@ -384,7 +386,7 @@ private fun LapRow(lap: Lap) {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "Split time",
+                    text = stringResource(R.string.stopwatch_split_time),
                     color = TextMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -401,7 +403,7 @@ private fun LapRow(lap: Lap) {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "Total",
+                    text = stringResource(R.string.stopwatch_total),
                     color = TextMuted,
                     style = MaterialTheme.typography.bodySmall
                 )

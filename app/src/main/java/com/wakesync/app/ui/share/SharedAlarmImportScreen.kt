@@ -40,12 +40,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wakesync.app.R
 import com.wakesync.app.data.model.Alarm
+import com.wakesync.app.ui.alarmedit.alarmChallengeLabelRes
 import com.wakesync.app.ui.components.AppChipShape
 import com.wakesync.app.ui.components.AppFeedbackCard
 import com.wakesync.app.ui.components.AppStatusChip
@@ -69,7 +72,7 @@ fun SharedAlarmImportScreen(
     viewModel: SharedAlarmImportViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val riskyFields = remember(alarm) { alarm.sharedImportRiskLabels() }
+    val riskyFields = remember(alarm) { alarm.sharedImportRiskLabelRes() }
     var stripRiskyFields by remember(alarm) { mutableStateOf(riskyFields.isNotEmpty()) }
 
     Column(
@@ -90,18 +93,18 @@ fun SharedAlarmImportScreen(
             IconButton(onClick = onCancel) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Discard shared alarm",
+                    contentDescription = stringResource(R.string.share_import_back),
                     tint = TextPrimary
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Review shared alarm",
+                    text = stringResource(R.string.share_import_title_review),
                     color = TextPrimary,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "Saved imports stay off until you review and enable them.",
+                    text = stringResource(R.string.share_import_subtitle),
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -110,16 +113,16 @@ fun SharedAlarmImportScreen(
 
         AppSurfaceCard {
             Text(
-                text = alarm.label.ifBlank { "Shared alarm" },
+                text = alarm.label.ifBlank { stringResource(R.string.share_import_default_label) },
                 color = TextPrimary,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
-            SharedImportDetailRow(label = "Time", value = alarm.formatSharedImportTime())
-            SharedImportDetailRow(label = "Repeat", value = alarm.repeatLabel)
-            SharedImportDetailRow(label = "Challenge", value = alarm.challengeSummary())
-            SharedImportDetailRow(label = "Sound", value = alarm.soundSummary())
-            SharedImportDetailRow(label = "Status", value = "Saved off until reviewed")
+            SharedImportDetailRow(label = stringResource(R.string.share_import_row_time), value = alarm.formatSharedImportTime())
+            SharedImportDetailRow(label = stringResource(R.string.share_import_row_repeat), value = alarm.repeatLabel)
+            SharedImportDetailRow(label = stringResource(R.string.share_import_row_challenge), value = alarm.challengeSummary())
+            SharedImportDetailRow(label = stringResource(R.string.share_import_row_sound), value = stringResource(alarm.soundSummaryRes()))
+            SharedImportDetailRow(label = stringResource(R.string.share_import_row_status), value = stringResource(R.string.share_import_status_off))
         }
 
         AppSurfaceCard(highlighted = riskyFields.isNotEmpty()) {
@@ -129,21 +132,23 @@ fun SharedAlarmImportScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Private references",
+                    text = stringResource(R.string.share_import_private_title),
                     color = TextPrimary,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f)
                 )
                 AppStatusChip(
-                    label = if (riskyFields.isEmpty()) "Clean" else "Review",
+                    label = stringResource(
+                        if (riskyFields.isEmpty()) R.string.share_import_private_clean else R.string.share_import_private_review
+                    ),
                     icon = if (riskyFields.isEmpty()) Icons.Default.CheckCircle else Icons.Default.Security,
                     color = if (riskyFields.isEmpty()) DismissGreen else SnoozeYellow
                 )
             }
             if (riskyFields.isEmpty()) {
                 Text(
-                    text = "No contact, location, Wi-Fi, media, or challenge reference was found.",
+                    text = stringResource(R.string.share_import_private_none_desc),
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -154,9 +159,9 @@ fun SharedAlarmImportScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    riskyFields.forEach { label ->
+                    riskyFields.forEach { labelRes ->
                         AppStatusChip(
-                            label = label,
+                            label = stringResource(labelRes),
                             color = SnoozeYellow
                         )
                     }
@@ -166,7 +171,7 @@ fun SharedAlarmImportScreen(
                     onCheckedChange = { stripRiskyFields = it }
                 )
                 Text(
-                    text = "Sanitizing keeps the wake time and repeat pattern, but removes values that can identify devices, places, people, media, or challenge secrets.",
+                    text = stringResource(R.string.share_import_private_strip_desc),
                     color = TextMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -175,7 +180,7 @@ fun SharedAlarmImportScreen(
 
         uiState.error?.let { error ->
             AppFeedbackCard(
-                title = "Import could not be saved",
+                title = stringResource(R.string.share_import_error_title),
                 message = error,
                 icon = Icons.Default.Warning,
                 color = AccentRed
@@ -193,7 +198,7 @@ fun SharedAlarmImportScreen(
                 enabled = !uiState.isSaving,
                 shape = AppChipShape
             ) {
-                Text("Discard")
+                Text(stringResource(R.string.share_import_discard))
             }
             Button(
                 onClick = {
@@ -214,9 +219,9 @@ fun SharedAlarmImportScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.size(8.dp))
-                    Text("Saving")
+                    Text(stringResource(R.string.share_import_saving))
                 } else {
-                    Text("Save, keep off")
+                    Text(stringResource(R.string.share_import_save_off))
                 }
             }
         }
@@ -283,20 +288,18 @@ private fun PrivateReferenceToggle(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                Text(
-                    text = "Strip private references",
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = if (checked) {
-                        "Recommended for alarms from other people or public links."
-                    } else {
-                        "Keep only when you trust the sender and need these references."
-                    },
-                    color = TextSecondary,
-                    style = MaterialTheme.typography.bodySmall
-                )
+Text(
+                text = stringResource(R.string.share_import_strip_toggle),
+                color = TextPrimary,
+                style = MaterialTheme.typography.titleSmall
+            )
+            Text(
+                text = stringResource(
+                    if (checked) R.string.share_import_strip_toggle_recommended else R.string.share_import_strip_toggle_optional
+                ),
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodySmall
+            )
             }
         }
     }
@@ -328,24 +331,32 @@ private fun Alarm.formatSharedImportTime(): String {
     return String.format(Locale.US, "%02d:%02d", hour.coerceIn(0, 23), minute.coerceIn(0, 59))
 }
 
+@Composable
 private fun Alarm.challengeSummary(): String {
-    return when {
-        challengeChain.isNotBlank() -> challengeChain
-            .split(",")
-            .mapNotNull { it.trim().takeIf(String::isNotBlank)?.toSharedImportLabel() }
-            .joinToString(" + ")
-        challengeType.isNotBlank() && challengeType != "NONE" -> challengeType.toSharedImportLabel()
-        else -> "None"
+    val chainResourceIds = challengeChain
+        .split(",")
+        .mapNotNull { it.trim().takeIf(String::isNotBlank)?.alarmChallengeLabelRes() }
+    if (challengeChain.isNotBlank() && chainResourceIds.isNotEmpty()) {
+        return buildString {
+            chainResourceIds.forEachIndexed { index, resource ->
+                if (index > 0) append(" + ")
+                append(stringResource(resource))
+            }
+        }
     }
+    if (challengeType.isNotBlank() && challengeType != "NONE") {
+        val resource = challengeType.alarmChallengeLabelRes()
+        if (resource != null) return stringResource(resource)
+        return challengeType.toSharedImportLabel()
+    }
+    return stringResource(R.string.share_import_challenge_none)
 }
 
-private fun Alarm.soundSummary(): String {
-    return when {
-        ringtonePool.isNotBlank() -> "Random ringtone pool"
-        ringtoneUri == "silent" -> "Silent alarm"
-        ringtoneUri.isNotBlank() -> "Custom ringtone"
-        else -> "Device default"
-    }
+private fun Alarm.soundSummaryRes(): Int = when {
+    ringtonePool.isNotBlank() -> R.string.share_import_sound_pool
+    ringtoneUri == "silent" -> R.string.share_import_sound_silent
+    ringtoneUri.isNotBlank() -> R.string.share_import_sound_custom
+    else -> R.string.share_import_sound_default
 }
 
 private fun String.toSharedImportLabel(): String {
@@ -357,21 +368,21 @@ private fun String.toSharedImportLabel(): String {
     }
 }
 
-private fun Alarm.sharedImportRiskLabels(): List<String> = buildList {
-    if (ringtoneUri.isNotBlank() || ringtonePool.isNotBlank()) add("Custom sound URI")
-    if (guardianEnabled || guardianPhone.isNotBlank()) add("Guardian Angel contact")
-    if (hueEnabled) add("Philips Hue sunrise setting")
-    if (nfcTagId.isNotBlank()) add("NFC tag identifier")
-    if (barcodeValue.isNotBlank()) add("Barcode or QR value")
-    if (photoMatchUri.isNotBlank()) add("Photo match URI")
-    if (wifiDismissSsid.isNotBlank()) add("Wi-Fi SSID")
-    if (locationDismissEnabled) add("Location dismiss coordinates")
-    if (morningRoutine.isNotBlank()) add("Morning routine text")
+private fun Alarm.sharedImportRiskLabelRes(): List<Int> = buildList {
+    if (ringtoneUri.isNotBlank() || ringtonePool.isNotBlank()) add(R.string.share_import_risk_ringtone)
+    if (guardianEnabled || guardianPhone.isNotBlank()) add(R.string.share_import_risk_guardian)
+    if (hueEnabled) add(R.string.share_import_risk_hue)
+    if (nfcTagId.isNotBlank()) add(R.string.share_import_risk_nfc)
+    if (barcodeValue.isNotBlank()) add(R.string.share_import_risk_barcode)
+    if (photoMatchUri.isNotBlank()) add(R.string.share_import_risk_photo)
+    if (wifiDismissSsid.isNotBlank()) add(R.string.share_import_risk_wifi)
+    if (locationDismissEnabled) add(R.string.share_import_risk_location)
+    if (morningRoutine.isNotBlank()) add(R.string.share_import_risk_routine)
     if (challengeType.uppercase(Locale.US) in referenceBackedChallenges) {
-        add("Reference-backed challenge")
+        add(R.string.share_import_risk_challenge)
     }
     if (challengeChain.split(",").any { it.trim().uppercase(Locale.US) in referenceBackedChallenges }) {
-        add("Challenge chain reference")
+        add(R.string.share_import_risk_chain)
     }
 }
 

@@ -29,8 +29,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.data.health.HealthConnectAvailability
 import com.wakesync.app.data.health.HealthConnectSleepSummary
 import com.wakesync.app.ui.components.AppFilterChip
@@ -58,8 +60,8 @@ internal fun PreSleepTagSection(
         highlighted = hasSelection
     ) {
         AppSectionTitle(
-            title = "Pre-sleep factors",
-            description = "${state.preSleepTagDateLabel}: tag the signals that may shape tomorrow's wake-up friction."
+            title = stringResource(R.string.bedtime_presleep_title),
+            description = stringResource(R.string.bedtime_presleep_desc, state.preSleepTagDateLabel)
         )
 
         Row(
@@ -72,7 +74,7 @@ internal fun PreSleepTagSection(
                     selected = tag.selected,
                     onClick = { onToggle(tag.key) },
                     leadingIcon = if (tag.selected) Icons.Default.CheckCircle else Icons.Default.Add,
-                    accessibilityLabel = "${tag.label}: ${tag.helper}"
+                    accessibilityLabel = stringResource(R.string.bedtime_presleep_accessibility, tag.label, tag.helper)
                 )
             }
         }
@@ -82,7 +84,7 @@ internal fun PreSleepTagSection(
             PreSleepCorrelationChart(items = state.preSleepCorrelations)
         } else {
             Text(
-                text = "Local chart appears after tagged nights overlap Sonar or smart-wake summaries.",
+                text = stringResource(R.string.bedtime_presleep_no_chart),
                 color = TextMuted,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -98,8 +100,8 @@ private fun PreSleepCorrelationChart(items: List<PreSleepCorrelationItem>) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ChartLegend("More restless", SnoozeYellow)
-            ChartLegend("Calmer", DismissGreen)
+            ChartLegend(stringResource(R.string.bedtime_corr_more_restless), SnoozeYellow)
+            ChartLegend(stringResource(R.string.bedtime_corr_calmer), DismissGreen)
         }
         items.forEach { item ->
             val delta = item.deltaMinutes
@@ -122,7 +124,9 @@ private fun PreSleepCorrelationChart(items: List<PreSleepCorrelationItem>) {
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = item.averageRestlessMinutes?.let { "${it}m avg" } ?: "No sleep data",
+                        text = item.averageRestlessMinutes?.let { avg ->
+                            stringResource(R.string.bedtime_corr_avg, avg)
+                        } ?: stringResource(R.string.bedtime_corr_no_data),
                         color = TextMuted,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -145,7 +149,7 @@ private fun PreSleepCorrelationChart(items: List<PreSleepCorrelationItem>) {
                     }
                 }
                 Text(
-                    text = "${item.deltaLabel} - ${item.nightsLabel}",
+                    text = stringResource(R.string.bedtime_corr_line, item.deltaLabel, item.nightsLabel),
                     color = color.copy(alpha = if (delta == null) 0.78f else 1f),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -184,11 +188,11 @@ internal fun SonarSleepTrackingSection(
         highlighted = state.sonarTrackingActive
     ) {
         AppSectionTitle(
-            title = "Sonar sleep tracking",
+            title = stringResource(R.string.bedtime_sonar_title),
             description = if (state.sonarTrackingActive) {
-                "Experimental overnight movement monitoring is running locally."
+                stringResource(R.string.bedtime_sonar_desc_active)
             } else {
-                "Start a local ultrasonic movement session from Bedtime when you want extra context."
+                stringResource(R.string.bedtime_sonar_desc_idle)
             }
         )
 
@@ -206,12 +210,16 @@ internal fun SonarSleepTrackingSection(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     AppStatusChip(
-                        label = if (state.sonarTrackingActive) "Active" else "Off",
+                        label = if (state.sonarTrackingActive) {
+                            stringResource(R.string.bedtime_sonar_active)
+                        } else {
+                            stringResource(R.string.bedtime_sonar_off)
+                        },
                         icon = if (state.sonarTrackingActive) Icons.Default.CheckCircle else Icons.Default.GraphicEq,
                         color = if (state.sonarTrackingActive) DismissGreen else TextMuted
                     )
                     AppStatusChip(
-                        label = "No audio saved",
+                        label = stringResource(R.string.bedtime_sonar_no_audio),
                         icon = Icons.Default.NightsStay,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -239,14 +247,18 @@ internal fun SonarSleepTrackingSection(
             }
             Spacer(modifier = Modifier.size(12.dp))
             AppFilterChip(
-                label = if (state.sonarTrackingActive) "Stop" else "Start",
+                label = if (state.sonarTrackingActive) {
+                    stringResource(R.string.bedtime_sonar_stop)
+                } else {
+                    stringResource(R.string.bedtime_sonar_start)
+                },
                 selected = state.sonarTrackingActive,
                 onClick = onToggle,
                 selectionSemantics = false,
                 accessibilityLabel = if (state.sonarTrackingActive) {
-                    "Stop sleep-motion tracking"
+                    stringResource(R.string.bedtime_sonar_accessibility_stop)
                 } else {
-                    "Start sleep-motion tracking"
+                    stringResource(R.string.bedtime_sonar_accessibility_start)
                 }
             )
         }
@@ -302,35 +314,42 @@ internal fun HealthConnectSleepSection(
         highlighted = summary.permissionGranted && summary.hasRecentSession
     ) {
         AppSectionTitle(
-            title = "Health Connect sleep",
+            title = stringResource(R.string.bedtime_health_title),
             description = when {
                 summary.availability == HealthConnectAvailability.PROVIDER_UPDATE_REQUIRED ->
-                    "Update Health Connect before recent sleep sessions can appear here."
+                    stringResource(R.string.bedtime_health_desc_update)
                 summary.availability == HealthConnectAvailability.UNAVAILABLE ->
-                    "Health Connect is not available on this device."
+                    stringResource(R.string.bedtime_health_desc_unavailable)
                 !summary.permissionGranted ->
-                    "Grant READ_SLEEP in Settings to fold recent sessions into bedtime planning."
+                    stringResource(R.string.bedtime_health_desc_permission)
                 summary.hasRecentSession ->
-                    "Recent sessions stay local and help compare your target with actual sleep."
+                    stringResource(R.string.bedtime_health_desc_sessions)
                 else ->
-                    "READ_SLEEP is granted, but no recent sleep sessions were found in the last 14 days."
+                    stringResource(R.string.bedtime_health_desc_none)
             }
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AppStatusChip(
-                label = if (summary.permissionGranted) "READ_SLEEP granted" else "Permission needed",
+                label = if (summary.permissionGranted) {
+                    stringResource(R.string.bedtime_health_permission_granted)
+                } else {
+                    stringResource(R.string.bedtime_health_permission_needed)
+                },
                 icon = if (summary.permissionGranted) Icons.Default.CheckCircle else Icons.Default.Warning,
                 color = if (summary.permissionGranted) DismissGreen else SnoozeYellow
             )
             AppStatusChip(
-                label = "${summary.sessionsRead} sessions",
+                label = stringResource(R.string.bedtime_health_sessions_chip, summary.sessionsRead),
                 icon = Icons.Default.Bedtime,
                 color = if (summary.sessionsRead > 0) MaterialTheme.colorScheme.primary else TextMuted
             )
         }
         if (summary.hasRecentSession) {
             Text(
-                text = "Last session: ${formatSleepMinutes(summary.lastSessionDurationMinutes)}",
+                text = stringResource(
+                    R.string.bedtime_health_last_session,
+                    formatSleepMinutes(summary.lastSessionDurationMinutes)
+                ),
                 color = TextPrimary,
                 style = MaterialTheme.typography.headlineSmall
             )
@@ -338,15 +357,15 @@ internal fun HealthConnectSleepSection(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SleepStageChip("Light", summary.lightStageMinutes)
-                SleepStageChip("Deep", summary.deepStageMinutes)
-                SleepStageChip("REM", summary.remStageMinutes)
-                SleepStageChip("Awake", summary.awakeStageMinutes)
+                SleepStageChip(stringResource(R.string.bedtime_health_stage_light), summary.lightStageMinutes)
+                SleepStageChip(stringResource(R.string.bedtime_health_stage_deep), summary.deepStageMinutes)
+                SleepStageChip(stringResource(R.string.bedtime_health_stage_rem), summary.remStageMinutes)
+                SleepStageChip(stringResource(R.string.bedtime_health_stage_awake), summary.awakeStageMinutes)
             }
         }
         summary.errorMessage?.let { error ->
             AppInlineNotice(
-                title = "Health Connect needs attention",
+                title = stringResource(R.string.bedtime_health_attention),
                 message = error,
                 icon = Icons.Default.Warning,
                 color = SnoozeYellow
@@ -364,13 +383,14 @@ private fun SleepStageChip(label: String, minutes: Long) {
     )
 }
 
+@Composable
 private fun formatSleepMinutes(minutes: Long?): String {
-    val value = minutes ?: return "0m"
+    val value = minutes ?: return stringResource(R.string.bedtime_duration_m, 0)
     val hours = value / 60
     val mins = value % 60
     return when {
-        hours > 0 && mins > 0 -> "${hours}h ${mins}m"
-        hours > 0 -> "${hours}h"
-        else -> "${mins}m"
+        hours > 0 && mins > 0 -> stringResource(R.string.bedtime_duration_h_m, hours.toInt(), mins.toInt())
+        hours > 0 -> stringResource(R.string.bedtime_duration_h, hours.toInt())
+        else -> stringResource(R.string.bedtime_duration_m, mins.toInt())
     }
 }

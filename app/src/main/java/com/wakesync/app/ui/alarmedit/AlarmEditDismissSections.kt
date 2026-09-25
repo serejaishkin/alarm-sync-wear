@@ -182,7 +182,7 @@ internal fun LazyListScope.alarmEditDismissSections(
                 )
             } else {
                 SettingsHint(
-                    challengeReadiness.message,
+                    stringResource(challengeReadiness.messageRes),
                     tone = HintTone.Warning
                 )
             }

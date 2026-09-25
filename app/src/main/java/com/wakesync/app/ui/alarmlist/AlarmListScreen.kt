@@ -178,26 +178,26 @@ fun AlarmListScreen(
             onDismissRequest = { statsAlarmLabel = null; viewModel.clearAlarmStats() },
             confirmButton = {
                 TextButton(onClick = { statsAlarmLabel = null; viewModel.clearAlarmStats() }) {
-                    Text("Close")
+                    Text(stringResource(R.string.alarm_stats_close))
                 }
             },
-            title = { Text(statsAlarmLabel ?: "Alarm history") },
+            title = { Text(statsAlarmLabel ?: stringResource(R.string.alarm_history)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Last 30 days", color = TextMuted, style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.alarm_stats_last_days), color = TextMuted, style = MaterialTheme.typography.labelSmall)
                     if (stats.fireCount == 0) {
                         // A brand-new (or recently-cleared) alarm has nothing to
                         // report yet — frame it rather than dumping all-zero stats.
                         Text(
-                            "This alarm hasn't fired in the last 30 days yet.",
+                            stringResource(R.string.alarm_stats_never_fired),
                             color = TextSecondary
                         )
                     } else {
-                        Text("Fired ${stats.fireCount} times")
-                        Text("Avg ${String.format("%.1f", stats.avgSnoozesPerFire)} snoozes per fire")
-                        Text("Avg dismiss in ${stats.avgDismissTimeSec}s")
+                        Text(stringResource(R.plurals.alarm_stats_fired, stats.fireCount, stats.fireCount))
+                        Text(stringResource(R.string.alarm_stats_avg_snoozes, String.format("%.1f", stats.avgSnoozesPerFire)))
+                        Text(stringResource(R.string.alarm_stats_avg_dismiss, stats.avgDismissTimeSec.toString()))
                         if (stats.missedCount > 0) {
-                            Text("${stats.missedCount} missed", color = AccentRed)
+                            Text(stringResource(R.plurals.alarm_stats_missed, stats.missedCount, stats.missedCount), color = AccentRed)
                         }
                     }
                 }
@@ -231,8 +231,8 @@ fun AlarmListScreen(
     LaunchedEffect(state.undoAlarm) {
         state.undoAlarm?.let {
             val result = snackbarHostState.showSnackbar(
-                message = "Alarm deleted",
-                actionLabel = "Undo",
+                message = context.getString(R.string.alarm_deleted),
+                actionLabel = context.getString(R.string.undo),
                 duration = SnackbarDuration.Short
             )
             if (result == SnackbarResult.ActionPerformed) {
@@ -282,22 +282,18 @@ fun AlarmListScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        if (state.selectedIds.size == 1) "Delete alarm" else "Delete ${state.selectedIds.size} alarms"
+                        stringResource(R.plurals.alarm_bulk_delete_confirm, state.selectedIds.size, state.selectedIds.size)
                     )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showBulkDeleteConfirmation = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text(stringResource(R.string.cancel), color = TextSecondary)
                 }
             },
             title = {
                 Text(
-                    text = if (state.selectedIds.size == 1) {
-                        "Delete selected alarm?"
-                    } else {
-                        "Delete ${state.selectedIds.size} selected alarms?"
-                    },
+                    text = stringResource(R.plurals.alarm_bulk_delete_title, state.selectedIds.size, state.selectedIds.size),
                     color = TextPrimary,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
@@ -306,9 +302,9 @@ fun AlarmListScreen(
             text = {
                 Text(
                     text = if (state.selectedIds.size == filteredAlarms.size && filteredAlarms.isNotEmpty()) {
-                        "This will remove every alarm currently visible in the list. Use this only if you are sure."
+                        stringResource(R.string.alarm_bulk_delete_all_body)
                     } else {
-                        "This removes only the alarms currently selected. This bulk action does not offer per-alarm undo."
+                        stringResource(R.string.alarm_bulk_delete_selected_body)
                     },
                     color = TextSecondary
                 )
@@ -368,10 +364,10 @@ fun AlarmListScreen(
                         alarmCount = state.alarms.size,
                         vacationActive = state.vacationActive,
                         sortLabel = when (state.sortOrder) {
-                            AlarmSortOrder.TIME -> "Sort by time"
-                            AlarmSortOrder.MANUAL -> "Manual order"
-                            AlarmSortOrder.CREATED -> "Newest first"
-                            AlarmSortOrder.ENABLED_FIRST -> "Active first"
+                            AlarmSortOrder.TIME -> stringResource(R.string.alarm_sort_time)
+                            AlarmSortOrder.MANUAL -> stringResource(R.string.alarm_sort_manual)
+                            AlarmSortOrder.CREATED -> stringResource(R.string.alarm_sort_newest)
+                            AlarmSortOrder.ENABLED_FIRST -> stringResource(R.string.alarm_sort_enabled)
                         },
                         onCycleSort = viewModel::cycleSortOrder,
                         onSync = viewModel::syncWithWatch,
@@ -386,7 +382,7 @@ fun AlarmListScreen(
                         ) {
                             if (state.groups.any { it.isNotBlank() }) {
                                 GroupFilterRow(
-                                    title = "Groups",
+                                    title = stringResource(R.string.groups),
                                     groups = state.groups.filter { it.isNotBlank() },
                                     selectedGroup = state.selectedGroup,
                                     onSelectGroup = viewModel::selectGroup
@@ -395,7 +391,7 @@ fun AlarmListScreen(
 
                             if (state.profiles.any { it.isNotBlank() }) {
                                 GroupFilterRow(
-                                    title = "Profiles",
+                                    title = stringResource(R.string.profiles),
                                     groups = state.profiles.filter { it.isNotBlank() },
                                     selectedGroup = state.selectedProfile,
                                     onSelectGroup = viewModel::selectProfile
@@ -407,12 +403,12 @@ fun AlarmListScreen(
                                     OutlinedTextField(
                                         value = searchQuery,
                                         onValueChange = { searchQuery = it },
-                                        placeholder = { Text("Try “weekday”, “gym”, or “medication”") },
+                                        placeholder = { Text(stringResource(R.string.alarm_search_hint)) },
                                         leadingIcon = { Icon(Icons.Default.Search, null, tint = TextMuted) },
                                         trailingIcon = {
                                             if (searchQuery.isNotBlank()) {
                                                 IconButton(onClick = { searchQuery = "" }) {
-                                                    Icon(Icons.Default.Clear, "Clear search", tint = TextMuted)
+                                                    Icon(Icons.Default.Clear, stringResource(R.string.clear_search), tint = TextMuted)
                                                 }
                                             }
                                         },
@@ -440,8 +436,8 @@ fun AlarmListScreen(
                                 AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                                     AppEmptyState(
                                         icon = Icons.Default.AlarmAdd,
-                                        title = "No alarms yet",
-                                        description = "Create your first wake-up, or start from a template.",
+                                        title = stringResource(R.string.no_alarms_title),
+                                        description = stringResource(R.string.no_alarms_desc),
                                         footer = {
                                             AlarmListEmptyActions(
                                                 onAddAlarm = onAddAlarm,
@@ -466,8 +462,8 @@ fun AlarmListScreen(
                                 AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                                     AppEmptyState(
                                         icon = Icons.Default.Search,
-                                        title = "No alarms match that search",
-                                        description = "Try a different label or clear your filters to bring everything back.",
+                                        title = stringResource(R.string.search_no_match_title),
+                                        description = stringResource(R.string.search_no_match_desc),
                                         footer = {
                                             TextButton(
                                                 onClick = {
@@ -476,7 +472,7 @@ fun AlarmListScreen(
                                                     viewModel.selectProfile(null)
                                                 }
                                             ) {
-                                                Text("Clear filters", color = MaterialTheme.colorScheme.primary)
+                                                Text(stringResource(R.string.clear_filters), color = MaterialTheme.colorScheme.primary)
                                             }
                                         }
                                     )
@@ -496,12 +492,8 @@ fun AlarmListScreen(
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     AppInlineNotice(
-                                        title = if (duplicateExtras.size == 1) {
-                                            "Duplicate alarm"
-                                        } else {
-                                            "${duplicateExtras.size} duplicate alarms"
-                                        },
-                                        message = "Identical time, days and label. Remove the extras, keeping the first of each.",
+                                        title = stringResource(R.plurals.duplicate_alarms, duplicateExtras.size, duplicateExtras.size),
+                                        message = stringResource(R.string.duplicate_alarms_msg),
                                         icon = Icons.Default.ContentCopy,
                                         color = AccentRed
                                     )
@@ -511,11 +503,7 @@ fun AlarmListScreen(
                                     ) {
                                         TextButton(onClick = viewModel::removeDuplicateExtras) {
                                             Text(
-                                                if (duplicateExtras.size == 1) {
-                                                    "Remove duplicate"
-                                                } else {
-                                                    "Remove ${duplicateExtras.size} duplicates"
-                                                },
+                                                stringResource(R.plurals.remove_duplicates, duplicateExtras.size, duplicateExtras.size),
                                                 color = AccentRed
                                             )
                                         }
@@ -537,8 +525,8 @@ fun AlarmListScreen(
                                     else "%d:%02d %s".format(if (h % 12 == 0) 12 else h % 12, m, if (h < 12) "AM" else "PM")
                                 }
                                 AppInlineNotice(
-                                    title = "Duplicate fire time",
-                                    message = "Multiple enabled alarms are set for $timeLabels. Review them if that was not intentional.",
+                                    title = stringResource(R.string.conflict_time_title),
+                                    message = stringResource(R.string.conflict_time_msg, timeLabels),
                                     icon = Icons.Default.Warning,
                                     color = SnoozeYellow,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -701,7 +689,7 @@ fun AlarmListScreen(
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Templates")
+                                    Text(stringResource(R.string.templates))
                                 }
                                 Button(
                                     onClick = onAddAlarm,
@@ -711,7 +699,7 @@ fun AlarmListScreen(
                                 ) {
                                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("New alarm")
+                                    Text(stringResource(R.string.new_alarm))
                                 }
                             }
                         }
@@ -804,7 +792,7 @@ private fun AlarmListEmptyActions(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Create alarm")
+                    Text(stringResource(R.string.create_alarm))
                 }
                 OutlinedButton(
                     onClick = onBrowseTemplates,
@@ -812,7 +800,7 @@ private fun AlarmListEmptyActions(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Browse templates")
+                    Text(stringResource(R.string.browse_templates))
                 }
             }
         } else {
@@ -825,14 +813,14 @@ private fun AlarmListEmptyActions(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Create alarm")
+                    Text(stringResource(R.string.create_alarm))
                 }
                 OutlinedButton(
                     onClick = onBrowseTemplates,
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Browse templates")
+                    Text(stringResource(R.string.browse_templates))
                 }
             }
         }
@@ -856,21 +844,22 @@ private fun AlarmDetailPane(
     onBrowseTemplates: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val detailPaneCd = if (alarm == null) {
+        stringResource(R.string.cd_alarm_detail_pane)
+    } else {
+        stringResource(R.string.cd_alarm_detail_pane_for, alarm.label.ifBlank { formatAlarmTime(alarm, is24Hour) })
+    }
     AppSurfaceCard(
         modifier = modifier.semantics {
-            contentDescription = if (alarm == null) {
-                "Alarm detail pane"
-            } else {
-                "Alarm detail pane for ${alarm.label.ifBlank { formatAlarmTime(alarm, is24Hour) }}"
-            }
+            contentDescription = detailPaneCd
         },
         highlighted = alarm?.isEnabled == true
     ) {
         if (alarm == null) {
             AppEmptyState(
                 icon = Icons.Default.AlarmAdd,
-                title = "Select an alarm",
-                description = "Choose an alarm from the list to review its next fire time and actions.",
+                title = stringResource(R.string.select_alarm_title),
+                description = stringResource(R.string.select_alarm_desc),
                 footer = {
                     AlarmListEmptyActions(
                         onAddAlarm = onAddAlarm,
@@ -886,15 +875,15 @@ private fun AlarmDetailPane(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             AppSectionTitle(
-                title = alarm.label.ifBlank { "Alarm details" },
+                title = alarm.label.ifBlank { stringResource(R.string.alarm_details) },
                 description = if (suppressedByVacation) {
-                    "Paused until vacation ends"
+                    stringResource(R.string.vacation_paused_detail)
                 } else {
-                    nextOccurrenceLabel(alarm, is24Hour)
+                    nextOccurrenceLabel(alarm, is24Hour, LocalContext.current)
                 },
                 action = {
                     AppStatusChip(
-                        label = if (alarm.isEnabled) "Enabled" else "Paused",
+                        label = if (alarm.isEnabled) stringResource(R.string.status_enabled) else stringResource(R.string.stopwatch_status_paused),
                         icon = if (alarm.isEnabled) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,
                         color = if (alarm.isEnabled) DismissGreen else TextMuted
                     )
@@ -915,7 +904,7 @@ private fun AlarmDetailPane(
             ) {
                 if (suppressedByVacation) {
                     AppStatusChip(
-                        label = "Paused by vacation",
+                        label = stringResource(R.string.vacation_paused_chip),
                         icon = Icons.Default.BeachAccess,
                         color = SnoozeYellow
                     )
@@ -941,28 +930,36 @@ private fun AlarmDetailPane(
                 }
                 if (alarm.challengeType != "NONE") {
                     AppStatusChip(
-                        label = challengeTypeLabel(alarm.challengeType),
+                        label = challengeTypeLabel(alarm.challengeType)?.let { stringResource(it) }
+                            ?: alarm.challengeType.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() },
                         color = SnoozeYellow
                     )
                 }
                 if (alarm.ringtoneUri == "silent") {
-                    AppStatusChip(label = "Silent", color = TextMuted)
+                    AppStatusChip(label = stringResource(R.string.silent), color = TextMuted)
                 }
             }
 
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .combinedClickable(
-                        onClick = { onToggle(alarm) },
-                        onLongClick = { if (alarm.isEnabled) onForceToggle(alarm) }
-                    )
-                    .semantics {
-                        contentDescription = "${alarm.label.ifBlank { formatAlarmTime(alarm, is24Hour) }} alarm"
-                        stateDescription = if (alarm.isEnabled) "Enabled" else "Disabled"
-                        role = Role.Switch
-                    },
+            val toggleSemanticsCd = stringResource(
+        R.string.alarm_toggle_cd,
+        alarm.label.ifBlank { formatAlarmTime(alarm, is24Hour) }
+    )
+    val toggleSemanticsState = stringResource(
+        if (alarm.isEnabled) R.string.status_enabled else R.string.status_disabled
+    )
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .combinedClickable(
+                onClick = { onToggle(alarm) },
+                onLongClick = { if (alarm.isEnabled) onForceToggle(alarm) }
+            )
+            .semantics {
+                contentDescription = toggleSemanticsCd
+                stateDescription = toggleSemanticsState
+                role = Role.Switch
+            },
                 shape = RoundedCornerShape(10.dp),
                 color = SurfaceMedium,
                 border = androidx.compose.foundation.BorderStroke(
@@ -976,9 +973,11 @@ private fun AlarmDetailPane(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Alarm state", color = TextPrimary, style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.alarm_state), color = TextPrimary, style = MaterialTheme.typography.titleSmall)
                         Text(
-                            if (alarm.isEnabled) "Tap to pause. Long-press to force-pause." else "Tap to enable this alarm.",
+                            stringResource(
+                                if (alarm.isEnabled) R.string.alarm_state_toggle_running else R.string.alarm_state_toggle_off
+                            ),
                             color = TextSecondary,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -999,7 +998,7 @@ private fun AlarmDetailPane(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Edit alarm")
+                    Text(stringResource(R.string.edit_alarm))
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
@@ -1011,7 +1010,7 @@ private fun AlarmDetailPane(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Duplicate")
+                        Text(stringResource(R.string.duplicate))
                     }
                     OutlinedButton(
                         onClick = { onShare(alarm) },
@@ -1020,7 +1019,7 @@ private fun AlarmDetailPane(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Share")
+                        Text(stringResource(R.string.share))
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1031,7 +1030,7 @@ private fun AlarmDetailPane(
                     ) {
                         Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("History")
+                        Text(stringResource(R.string.history))
                     }
                     OutlinedButton(
                         onClick = { onDelete(alarm) },
@@ -1041,7 +1040,7 @@ private fun AlarmDetailPane(
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Delete")
+                        Text(stringResource(R.string.delete))
                     }
                 }
                 if (alarm.isEnabled && alarm.isRecurringSchedule) {
@@ -1052,7 +1051,7 @@ private fun AlarmDetailPane(
                     ) {
                         Icon(Icons.Default.SkipNext, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Skip next occurrence")
+                        Text(stringResource(R.string.skip_next))
                     }
                 }
             }
@@ -1099,7 +1098,7 @@ private fun AlarmHeader(
                         modifier = Modifier.size(13.dp)
                     )
                     Text(
-                        text = "Phone \u21c4 Watch",
+                        text = stringResource(R.string.header_phone_watch),
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -1116,7 +1115,7 @@ private fun AlarmHeader(
                         .background(DismissGreen)
                 )
                 Text(
-                    text = "Synced",
+                    text = stringResource(R.string.synced),
                     color = DismissGreen,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -1142,7 +1141,9 @@ private fun AlarmHeader(
                 modifier = Modifier.size(12.dp)
             )
             Text(
-                text = if (vacationActive) "Vacation mode active" else "Auto-sync enabled",
+                text = stringResource(
+                    if (vacationActive) R.string.vacation_active else R.string.autosync_enabled
+                ),
                 color = TextMuted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
@@ -1152,7 +1153,7 @@ private fun AlarmHeader(
                 onClick = onSync,
                 contentPadding = ButtonDefaults.ContentPadding
             ) {
-                Text("Sync watch", fontSize = 12.sp)
+                Text(stringResource(R.string.sync_watch), fontSize = 12.sp)
             }
         }
     }
@@ -1174,7 +1175,7 @@ private fun GroupFilterRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AppFilterChip(
-                label = "All",
+                label = stringResource(R.string.all),
                 selected = selectedGroup == null,
                 onClick = { onSelectGroup(null) },
                 selectionSemantics = true,
@@ -1202,6 +1203,13 @@ private fun AlarmReorderHandle(
     // v1.13.15: WCAG 2.5.7 — expose drag-equivalent moves as accessibility actions.
     val moveUpLabel = stringResource(R.string.alarm_list_move_up)
     val moveDownLabel = stringResource(R.string.alarm_list_move_down)
+    val handleCd = stringResource(
+        if (enabled) R.string.cd_drag_handle_for else R.string.cd_drag_handle_unavailable,
+        if (enabled) alarmLabel else ""
+    )
+    val handleState = stringResource(
+        if (enabled) R.string.stopwatch_status_ready else R.string.status_disabled
+    )
     Box(
         modifier = modifier
             .size(44.dp)
@@ -1214,12 +1222,8 @@ private fun AlarmReorderHandle(
                 }
             )
             .semantics {
-                contentDescription = if (enabled) {
-                    "Drag handle for $alarmLabel"
-                } else {
-                    "Drag handle unavailable"
-                }
-                stateDescription = if (enabled) "Ready" else "Disabled"
+                contentDescription = handleCd
+                stateDescription = handleState
                 if (enabled) {
                     customActions = listOf(
                         CustomAccessibilityAction(moveUpLabel) { onMoveUp() },
@@ -1244,7 +1248,7 @@ private fun QuickAlarmRow(
 ) {
     AppSurfaceCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         AppSectionTitle(
-            title = "Quick alarms"
+            title = stringResource(R.string.quick_alarms)
         )
         Row(
             modifier = Modifier
@@ -1252,11 +1256,18 @@ private fun QuickAlarmRow(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            listOf(10 to "10 min", 30 to "30 min", 60 to "1 hour", 120 to "2 hours").forEach { (minutes, label) ->
+            val quickOptions = listOf(
+                10 to R.string.quick_10min,
+                30 to R.string.quick_30min,
+                60 to R.string.quick_1hour,
+                120 to R.string.quick_2hours
+            )
+            quickOptions.forEach { (minutes, labelRes) ->
+                val label = stringResource(labelRes)
                 AppFilterChip(
                     label = label,
                     selected = false,
-                    accessibilityLabel = "Set quick alarm for $label",
+                    accessibilityLabel = stringResource(R.string.quick_alarm_cd, label),
                     onClick = { onQuickAlarm(minutes) },
                 )
             }
@@ -1267,7 +1278,7 @@ private fun QuickAlarmRow(
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
         )
         Text(
-            text = "Power nap",
+            text = stringResource(R.string.power_nap),
             color = TextSecondary,
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.padding(bottom = 4.dp)
@@ -1287,11 +1298,12 @@ private fun QuickAlarmRow(
             napOptions.forEach { minutes ->
                 val isDefault = minutes == napDefaultMinutes
                 AppFilterChip(
-                    label = "$minutes min",
+                    label = stringResource(R.string.timer_preset_minutes, minutes),
                     selected = isDefault,
                     leadingIcon = if (isDefault) Icons.Default.CheckCircle else null,
                     selectionSemantics = false,
-                    accessibilityLabel = "Set $minutes-minute power nap${if (isDefault) ", default length" else ""}",
+                    accessibilityLabel = stringResource(R.string.quick_nap_cd, minutes) +
+                        if (isDefault) stringResource(R.string.quick_nap_default) else "",
                     onClick = { onQuickAlarm(minutes) },
                 )
             }
@@ -1320,6 +1332,11 @@ private fun AlarmCard(
     val shapeTokens = LocalAppShapeTokens.current
     val cardAlpha = if (alarm.isEnabled) 1f else 0.55f
     val (timeStr, periodStr) = splitAlarmTime(alarm, is24Hour)
+    val selectedSemantics = stringResource(R.string.selected_state)
+    val toggleStateSemantics = stringResource(
+        if (alarm.isEnabled) R.string.status_enabled else R.string.status_disabled
+    )
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -1328,7 +1345,7 @@ private fun AlarmCard(
             .semantics {
                 if (isActivePaneSelection) {
                     selected = true
-                    stateDescription = "Selected"
+                    stateDescription = selectedSemantics
                 }
             },
         shape = RoundedCornerShape(16.dp),
@@ -1386,6 +1403,7 @@ private fun AlarmCard(
 
                 // Toggle pill
                 val alarmToggleLabel = alarm.label.ifBlank { timeStr }
+                val toggleCd = stringResource(R.string.alarm_toggle_cd, alarmToggleLabel)
                 Box(
                     modifier = Modifier
                         .combinedClickable(
@@ -1393,8 +1411,8 @@ private fun AlarmCard(
                             onLongClick = { if (alarm.isEnabled) onForceToggle() }
                         )
                         .semantics {
-                            contentDescription = "$alarmToggleLabel alarm"
-                            stateDescription = if (alarm.isEnabled) "Enabled" else "Disabled"
+                            contentDescription = toggleCd
+                            stateDescription = toggleStateSemantics
                             role = Role.Switch
                         }
                 ) {
@@ -1426,7 +1444,7 @@ private fun AlarmCard(
                     alarm.shiftPatternChipLabel()?.let(::add)
                 }.joinToString(" · ")
 
-                val remainingText = if (alarm.isEnabled) nextRemainingLabel(alarm) else ""
+                val remainingText = if (alarm.isEnabled) nextRemainingLabel(alarm, context) else ""
 
                 Row(
                     modifier = Modifier.weight(1f),
@@ -1461,7 +1479,7 @@ private fun AlarmCard(
                         IconButton(onClick = { onShowHistory() }, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = "Test ring",
+                                contentDescription = stringResource(R.string.test_ring),
                                 tint = TextMuted,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -1470,7 +1488,7 @@ private fun AlarmCard(
                     IconButton(onClick = onClick, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.cd_edit),
                             tint = TextMuted,
                             modifier = Modifier.size(16.dp)
                         )
@@ -1478,7 +1496,7 @@ private fun AlarmCard(
                     IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.delete),
                             tint = TextMuted,
                             modifier = Modifier.size(16.dp)
                         )
@@ -1501,7 +1519,9 @@ private fun AlarmCard(
                         modifier = Modifier.size(13.dp)
                     )
                     Text(
-                        text = if (change.fromWatch) "Created/changed on watch" else "Created/changed on phone",
+                        text = stringResource(
+                            if (change.fromWatch) R.string.change_from_watch else R.string.change_from_phone
+                        ),
                         color = TextMuted.copy(alpha = 0.7f),
                         fontSize = 9.sp
                     )
@@ -1540,16 +1560,14 @@ private fun SelectionActionBar(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onClearSelection) {
-                        Icon(Icons.Default.Close, "Clear selection", tint = TextPrimary)
+                        Icon(Icons.Default.Close, stringResource(R.string.cd_clear_selection), tint = TextPrimary)
                     }
                     Column {
-                        Text("$selectedCount selected", color = TextPrimary, style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.plurals.selection_count, selectedCount, selectedCount), color = TextPrimary, style = MaterialTheme.typography.titleSmall)
                         Text(
-                            if (selectedCount == totalCount) {
-                                "Bulk actions apply to everything currently on screen"
-                            } else {
-                                "Bulk actions apply only to the alarms you selected"
-                            },
+                            stringResource(
+                                if (selectedCount == totalCount) R.string.bulk_all_note else R.string.bulk_selected_note
+                            ),
                             color = TextSecondary,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -1558,7 +1576,7 @@ private fun SelectionActionBar(
 
                 if (selectedCount < totalCount) {
                     TextButton(onClick = onSelectAll) {
-                        Text("Select visible", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.select_visible), color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -1575,7 +1593,7 @@ private fun SelectionActionBar(
                 ) {
                     Icon(Icons.Default.NotificationsActive, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Enable")
+                    Text(stringResource(R.string.enable))
                 }
                 OutlinedButton(
                     onClick = onDisableSelected,
@@ -1585,7 +1603,7 @@ private fun SelectionActionBar(
                 ) {
                     Icon(Icons.Default.NotificationsOff, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Pause")
+                    Text(stringResource(R.string.pause))
                 }
                 Button(
                     onClick = onDeleteSelected,
@@ -1595,7 +1613,7 @@ private fun SelectionActionBar(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             }
         }
@@ -1611,13 +1629,16 @@ private fun SelectableAlarmCard(
     onToggleSelect: () -> Unit
 ) {
     val shapeTokens = LocalAppShapeTokens.current
+    val selectStateSemantics = stringResource(
+        if (isSelected) R.string.selected_state else R.string.not_selected
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onToggleSelect)
             .semantics {
                 selected = isSelected
-                stateDescription = if (isSelected) "Selected" else "Not selected"
+                stateDescription = selectStateSemantics
             },
         shape = shapeTokens.card,
         colors = CardDefaults.cardColors(
@@ -1674,21 +1695,21 @@ private fun SelectableAlarmCard(
 
 private fun shareAlarm(context: Context, alarm: Alarm, is24Hour: Boolean) {
     val deepLink = AlarmShareCodec.createDeepLink(alarm)
-    val title = alarm.label.ifBlank { "Alarm ${formatAlarmTime(alarm, is24Hour)}" }
+    val title = alarm.label.ifBlank { context.getString(R.string.share_alarm_title, formatAlarmTime(alarm, is24Hour)) }
     val shareText = buildString {
-        appendLine("WakeSync alarm: $title")
-        appendLine("Time: ${formatAlarmTime(alarm, is24Hour)}")
-        append("Import: $deepLink")
+        appendLine(context.getString(R.string.share_subject, title))
+        appendLine(context.getString(R.string.share_time, formatAlarmTime(alarm, is24Hour)))
+        append(context.getString(R.string.share_import, deepLink))
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "WakeSync alarm: $title")
+        putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_subject, title))
         putExtra(Intent.EXTRA_TEXT, shareText)
     }
     runCatching {
-        context.startActivity(Intent.createChooser(intent, "Share alarm"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_alarm_chooser)))
     }.onFailure {
-        Toast.makeText(context, "No app is available to share this alarm.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.share_no_app), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -1714,7 +1735,7 @@ private fun splitAlarmTime(alarm: Alarm, is24Hour: Boolean): Pair<String, String
 }
 
 /** Short relative remaining time like "in 23h 20m" or "in 5m". */
-private fun nextRemainingLabel(alarm: Alarm): String {
+private fun nextRemainingLabel(alarm: Alarm, context: Context): String {
     val now = java.lang.System.currentTimeMillis()
     val diff = alarm.nextTriggerTime - now
     if (diff <= 0) return ""
@@ -1722,41 +1743,41 @@ private fun nextRemainingLabel(alarm: Alarm): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return when {
-        hours > 0 -> "in ${hours}h ${minutes}m"
-        minutes > 0 -> "in ${minutes}m"
-        else -> "in <1m"
+        hours > 0 -> context.getString(R.string.alarm_in_hours_mins, hours.toString(), minutes.toString())
+        minutes > 0 -> context.getString(R.string.alarm_in_minutes, minutes.toString())
+        else -> context.getString(R.string.alarm_in_less_minute)
     }
 }
 
-private fun challengeTypeLabel(type: String): String = when (type) {
-    "MATH_EASY"      -> "Math (Easy)"
-    "MATH_MEDIUM"    -> "Math (Medium)"
-    "MATH_HARD"      -> "Math (Hard)"
-    "SHAKE"          -> "Shake Phone"
-    "SEQUENCE"       -> "Number Sequence"
-    "MEMORY_PATTERN" -> "Memory Pattern"
-    "TYPING"         -> "Type a Phrase"
-    "VOICE_PHRASE"   -> "Voice Phrase"
-    "HANDWRITING"    -> "Handwriting"
-    "WALK_STEPS"     -> "Walk Steps"
-    "NFC_SCAN"       -> "NFC Tag Scan"
-    "BARCODE_SCAN"   -> "Barcode Scan"
-    "PHOTO_MATCH"    -> "Photo Match"
-    "SQUAT"          -> "Squats"
-    "WIFI_CONNECT"   -> "Wi-Fi Connect"
-    "MAZE"           -> "Maze Puzzle"
-    "COUNT_SHEEP"    -> "Count the Sheep"
-    "SIMON_SAYS"     -> "Simon Says"
-    "DATE_BACKWARDS" -> "Type Date Backwards"
-    "STROOP"         -> "Stroop Color Test"
-    "ROCK_PAPER_SCISSORS" -> "Rock Paper Scissors"
-    "EMOJI_MEMORY"   -> "Emoji Memory"
-    "TYPING_SPEED"   -> "Typing Speed"
-    "WORDLE"         -> "Wordle"
-    "PVT"            -> "Reaction Test"
-    "PUSH_UP"        -> "Push-ups"
-    "PLANK_HOLD"     -> "Plank Hold"
-    else             -> type.lowercase().replace("_", " ").replaceFirstChar { it.uppercase() }
+private fun challengeTypeLabel(type: String): Int? = when (type) {
+    "MATH_EASY"      -> R.string.challenge_math_easy
+    "MATH_MEDIUM"    -> R.string.challenge_math_medium
+    "MATH_HARD"      -> R.string.challenge_math_hard
+    "SHAKE"          -> R.string.challenge_shake
+    "SEQUENCE"       -> R.string.challenge_sequence
+    "MEMORY_PATTERN" -> R.string.challenge_memory_pattern
+    "TYPING"         -> R.string.challenge_typing
+    "VOICE_PHRASE"   -> R.string.challenge_voice_phrase
+    "HANDWRITING"    -> R.string.challenge_handwriting
+    "WALK_STEPS"     -> R.string.challenge_walk_steps
+    "NFC_SCAN"       -> R.string.challenge_nfc_scan
+    "BARCODE_SCAN"   -> R.string.challenge_barcode_scan
+    "PHOTO_MATCH"    -> R.string.challenge_photo_match
+    "SQUAT"          -> R.string.challenge_squat
+    "WIFI_CONNECT"   -> R.string.challenge_wifi_connect
+    "MAZE"           -> R.string.challenge_maze
+    "COUNT_SHEEP"    -> R.string.challenge_count_sheep
+    "SIMON_SAYS"     -> R.string.challenge_simon_says
+    "DATE_BACKWARDS" -> R.string.challenge_date_backwards
+    "STROOP"         -> R.string.challenge_stroop
+    "ROCK_PAPER_SCISSORS" -> R.string.challenge_rps
+    "EMOJI_MEMORY"   -> R.string.challenge_emoji_memory
+    "TYPING_SPEED"   -> R.string.challenge_typing_speed
+    "WORDLE"         -> R.string.challenge_wordle
+    "PVT"            -> R.string.challenge_pvt
+    "PUSH_UP"        -> R.string.challenge_push_up
+    "PLANK_HOLD"     -> R.string.challenge_plank_hold
+    else             -> null
 }
 
 private fun Alarm.shiftPatternChipLabel(): String? {
@@ -1765,13 +1786,13 @@ private fun Alarm.shiftPatternChipLabel(): String? {
     return pattern.shortLabel
 }
 
-private fun nextOccurrenceLabel(alarm: Alarm, is24Hour: Boolean): String {
+private fun nextOccurrenceLabel(alarm: Alarm, is24Hour: Boolean, context: Context): String {
     if (!alarm.isEnabled || alarm.nextTriggerTime <= 0) {
-        return "Paused until you re-enable this alarm"
+        return context.getString(R.string.alarm_paused_until_enable)
     }
     val pattern = if (is24Hour) "EEE, MMM d • HH:mm" else "EEE, MMM d • h:mm a"
     val formatted = Instant.ofEpochMilli(alarm.nextTriggerTime)
         .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern(pattern))
-    return "Next occurrence: $formatted"
+        .format(DateTimeFormatter.ofPattern(pattern, java.util.Locale.getDefault()))
+    return context.getString(R.string.next_occurrence, formatted)
 }

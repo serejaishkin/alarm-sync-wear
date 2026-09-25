@@ -395,14 +395,14 @@ class SettingsViewModel @Inject constructor(
     fun testHue() {
         viewModelScope.launch(Dispatchers.IO) {
             _hueTestState.value = IntegrationTestState(
-                message = "Checking Hue bridge...",
+                message = getApplication<Application>().getString(R.string.hue_checking),
                 isRunning = true
             )
             val settings = preferencesManager.getCurrentSettings()
             if (LocalNetworkPermission.isRuntimeRequired() &&
                 !LocalNetworkPermission.isGranted(getApplication())
             ) {
-                val result = "Hue bridge not checked — allow local network access first"
+                val result = getApplication<Application>().getString(R.string.hue_not_checked_local)
                 _hueTestState.value = IntegrationTestState(message = result, isRunning = false)
                 kotlinx.coroutines.delay(4000)
                 if (_hueTestState.value.message == result) {
@@ -421,24 +421,25 @@ class SettingsViewModel @Inject constructor(
                     val pin = hueTrustStore.rememberFirstUse(connection.observedFingerprint)
                 ) {
                     is HuePinResult.Accepted -> if (pin.newlyPinned) {
-                        "Hue bridge reachable (API v2) — certificate saved"
+                        getApplication<Application>().getString(R.string.hue_reachable_v2_cert)
                     } else {
-                        "Hue bridge reachable (API v2)"
+                        getApplication<Application>().getString(R.string.hue_reachable_v2)
                     }
                     is HuePinResult.Changed ->
-                        "Hue certificate changed — verify the bridge, then forget the saved certificate"
-                    HuePinResult.Invalid -> "Hue bridge returned an invalid certificate fingerprint"
+                        getApplication<Application>().getString(R.string.hue_cert_changed)
+                    HuePinResult.Invalid ->
+                        getApplication<Application>().getString(R.string.hue_invalid_fingerprint)
                 }
                 HueConnectionResult.V1Reachable ->
-                    "Hue bridge reachable (legacy API v1 over HTTP)"
+                    getApplication<Application>().getString(R.string.hue_reachable_legacy)
                 is HueConnectionResult.CertificateChanged ->
-                    "Hue certificate changed — verify the bridge, then forget the saved certificate"
+                    getApplication<Application>().getString(R.string.hue_cert_changed)
                 HueConnectionResult.InvalidConfiguration ->
-                    "Hue bridge not checked — enter a valid IP and API key"
+                    getApplication<Application>().getString(R.string.hue_not_checked_creds)
                 is HueConnectionResult.Unreachable -> if (settings.hueLegacyHttpEnabled) {
-                    "Hue bridge not found — check IP and key"
+                    getApplication<Application>().getString(R.string.hue_not_found)
                 } else {
-                    "Hue API v2 not reachable — legacy HTTP is off"
+                    getApplication<Application>().getString(R.string.hue_v2_unreachable)
                 }
             }
             _hueTestState.value = IntegrationTestState(message = result, isRunning = false)
@@ -570,8 +571,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     // Backup/restore
-    private val _backupResult = MutableStateFlow<String?>(null)
-    val backupResult: StateFlow<String?> = _backupResult.asStateFlow()
+    private val _backupResult = MutableStateFlow<BackupStatus?>(null)
+    internal val backupResult: StateFlow<BackupStatus?> = _backupResult.asStateFlow()
     private val _backupBusy = MutableStateFlow(false)
     val backupBusy: StateFlow<Boolean> = _backupBusy.asStateFlow()
     private val _supportExportResult = MutableStateFlow<String?>(null)
@@ -607,9 +608,17 @@ class SettingsViewModel @Inject constructor(
                             )
                         )
                     }
-                    .onFailure { setBackupResult(backupFailureMessage(BackupStatusKind.PlainExport, it)) }
+                    .onFailure {
+                        setBackupResult(
+                            backupFailureMessage(
+                                getApplication<Application>().resources,
+                                BackupStatusKind.PlainExport,
+                                it
+                            )
+                        )
+                    }
             } catch (e: Exception) {
-                setBackupResult(backupFailureMessage(BackupStatusKind.PlainExport, e))
+                setBackupResult(backupFailureMessage(getApplication<Application>().resources, BackupStatusKind.PlainExport, e))
             } finally {
                 _backupBusy.value = false
             }
@@ -630,9 +639,17 @@ class SettingsViewModel @Inject constructor(
                             )
                         )
                     }
-                    .onFailure { setBackupResult(backupFailureMessage(BackupStatusKind.EncryptedExport, it)) }
+                    .onFailure {
+                        setBackupResult(
+                            backupFailureMessage(
+                                getApplication<Application>().resources,
+                                BackupStatusKind.EncryptedExport,
+                                it
+                            )
+                        )
+                    }
             } catch (e: Exception) {
-                setBackupResult(backupFailureMessage(BackupStatusKind.EncryptedExport, e))
+                setBackupResult(backupFailureMessage(getApplication<Application>().resources, BackupStatusKind.EncryptedExport, e))
             } finally {
                 _backupBusy.value = false
             }
@@ -656,9 +673,17 @@ class SettingsViewModel @Inject constructor(
                             )
                         )
                     }
-                    .onFailure { setBackupResult(backupFailureMessage(BackupStatusKind.PlainImport, it)) }
+                    .onFailure {
+                        setBackupResult(
+                            backupFailureMessage(
+                                getApplication<Application>().resources,
+                                BackupStatusKind.PlainImport,
+                                it
+                            )
+                        )
+                    }
             } catch (e: Exception) {
-                setBackupResult(backupFailureMessage(BackupStatusKind.PlainImport, e))
+                setBackupResult(backupFailureMessage(getApplication<Application>().resources, BackupStatusKind.PlainImport, e))
             } finally {
                 _backupBusy.value = false
             }
@@ -683,9 +708,17 @@ class SettingsViewModel @Inject constructor(
                             )
                         )
                     }
-                    .onFailure { setBackupResult(backupFailureMessage(BackupStatusKind.EncryptedImport, it)) }
+                    .onFailure {
+                        setBackupResult(
+                            backupFailureMessage(
+                                getApplication<Application>().resources,
+                                BackupStatusKind.EncryptedImport,
+                                it
+                            )
+                        )
+                    }
             } catch (e: Exception) {
-                setBackupResult(backupFailureMessage(BackupStatusKind.EncryptedImport, e))
+                setBackupResult(backupFailureMessage(getApplication<Application>().resources, BackupStatusKind.EncryptedImport, e))
             } finally {
                 _backupBusy.value = false
             }
@@ -699,16 +732,21 @@ class SettingsViewModel @Inject constructor(
                 fossifyImportManager.import(uri, expectedFingerprint)
                     .onSuccess { count ->
                         setBackupResult(
-                            getApplication<Application>().resources.getQuantityString(
-                                R.plurals.settings_fossify_import_success,
-                                count,
-                                count
+                            BackupStatus(
+                                getApplication<Application>().resources.getQuantityString(
+                                    R.plurals.settings_fossify_import_success,
+                                    count,
+                                    count
+                                ),
+                                isFailure = false
                             )
                         )
                     }
-                    .onFailure { setBackupResult(fossifyImportFailureMessage(it)) }
+                    .onFailure {
+                        setBackupResult(BackupStatus(fossifyImportFailureMessage(it), isFailure = true))
+                    }
             } catch (e: Exception) {
-                setBackupResult(fossifyImportFailureMessage(e))
+                setBackupResult(BackupStatus(fossifyImportFailureMessage(e), isFailure = true))
             } finally {
                 _backupBusy.value = false
             }
@@ -730,15 +768,15 @@ class SettingsViewModel @Inject constructor(
         return getApplication<Application>().getString(res)
     }
 
-    fun showBackupResult(message: String) {
-        setBackupResult(message)
+    fun showBackupResult(message: String, isFailure: Boolean = false) {
+        setBackupResult(BackupStatus(message, isFailure))
     }
 
-    private fun setBackupResult(message: String) {
-        _backupResult.value = message
+    private fun setBackupResult(status: BackupStatus) {
+        _backupResult.value = status
         viewModelScope.launch {
             kotlinx.coroutines.delay(5000)
-            if (_backupResult.value == message) {
+            if (_backupResult.value == status) {
                 _backupResult.value = null
             }
         }
@@ -747,12 +785,12 @@ class SettingsViewModel @Inject constructor(
     fun clearBackupResult() { _backupResult.value = null }
 
     suspend fun createSupportExport(): Result<SupportExportFile> = createDiagnosticExport(
-        successMessage = "Support bundle ready to share",
+        successMessage = getApplication<Application>().getString(R.string.support_export_ready),
         exporter = supportExportManager::createSupportExport
     )
 
     suspend fun createCrashLogExport(): Result<SupportExportFile> = createDiagnosticExport(
-        successMessage = "Crash log ready to share",
+        successMessage = getApplication<Application>().getString(R.string.crash_log_ready),
         exporter = supportExportManager::createCrashLogExport
     )
 
@@ -768,8 +806,8 @@ class SettingsViewModel @Inject constructor(
             setSupportExportResult(successMessage)
             Result.success(export)
         } catch (e: Exception) {
-            val message = backupFailureMessage(BackupStatusKind.SupportExport, e)
-            setSupportExportResult(message)
+            val message = backupFailureMessage(getApplication<Application>().resources, BackupStatusKind.SupportExport, e)
+            setSupportExportResult(message.message)
             Result.failure(e)
         } finally {
             _supportExportBusy.value = false
@@ -777,7 +815,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setSupportExportShareFailed() {
-        setSupportExportResult("No app is available to share the support bundle")
+        setSupportExportResult(
+            getApplication<Application>().getString(R.string.support_no_share_app)
+        )
     }
 
     fun clearSupportExportResult() { _supportExportResult.value = null }

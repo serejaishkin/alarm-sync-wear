@@ -28,9 +28,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.wakesync.app.R
 import com.wakesync.app.domain.SleepNoisePreset
 import com.wakesync.app.ui.components.AppFilterChip
 import com.wakesync.app.ui.components.AppSectionTitle
@@ -46,14 +48,15 @@ private data class SleepSound(
     val preset: SleepNoisePreset
 )
 
-private val SLEEP_SOUNDS = listOf(
-    SleepSound("White Noise", Icons.Default.Waves, SleepNoisePreset.WHITE),
-    SleepSound("Rain", Icons.Default.WaterDrop, SleepNoisePreset.RAIN),
-    SleepSound("Brown Noise", Icons.Default.GraphicEq, SleepNoisePreset.BROWN),
-    SleepSound("Ocean", Icons.Default.Sailing, SleepNoisePreset.OCEAN),
-    SleepSound("Fan", Icons.Default.Air, SleepNoisePreset.FAN),
-    SleepSound("Pink Noise", Icons.Default.GraphicEq, SleepNoisePreset.PINK),
-    SleepSound("Violet Noise", Icons.Default.Waves, SleepNoisePreset.VIOLET),
+@Composable
+private fun sleepSounds(): List<SleepSound> = listOf(
+    SleepSound(stringResource(R.string.sleep_sound_white), Icons.Default.Waves, SleepNoisePreset.WHITE),
+    SleepSound(stringResource(R.string.sleep_sound_rain), Icons.Default.WaterDrop, SleepNoisePreset.RAIN),
+    SleepSound(stringResource(R.string.sleep_sound_brown), Icons.Default.GraphicEq, SleepNoisePreset.BROWN),
+    SleepSound(stringResource(R.string.sleep_sound_ocean), Icons.Default.Sailing, SleepNoisePreset.OCEAN),
+    SleepSound(stringResource(R.string.sleep_sound_fan), Icons.Default.Air, SleepNoisePreset.FAN),
+    SleepSound(stringResource(R.string.sleep_sound_pink), Icons.Default.GraphicEq, SleepNoisePreset.PINK),
+    SleepSound(stringResource(R.string.sleep_sound_violet), Icons.Default.Waves, SleepNoisePreset.VIOLET),
 )
 
 @Composable
@@ -64,12 +67,13 @@ internal fun SleepSoundsSection(
 ) {
     AppSurfaceCard(modifier = modifier) {
         AppSectionTitle(
-            title = "Sleep sounds",
-            description = "Continuous procedural soundscapes with no looping artifacts."
+            title = stringResource(R.string.bedtime_sounds_title),
+            description = stringResource(R.string.bedtime_sounds_desc)
         )
 
+        val soundOptions = sleepSounds()
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            itemsIndexed(SLEEP_SOUNDS) { _, sound ->
+            itemsIndexed(soundOptions) { _, sound ->
                 val isActive = state.activeSoundKey == sound.preset.key
 
                 Card(
@@ -107,7 +111,11 @@ internal fun SleepSoundsSection(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                text = if (isActive) "Playing" else "Tap to preview",
+                                text = if (isActive) {
+                                    stringResource(R.string.bedtime_sound_playing)
+                                } else {
+                                    stringResource(R.string.bedtime_sound_tap_preview)
+                                },
                                 color = if (isActive) MaterialTheme.colorScheme.primary else TextMuted,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -120,7 +128,7 @@ internal fun SleepSoundsSection(
         HorizontalDivider(color = TextMuted.copy(alpha = 0.16f))
 
         Text(
-            text = "Fade out after",
+            text = stringResource(R.string.bedtime_fade_out),
             color = TextSecondary,
             style = MaterialTheme.typography.labelLarge
         )
@@ -130,7 +138,11 @@ internal fun SleepSoundsSection(
         ) {
             listOf(0, 15, 30, 45, 60).forEach { minutes ->
                 AppFilterChip(
-                    label = if (minutes == 0) "Never" else "$minutes min",
+                    label = if (minutes == 0) {
+                        stringResource(R.string.bedtime_never)
+                    } else {
+                        stringResource(R.string.firing_minutes_short, minutes)
+                    },
                     selected = state.sleepSoundFadeMinutes == minutes,
                     onClick = { viewModel.setSleepSoundFade(minutes) },
                     selectionSemantics = true,
@@ -141,7 +153,7 @@ internal fun SleepSoundsSection(
         // v1.5.0: Final-taper duration. Until this pass the fade was hard-coded
         // to 60s; users with deeper-sleep routines asked for a longer slide.
         Text(
-            text = "Final taper length",
+            text = stringResource(R.string.bedtime_final_taper),
             color = TextSecondary,
             style = MaterialTheme.typography.labelLarge
         )
@@ -153,9 +165,9 @@ internal fun SleepSoundsSection(
             tapers.forEach { seconds ->
                 AppFilterChip(
                     label = when {
-                        seconds < 60 -> "${seconds}s"
-                        seconds % 60 == 0 -> "${seconds / 60} min"
-                        else -> "${seconds}s"
+                        seconds < 60 -> stringResource(R.string.bedtime_seconds_short, seconds)
+                        seconds % 60 == 0 -> stringResource(R.string.firing_minutes_short, seconds / 60)
+                        else -> stringResource(R.string.bedtime_seconds_short, seconds)
                     },
                     selected = state.sleepSoundFadeSeconds == seconds,
                     onClick = { viewModel.setSleepSoundFadeSeconds(seconds) },
@@ -169,7 +181,7 @@ internal fun SleepSoundsSection(
                 onClick = viewModel::stopSound,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("Stop sound", color = TextSecondary)
+                Text(stringResource(R.string.bedtime_stop_sound), color = TextSecondary)
             }
         }
     }

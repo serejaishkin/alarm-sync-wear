@@ -58,6 +58,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -67,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wakesync.app.R
 import com.wakesync.app.ui.components.AlarmClockHeroHeader
 import com.wakesync.app.ui.components.AppFilterChip
 import com.wakesync.app.ui.components.AppSectionTitle
@@ -117,15 +119,15 @@ fun TimerScreen(
             .verticalScroll(androidx.compose.foundation.rememberScrollState())
     ) {
         AlarmClockHeroHeader(
-            title = "Timer",
+            title = stringResource(R.string.timer_title),
             subtitle = if (state.activeTimers.isEmpty()) {
                 ""
             } else {
-                "${state.activeTimers.size} timer${if (state.activeTimers.size == 1) "" else "s"} active"
+                stringResource(R.plurals.timer_active_count, state.activeTimers.size, state.activeTimers.size)
             },
             actions = {
                 TextButton(onClick = onOpenStopwatch) {
-                    Text("Stopwatch")
+                    Text(stringResource(R.string.timer_stopwatch_action))
                 }
             }
         )
@@ -142,7 +144,7 @@ fun TimerScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 AppSectionTitle(
-                    title = "Active timers"
+                    title = stringResource(R.string.timer_active_timers)
                 )
                 state.activeTimers.forEach { timer ->
                     ActiveTimerCard(
@@ -204,12 +206,12 @@ private fun ActiveTimerCard(
                 TimerProgressRing(timer = timer, pulseAlpha = pulseAlpha)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        timer.label.ifBlank { "Timer" },
+                        timer.label.ifBlank { stringResource(R.string.timer_blank_label) },
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = if (isFinished) "Time’s up" else String.format(
+                        text = if (isFinished) stringResource(R.string.timer_time_up) else String.format(
                             "%02d:%02d:%02d",
                             timer.displayHours,
                             timer.displayMinutes,
@@ -219,7 +221,7 @@ private fun ActiveTimerCard(
                         style = MaterialTheme.typography.headlineSmall
                     )
                     if (timer.state == TimerState.PAUSED) {
-                        AppStatusChip(label = "Paused", icon = Icons.Default.Pause, color = SnoozeYellow)
+                        AppStatusChip(label = stringResource(R.string.timer_paused), icon = Icons.Default.Pause, color = SnoozeYellow)
                     }
                 }
             }
@@ -230,17 +232,19 @@ private fun ActiveTimerCard(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
                 ) {
-                    Text("Dismiss")
+                    Text(stringResource(R.string.timer_dismiss))
                 }
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onStop) {
-                        Icon(Icons.Default.Stop, "Stop timer", tint = AccentRed)
+                        Icon(Icons.Default.Stop, stringResource(R.string.timer_stop_cd), tint = AccentRed)
                     }
                     IconButton(onClick = { if (timer.state == TimerState.RUNNING) onPause() else onResume() }) {
                         Icon(
                             if (timer.state == TimerState.RUNNING) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (timer.state == TimerState.RUNNING) "Pause timer" else "Resume timer",
+                            contentDescription = stringResource(
+                                if (timer.state == TimerState.RUNNING) R.string.timer_pause_cd else R.string.timer_resume_cd
+                            ),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -320,7 +324,7 @@ private fun TimerInputView(state: TimerUiState, viewModel: TimerViewModel, modif
 
         if (state.inputDigits.isNotBlank()) {
             TextButton(onClick = viewModel::clearInput) {
-                Text("Clear entry", color = TextMuted)
+                Text(stringResource(R.string.timer_clear_entry), color = TextMuted)
             }
         }
 
@@ -332,7 +336,7 @@ private fun TimerInputView(state: TimerUiState, viewModel: TimerViewModel, modif
         ) {
             defaultPresets.forEach { preset ->
                 AppFilterChip(
-                    label = preset.label,
+                    label = stringResource(R.string.timer_preset_minutes, (preset.seconds / 60)),
                     selected = false,
                     onClick = { viewModel.selectPreset(preset) },
                 )
@@ -360,7 +364,7 @@ private fun TimerInputView(state: TimerUiState, viewModel: TimerViewModel, modif
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
             Spacer(modifier = Modifier.size(8.dp))
-            Text("Start", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.timer_start), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -400,9 +404,9 @@ private fun NumPad(
                     val interactionSource = remember { MutableInteractionSource() }
                     val pressed by interactionSource.collectIsPressedAsState()
                     val keyLabel = when (key) {
-                        -1 -> "Delete digit"
-                        -2 -> "Add double zero"
-                        else -> "Enter $key"
+                        -1 -> stringResource(R.string.timer_key_delete)
+                        -2 -> stringResource(R.string.timer_key_doublezero)
+                        else -> stringResource(R.string.timer_key_enter, key)
                     }
                     val pressScale by animateFloatAsState(
                         targetValue = if (pressed) 0.97f else 1f,

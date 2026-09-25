@@ -34,9 +34,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.ui.components.AppSectionTitle
 import com.wakesync.app.ui.components.AppStatusChip
 import com.wakesync.app.ui.components.AppSurfaceCard
@@ -161,13 +164,13 @@ fun MorningBriefingScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Good morning",
+                            text = stringResource(R.string.briefing_good_morning),
                             color = TextPrimary,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "You’re clear of the alarm. Here’s the shortest path into the day.",
+                            text = stringResource(R.string.briefing_subtitle),
                             color = TextSecondary,
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center
@@ -196,13 +199,21 @@ fun MorningBriefingScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             AppStatusChip(
-                                label = if (hasEvent) "Next event" else "Open schedule",
+                                label = if (hasEvent) {
+                                    stringResource(R.string.briefing_next_event)
+                                } else {
+                                    stringResource(R.string.briefing_open_schedule)
+                                },
                                 icon = Icons.Default.Event,
                                 color = if (hasEvent) DismissGreen else TextMuted
                             )
                             if (routineItems.isNotEmpty()) {
                                 AppStatusChip(
-                                    label = "${routineItems.size} routine items",
+                                    label = pluralStringResource(
+                                        R.plurals.briefing_routine_items,
+                                        routineItems.size,
+                                        routineItems.size
+                                    ),
                                     icon = Icons.Default.CheckCircleOutline,
                                     color = SnoozeYellow
                                 )
@@ -217,8 +228,8 @@ fun MorningBriefingScreen(
                 highlighted = true
             ) {
                 AppSectionTitle(
-                    title = "Morning briefing",
-                    description = "A quick snapshot so you can start moving with context."
+                    title = stringResource(R.string.briefing_title),
+                    description = stringResource(R.string.briefing_desc)
                 )
                 if (nextEvent.isNotBlank()) {
                     BriefingRow(
@@ -229,7 +240,7 @@ fun MorningBriefingScreen(
                 }
                 if (nextEvent.isBlank()) {
                     Text(
-                        text = "Nothing urgent is queued right now. Enjoy a calmer start to the day.",
+                        text = stringResource(R.string.briefing_nothing_urgent),
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -239,8 +250,8 @@ fun MorningBriefingScreen(
             if (routineItems.isNotEmpty()) {
                 AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                     AppSectionTitle(
-                        title = "Morning routine",
-                        description = "A short checklist to get momentum without decision fatigue."
+                        title = stringResource(R.string.briefing_routine_title),
+                        description = stringResource(R.string.briefing_routine_desc)
                     )
                     routineItems.forEachIndexed { index, item ->
                         RoutineRow(
@@ -258,13 +269,13 @@ fun MorningBriefingScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Close briefing",
+                    text = stringResource(R.string.briefing_close),
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
             Text(
-                text = "This closes intentionally so the handoff from alarm to morning feels clean, not abrupt.",
+                text = stringResource(R.string.briefing_close_note),
                 color = TextMuted,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),

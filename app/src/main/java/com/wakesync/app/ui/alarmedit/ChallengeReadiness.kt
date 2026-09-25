@@ -8,8 +8,10 @@ import android.hardware.SensorManager
 import android.nfc.NfcAdapter
 import android.os.Build
 import android.speech.SpeechRecognizer
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import com.wakesync.app.BuildConfig
+import com.wakesync.app.R
 
 /**
  * Physical-challenge readiness preflight.
@@ -40,7 +42,7 @@ enum class ChallengeReadinessStatus {
 
 data class ChallengeReadiness(
     val status: ChallengeReadinessStatus,
-    val message: String
+    @StringRes val messageRes: Int
 ) {
     /**
      * Whether this verdict should prevent saving the alarm. Missing hardware or a
@@ -88,51 +90,51 @@ fun evaluateChallengeReadiness(
     capabilities: DeviceChallengeCapabilities,
     references: ChallengeReferences
 ): ChallengeReadiness? = when (challengeType) {
-    "SHAKE" -> motionReadiness(capabilities, "shake")
-    "SQUAT" -> motionReadiness(capabilities, "squat")
-    "PUSH_UP" -> motionReadiness(capabilities, "push-up")
-    "PLANK_HOLD" -> motionReadiness(capabilities, "plank hold")
+    "SHAKE" -> motionReadiness(capabilities, R.string.readiness_no_motion_shake)
+    "SQUAT" -> motionReadiness(capabilities, R.string.readiness_no_motion_squat)
+    "PUSH_UP" -> motionReadiness(capabilities, R.string.readiness_no_motion_pushup)
+    "PLANK_HOLD" -> motionReadiness(capabilities, R.string.readiness_no_motion_plank)
     "WALK_STEPS" -> when {
-        !capabilities.hasStepCounter -> hardware("This device has no step-counter sensor for the walk challenge.")
+        !capabilities.hasStepCounter -> hardware(R.string.readiness_no_step_counter)
         !capabilities.activityRecognitionGranted ->
-            permission("Grant physical-activity permission so steps can be counted.")
+            permission(R.string.readiness_activity_grant)
         else -> ready()
     }
     "VOICE_PHRASE" -> when {
         !capabilities.speechRecognitionAvailable ->
-            permission("Android speech recognition is unavailable; typed fallback remains available.")
+            permission(R.string.readiness_speech_unavailable)
         !capabilities.recordAudioGranted ->
-            permission("Grant microphone permission so the phrase can be recognized.")
+            permission(R.string.readiness_mic_permission)
         else -> ready()
     }
     "HANDWRITING" -> when {
         !capabilities.digitalInkRecognitionAvailable ->
-            permission("Handwriting recognition is unavailable in this build; typed fallback remains available.")
+            permission(R.string.readiness_handwriting_unavailable)
         else -> ready()
     }
     "NFC_SCAN" -> when {
-        !capabilities.hasNfc -> hardware("This device has no NFC hardware for the tag challenge.")
-        references.nfcTagId.isBlank() -> reference("Register an NFC tag before saving.")
-        !capabilities.nfcEnabled -> permission("Turn on NFC before this alarm fires.")
+        !capabilities.hasNfc -> hardware(R.string.readiness_no_nfc)
+        references.nfcTagId.isBlank() -> reference(R.string.readiness_register_nfc)
+        !capabilities.nfcEnabled -> permission(R.string.readiness_nfc_off)
         else -> ready()
     }
     "BARCODE_SCAN" -> when {
-        !capabilities.hasCamera -> hardware("This device has no camera to scan the barcode.")
-        references.barcodeValue.isBlank() -> reference("Register a barcode value before saving.")
-        !capabilities.cameraGranted -> permission("Grant camera permission to scan the barcode.")
+        !capabilities.hasCamera -> hardware(R.string.readiness_no_camera_barcode)
+        references.barcodeValue.isBlank() -> reference(R.string.readiness_register_barcode)
+        !capabilities.cameraGranted -> permission(R.string.readiness_camera_permission_barcode)
         else -> ready()
     }
     "PHOTO_MATCH" -> when {
-        !capabilities.hasCamera -> hardware("This device has no camera for the photo-match challenge.")
-        references.photoMatchUri.isBlank() -> reference("Capture a reference photo before saving.")
-        !capabilities.cameraGranted -> permission("Grant camera permission to match the photo.")
+        !capabilities.hasCamera -> hardware(R.string.readiness_no_camera_photo)
+        references.photoMatchUri.isBlank() -> reference(R.string.readiness_register_photo)
+        !capabilities.cameraGranted -> permission(R.string.readiness_camera_permission_photo)
         else -> ready()
     }
     "WIFI_CONNECT" -> when {
-        !capabilities.hasWifi -> hardware("This device has no Wi-Fi for the network challenge.")
-        references.wifiDismissSsid.isBlank() -> reference("Enter the Wi-Fi network name before saving.")
+        !capabilities.hasWifi -> hardware(R.string.readiness_no_wifi)
+        references.wifiDismissSsid.isBlank() -> reference(R.string.readiness_register_ssid)
         !capabilities.locationGranted ->
-            permission("Grant location permission so the Wi-Fi network can be detected.")
+            permission(R.string.readiness_location_permission)
         else -> ready()
     }
     else -> null
@@ -171,17 +173,17 @@ private fun ChallengeReadinessStatus.severityRank(): Int = when (this) {
     ChallengeReadinessStatus.READY -> 3
 }
 
-private fun motionReadiness(caps: DeviceChallengeCapabilities, verb: String): ChallengeReadiness =
+private fun motionReadiness(caps: DeviceChallengeCapabilities, resId: Int): ChallengeReadiness =
     if (!caps.hasAccelerometer) {
-        hardware("This device has no motion sensor for the $verb challenge.")
+        hardware(resId)
     } else {
         ready()
     }
 
-private fun ready() = ChallengeReadiness(ChallengeReadinessStatus.READY, "Ready to use.")
-private fun permission(message: String) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_PERMISSION, message)
-private fun hardware(message: String) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_HARDWARE, message)
-private fun reference(message: String) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_REFERENCE, message)
+private fun ready() = ChallengeReadiness(ChallengeReadinessStatus.READY, R.string.readiness_ready)
+private fun permission(messageRes: Int) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_PERMISSION, messageRes)
+private fun hardware(messageRes: Int) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_HARDWARE, messageRes)
+private fun reference(messageRes: Int) = ChallengeReadiness(ChallengeReadinessStatus.NEEDS_REFERENCE, messageRes)
 
 /** Build the live capability snapshot from the device. */
 fun deviceChallengeCapabilities(context: Context): DeviceChallengeCapabilities {

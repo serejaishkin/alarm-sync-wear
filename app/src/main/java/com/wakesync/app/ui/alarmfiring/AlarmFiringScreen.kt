@@ -157,6 +157,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -264,8 +265,8 @@ fun AlarmFiringScreen(
     }
 
     val timePattern = if (is24Hour) "HH:mm" else "h:mm"
-    val timeText = currentTime.format(DateTimeFormatter.ofPattern(timePattern))
-    val amPm = if (is24Hour) "" else currentTime.format(DateTimeFormatter.ofPattern("a"))
+    val timeText = currentTime.format(DateTimeFormatter.ofPattern(timePattern, Locale.getDefault()))
+    val amPm = if (is24Hour) "" else currentTime.format(DateTimeFormatter.ofPattern("a", Locale.getDefault()))
     val dateText = currentDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
     val alarmLabel = state.alarm?.label?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.notif_alarm_ringing)

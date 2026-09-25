@@ -843,42 +843,44 @@ internal fun Set<DayOfWeek>.toAlarmRepeatSummary(): String {
     }
 }
 
+internal fun String.alarmChallengeLabelRes(): Int? = when (this) {
+    "NONE" -> R.string.alarm_edit_challenge_none
+    "MATH_EASY" -> R.string.alarm_edit_challenge_math_easy
+    "MATH_MEDIUM" -> R.string.alarm_edit_challenge_math_medium
+    "MATH_HARD" -> R.string.alarm_edit_challenge_math_hard
+    "SHAKE" -> R.string.alarm_edit_challenge_shake
+    "SEQUENCE" -> R.string.alarm_edit_challenge_sequence
+    "MEMORY_PATTERN" -> R.string.alarm_edit_challenge_memory
+    "TYPING" -> R.string.alarm_edit_challenge_typing
+    "VOICE_PHRASE" -> R.string.alarm_edit_challenge_voice
+    "HANDWRITING" -> R.string.alarm_edit_challenge_handwriting
+    "WALK_STEPS" -> R.string.alarm_edit_challenge_walk
+    "NFC_SCAN" -> R.string.alarm_edit_challenge_nfc
+    "BARCODE_SCAN" -> R.string.alarm_edit_challenge_barcode
+    "PHOTO_MATCH" -> R.string.alarm_edit_challenge_photo
+    "SQUAT" -> R.string.alarm_edit_challenge_squat
+    "PUSH_UP" -> R.string.alarm_edit_challenge_pushup
+    "PLANK_HOLD" -> R.string.alarm_edit_challenge_plank
+    "WIFI_CONNECT" -> R.string.alarm_edit_challenge_wifi
+    "MAZE" -> R.string.alarm_edit_challenge_maze
+    "COUNT_SHEEP" -> R.string.alarm_edit_challenge_sheep
+    "SIMON_SAYS" -> R.string.alarm_edit_challenge_simon
+    "DATE_BACKWARDS" -> R.string.alarm_edit_challenge_date
+    "STROOP" -> R.string.alarm_edit_challenge_stroop
+    "ROCK_PAPER_SCISSORS" -> R.string.alarm_edit_challenge_rps
+    "EMOJI_MEMORY" -> R.string.alarm_edit_challenge_emoji
+    "TYPING_SPEED" -> R.string.alarm_edit_challenge_speed
+    "WORDLE" -> R.string.alarm_edit_challenge_wordle
+    "PVT" -> R.string.alarm_edit_challenge_pvt
+    "SPOT_DIFFERENCE" -> R.string.alarm_edit_challenge_difference
+    "CHESS_MATE" -> R.string.alarm_edit_challenge_chess
+    "RSVP_READING" -> R.string.alarm_edit_challenge_rsvp
+    else -> null
+}
+
 @Composable
 internal fun String.toAlarmChallengeSummary(): String {
-    val resource = when (this) {
-        "NONE" -> R.string.alarm_edit_challenge_none
-        "MATH_EASY" -> R.string.alarm_edit_challenge_math_easy
-        "MATH_MEDIUM" -> R.string.alarm_edit_challenge_math_medium
-        "MATH_HARD" -> R.string.alarm_edit_challenge_math_hard
-        "SHAKE" -> R.string.alarm_edit_challenge_shake
-        "SEQUENCE" -> R.string.alarm_edit_challenge_sequence
-        "MEMORY_PATTERN" -> R.string.alarm_edit_challenge_memory
-        "TYPING" -> R.string.alarm_edit_challenge_typing
-        "VOICE_PHRASE" -> R.string.alarm_edit_challenge_voice
-        "HANDWRITING" -> R.string.alarm_edit_challenge_handwriting
-        "WALK_STEPS" -> R.string.alarm_edit_challenge_walk
-        "NFC_SCAN" -> R.string.alarm_edit_challenge_nfc
-        "BARCODE_SCAN" -> R.string.alarm_edit_challenge_barcode
-        "PHOTO_MATCH" -> R.string.alarm_edit_challenge_photo
-        "SQUAT" -> R.string.alarm_edit_challenge_squat
-        "PUSH_UP" -> R.string.alarm_edit_challenge_pushup
-        "PLANK_HOLD" -> R.string.alarm_edit_challenge_plank
-        "WIFI_CONNECT" -> R.string.alarm_edit_challenge_wifi
-        "MAZE" -> R.string.alarm_edit_challenge_maze
-        "COUNT_SHEEP" -> R.string.alarm_edit_challenge_sheep
-        "SIMON_SAYS" -> R.string.alarm_edit_challenge_simon
-        "DATE_BACKWARDS" -> R.string.alarm_edit_challenge_date
-        "STROOP" -> R.string.alarm_edit_challenge_stroop
-        "ROCK_PAPER_SCISSORS" -> R.string.alarm_edit_challenge_rps
-        "EMOJI_MEMORY" -> R.string.alarm_edit_challenge_emoji
-        "TYPING_SPEED" -> R.string.alarm_edit_challenge_speed
-        "WORDLE" -> R.string.alarm_edit_challenge_wordle
-        "PVT" -> R.string.alarm_edit_challenge_pvt
-        "SPOT_DIFFERENCE" -> R.string.alarm_edit_challenge_difference
-        "CHESS_MATE" -> R.string.alarm_edit_challenge_chess
-        "RSVP_READING" -> R.string.alarm_edit_challenge_rsvp
-        else -> null
-    }
+    val resource = alarmChallengeLabelRes()
     if (resource != null) return stringResource(resource)
     val readableCode = replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
     return stringResource(R.string.alarm_edit_challenge_unknown, readableCode)

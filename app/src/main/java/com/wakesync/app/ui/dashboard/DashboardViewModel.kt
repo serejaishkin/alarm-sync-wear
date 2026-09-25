@@ -3,6 +3,7 @@ package com.wakesync.app.ui.dashboard
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.wakesync.app.R
 import com.wakesync.app.data.preferences.PreferencesManager
 import com.wakesync.app.data.repository.CalendarEvent
 import com.wakesync.app.data.repository.CalendarRepository
@@ -41,7 +42,7 @@ class DashboardViewModel @Inject constructor(
     init {
         val today = LocalDate.now()
         _uiState.update { it.copy(
-            todayDate = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
+            todayDate = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault()))
         ) }
         viewModelScope.launch {
             combine(
@@ -54,7 +55,9 @@ class DashboardViewModel @Inject constructor(
                     val pattern = if (settings.is24HourFormat) "HH:mm" else "h:mm a"
                     Triple(
                         alarm.time.format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault())),
-                        alarm.label.ifBlank { "Alarm" },
+                        alarm.label.ifBlank {
+                            getApplication<Application>().getString(R.string.stats_alarm_default)
+                        },
                         alarm.repeatLabel
                     )
                 }
@@ -104,12 +107,12 @@ class DashboardViewModel @Inject constructor(
                     _uiState.update { it.copy(
                         calendarEvents = emptyList(),
                         calendarPermissionNeeded = true,
-                        calendarError = "Calendar permission needed"
+                        calendarError = getApplication<Application>().getString(R.string.dashboard_calendar_permission_error)
                     ) }
                 } else {
                     _uiState.update { it.copy(
                         calendarEvents = emptyList(),
-                        calendarError = "Unable to load calendar"
+                        calendarError = getApplication<Application>().getString(R.string.dashboard_calendar_load_error)
                     ) }
                 }
             }

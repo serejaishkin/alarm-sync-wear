@@ -57,9 +57,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.wakesync.app.R
 import com.wakesync.app.ui.components.AppEmptyState
 import com.wakesync.app.ui.components.AppInlineNotice
 import com.wakesync.app.ui.components.AppSectionTitle
@@ -134,9 +137,9 @@ fun RingtonePickerSheet(
         }.onSuccess {
             RingtoneFolderStore.addFolder(context, uri)
             ringtoneLoad = loadRingtones(context)
-            folderStatus = "Folder added. Its audio files are now available below."
+            folderStatus = context.getString(R.string.ringtone_folder_added)
         }.onFailure {
-            folderStatus = "Could not keep access to that folder. Choose it again if needed."
+            folderStatus = context.getString(R.string.ringtone_folder_access_failed)
         }
     }
 
@@ -190,7 +193,7 @@ fun RingtonePickerSheet(
             previewError = ""
         } catch (_: Exception) {
             stopPreview()
-            previewError = "Could not preview that tone. You can still select it for the alarm."
+            previewError = context.getString(R.string.ringtone_preview_error)
         }
     }
 
@@ -209,8 +212,8 @@ fun RingtonePickerSheet(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             AppSectionTitle(
-                title = "Alarm Sound",
-                description = "Preview tones before applying them. Default and silent options stay available at the top.",
+                title = stringResource(R.string.ringtone_section_title),
+                description = stringResource(R.string.ringtone_section_desc),
                 action = {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(
@@ -226,7 +229,7 @@ fun RingtonePickerSheet(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.size(6.dp))
-                                Text("From folder", fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.ringtone_from_folder), fontWeight = FontWeight.SemiBold)
                             }
                     }
                 }
@@ -234,7 +237,7 @@ fun RingtonePickerSheet(
 
             if (folderStatus.isNotBlank()) {
                 AppInlineNotice(
-                    title = "Folder source",
+                    title = stringResource(R.string.ringtone_folder_source),
                     message = folderStatus,
                     icon = Icons.Default.FolderOpen,
                     color = DismissGreen
@@ -246,26 +249,26 @@ fun RingtonePickerSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AppStatusChip(
-                    label = currentSelection?.title ?: "Default Alarm",
+                    label = currentSelection?.title ?: stringResource(R.string.ringtone_default_alarm),
                     color = MaterialTheme.colorScheme.primary
                 )
                 AppStatusChip(
-                    label = "${filteredRingtones.size} result${if (filteredRingtones.size == 1) "" else "s"}",
+                    label = pluralStringResource(R.plurals.ringtone_results, filteredRingtones.size, filteredRingtones.size),
                     color = DismissGreen
                 )
                 AppStatusChip(
-                    label = "Tap a tone to preview",
+                    label = stringResource(R.string.ringtone_tap_preview),
                     color = TextMuted
                 )
                 if (playingUri != null) {
                     AppStatusChip(
-                        label = "Preview playing",
+                        label = stringResource(R.string.ringtone_preview_playing),
                         color = AccentBlue
                     )
                 }
                 if (previewError.isNotBlank()) {
                     AppStatusChip(
-                        label = "Preview unavailable",
+                        label = stringResource(R.string.ringtone_preview_unavailable),
                         color = SnoozeYellow
                     )
                 }
@@ -273,7 +276,7 @@ fun RingtonePickerSheet(
 
             if (previewError.isNotBlank()) {
                 AppInlineNotice(
-                    title = "Preview unavailable",
+                    title = stringResource(R.string.ringtone_preview_unavailable),
                     message = previewError,
                     icon = Icons.Default.Warning,
                     color = SnoozeYellow
@@ -282,8 +285,8 @@ fun RingtonePickerSheet(
 
             if (ringtoneLoad.enumerationFailed) {
                 AppInlineNotice(
-                    title = "Sound list limited",
-                    message = "Couldn't read this device's sound list. Default and Silent are still available.",
+                    title = stringResource(R.string.ringtone_list_limited),
+                    message = stringResource(R.string.ringtone_list_limited_desc),
                     icon = Icons.Default.Warning,
                     color = SnoozeYellow
                 )
@@ -294,10 +297,10 @@ fun RingtonePickerSheet(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = TextMuted)
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.ringtone_search_cd), tint = TextMuted)
                 },
                 placeholder = {
-                    Text("Search alarm sounds", color = TextMuted)
+                    Text(stringResource(R.string.ringtone_search_placeholder), color = TextMuted)
                 },
                 singleLine = true,
                 colors = appOutlinedTextFieldColors(),
@@ -308,8 +311,8 @@ fun RingtonePickerSheet(
                 AppSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                     AppEmptyState(
                         icon = Icons.Default.Search,
-                        title = "No matching tones",
-                        description = "Nothing matches \"$searchQuery\". Try a shorter or different term."
+                        title = stringResource(R.string.ringtone_no_results),
+                        description = stringResource(R.string.ringtone_no_results_desc, searchQuery)
                     )
                 }
             } else {
@@ -429,19 +432,19 @@ private fun RingtoneRow(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     when {
                         isSelected -> AppStatusChip(
-                            label = "Selected",
+                            label = stringResource(R.string.ringtone_selected),
                             color = MaterialTheme.colorScheme.primary
                         )
                         isPlaying -> AppStatusChip(
-                            label = "Previewing",
+                            label = stringResource(R.string.ringtone_previewing),
                             color = AccentBlue
                         )
                         ringtone.isDefault -> AppStatusChip(
-                            label = "Recommended",
+                            label = stringResource(R.string.ringtone_recommended),
                             color = DismissGreen
                         )
                         ringtone.isSilent -> AppStatusChip(
-                            label = "Quiet mode",
+                            label = stringResource(R.string.ringtone_quiet_mode),
                             color = SnoozeYellow
                         )
                     }
@@ -455,13 +458,13 @@ private fun RingtoneRow(
                 if (isSelected) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Current alarm sound",
+                        contentDescription = stringResource(R.string.ringtone_current_sound_cd),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     TextButton(onClick = onConfirm) {
-                        Text("Use", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.ringtone_use), fontWeight = FontWeight.SemiBold)
                     }
                 }
 
@@ -469,7 +472,11 @@ private fun RingtoneRow(
                     IconButton(onClick = onPreview) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlaying) "Stop preview" else "Preview sound",
+                            contentDescription = if (isPlaying) {
+                                stringResource(R.string.ringtone_stop_preview_cd)
+                            } else {
+                                stringResource(R.string.ringtone_preview_sound_cd)
+                            },
                             tint = if (isPlaying) MaterialTheme.colorScheme.primary else TextMuted
                         )
                     }
@@ -481,11 +488,12 @@ private fun RingtoneRow(
     }
 }
 
+@Composable
 private fun ringtoneSubtitle(ringtone: RingtoneItem, supportsPreview: Boolean): String = when {
-    ringtone.isDefault -> "Uses your device's current default alarm sound."
-    ringtone.isSilent -> "No audio. Best paired with vibration or other wake effects."
-    supportsPreview -> "Tap to preview, then choose Use when it feels right."
-    else -> "Ready to apply."
+    ringtone.isDefault -> stringResource(R.string.ringtone_subtitle_default)
+    ringtone.isSilent -> stringResource(R.string.ringtone_subtitle_silent)
+    supportsPreview -> stringResource(R.string.ringtone_subtitle_preview)
+    else -> stringResource(R.string.ringtone_subtitle_ready)
 }
 
 private fun ringtoneSearchText(ringtone: RingtoneItem): String = buildString {
@@ -498,8 +506,8 @@ private fun loadRingtones(context: Context): RingtoneLoadResult {
     val ringtones = mutableListOf<RingtoneItem>()
     var enumerationFailed = false
 
-    ringtones += RingtoneItem("Default Alarm", "", isDefault = true)
-    ringtones += RingtoneItem("Silent", "", isSilent = true)
+    ringtones += RingtoneItem(context.getString(R.string.ringtone_default_alarm), "", isDefault = true)
+    ringtones += RingtoneItem(context.getString(R.string.ringtone_silent), "", isSilent = true)
 
     val alarmManager = RingtoneManager(context).apply {
         setType(RingtoneManager.TYPE_ALARM)

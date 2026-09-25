@@ -1195,6 +1195,270 @@
     <string name="bedtime_jetlag_travel_target">Travel target</string>
     <string name="bedtime_jetlag_choose_target_wake">Choose target wake time</string>
 
+    <!-- Bedtime screen -->
+    <string name="bedtime_screen_title">Bedtime</string>
+    <string name="bedtime_screen_overline">Sleep planning</string>
+    <string name="bedtime_summary_alarm">Plan around your %1$s alarm and protect %2$s of sleep.</string>
+    <string name="bedtime_summary_enabled">Your wind-down reminder is set. Add an alarm to get a recommended bedtime.</string>
+    <string name="bedtime_summary_disabled">Build a calmer night routine with a reminder, a target, and gentler wind-down cues.</string>
+    <string name="bedtime_reminder_on">Reminder on</string>
+    <string name="bedtime_reminder_off">Reminder off</string>
+    <string name="bedtime_no_alarm_linked">No alarm linked</string>
+    <string name="bedtime_close">Close bedtime</string>
+    <string name="bedtime_reminder_title">Bedtime reminder</string>
+    <string name="bedtime_reminder_active_desc">Remind me %1$d minutes before %2$s.</string>
+    <string name="bedtime_reminder_inactive_desc">Get a nudge before your target bedtime so nights feel less rushed.</string>
+    <string name="bedtime_min_early">%1$d min early</string>
+    <string name="bedtime_optional">Optional</string>
+    <string name="bedtime_linked_alarm">Linked to alarm</string>
+    <string name="bedtime_needs_alarm">Needs alarm</string>
+    <string name="bedtime_dnd_title">Bedtime DND</string>
+    <string name="bedtime_dnd_desc_grant">Grant DND access so WakeSync can own an alarms-only sleep rule.</string>
+    <string name="bedtime_dnd_desc_active">Alarms-only mode is active for your sleep window.</string>
+    <string name="bedtime_dnd_desc_silence">Silences interruptions from bedtime until your next alarm.</string>
+    <string name="bedtime_dnd_desc_create">Create an app-owned alarms-only rule for your sleep window.</string>
+    <string name="bedtime_dnd_alarms_only">Alarms only</string>
+    <string name="bedtime_dnd_error">DND sync needs attention: %1$s</string>
+    <string name="bedtime_dnd_grant_button">Grant DND access</string>
+    <string name="bedtime_battery_warning">Battery at %1$d%% — plug in before sleep to avoid alarm failure</string>
+    <string name="bedtime_stay_up_title">Staying up late until %1$s</string>
+    <string name="bedtime_stay_up_tonight">Stay up late tonight</string>
+    <string name="bedtime_stay_up_subtitle">Delay tonight\'s bedtime reminder</string>
+    <string name="bedtime_stay_up_hours">+%1$dh</string>
+    <string name="bedtime_window_title">Tonight\'s sleep window</string>
+    <string name="bedtime_window_desc">Use your current goal and next alarm to see when sleep should start.</string>
+    <string name="bedtime_current_target">Current sleep target</string>
+    <string name="bedtime_metric_bedtime">Bedtime</string>
+    <string name="bedtime_metric_wake">Wake</string>
+    <string name="bedtime_metric_reminder">Reminder</string>
+    <string name="bedtime_metric_room">Room</string>
+    <string name="bedtime_tap_to_edit">Tap to edit</string>
+    <string name="bedtime_helper_before_bedtime">Before bedtime</string>
+    <string name="bedtime_helper_turn_on_above">Turn on above</string>
+    <string name="bedtime_no_alarm_title">No upcoming alarm</string>
+    <string name="bedtime_no_alarm_desc">Set an alarm to unlock suggested bedtimes and cycle-friendly options.</string>
+    <string name="bedtime_suggested_title">Suggested bedtime</string>
+    <string name="bedtime_suggested_desc">Aim for %1$s to protect %2$s before your next alarm.</string>
+    <string name="bedtime_suggestion_cd">Suggestion</string>
+    <string name="bedtime_goal_title">Sleep goal and reminder timing</string>
+    <string name="bedtime_goal_desc">Adjust in 30-minute steps and pick how early you want the reminder.</string>
+    <string name="bedtime_goal_less">Less</string>
+    <string name="bedtime_goal_more">More</string>
+    <string name="bedtime_goal_sleep_target">Sleep target</string>
+    <string name="bedtime_goal_steps_30min">30-minute steps</string>
+    <string name="bedtime_goal_reminder_lead">Reminder lead time</string>
+    <string name="bedtime_cycles_title">Cycle-friendly options</string>
+    <string name="bedtime_cycles_desc">Based on 90-minute sleep cycles and a short fall-asleep buffer.</string>
+    <string name="bedtime_cycles_empty_title">Waiting for your next alarm</string>
+    <string name="bedtime_cycles_empty_desc">Once an alarm is set, bedtime will suggest easier cycle-aligned sleep times.</string>
+    <string name="bedtime_cycle_best_match">Best match</string>
+    <string name="bedtime_picker_winddown">Wind-down target</string>
+    <string name="bedtime_picker_choose">Choose bedtime</string>
+    <string name="bedtime_picker_save">Save bedtime</string>
+
+    <!-- Sleep sounds library -->
+    <string name="sleep_sound_white">White Noise</string>
+    <string name="sleep_sound_rain">Rain</string>
+    <string name="sleep_sound_brown">Brown Noise</string>
+    <string name="sleep_sound_ocean">Ocean</string>
+    <string name="sleep_sound_fan">Fan</string>
+    <string name="sleep_sound_pink">Pink Noise</string>
+    <string name="sleep_sound_violet">Violet Noise</string>
+    <string name="bedtime_sounds_title">Sleep sounds</string>
+    <string name="bedtime_sounds_desc">Continuous procedural soundscapes with no looping artifacts.</string>
+    <string name="bedtime_sound_playing">Playing</string>
+    <string name="bedtime_sound_tap_preview">Tap to preview</string>
+    <string name="bedtime_fade_out">Fade out after</string>
+    <string name="bedtime_never">Never</string>
+    <string name="bedtime_final_taper">Final taper length</string>
+    <string name="bedtime_seconds_short">%1$d s</string>
+    <string name="bedtime_stop_sound">Stop sound</string>
+
+    <!-- Pre-sleep factors -->
+    <string name="bedtime_presleep_title">Pre-sleep factors</string>
+    <string name="bedtime_presleep_desc">%1$s: tag the signals that may shape tomorrow\'s wake-up friction.</string>
+    <string name="bedtime_presleep_no_chart">Local chart appears after tagged nights overlap Sonar or smart-wake summaries.</string>
+    <string name="bedtime_presleep_accessibility">%1$s: %2$s</string>
+    <string name="pre_sleep_tag_caffeine">Caffeine</string>
+    <string name="pre_sleep_tag_caffeine_helper">Coffee, tea, energy drinks</string>
+    <string name="pre_sleep_tag_exercise">Exercise</string>
+    <string name="pre_sleep_tag_exercise_helper">Late workout or training</string>
+    <string name="pre_sleep_tag_alcohol">Alcohol</string>
+    <string name="pre_sleep_tag_alcohol_helper">Any evening alcohol</string>
+    <string name="pre_sleep_tag_stress">Stress</string>
+    <string name="pre_sleep_tag_stress_helper">High-stress evening</string>
+    <string name="bedtime_corr_more_restless">More restless</string>
+    <string name="bedtime_corr_calmer">Calmer</string>
+    <string name="bedtime_corr_avg">%1$dm avg</string>
+    <string name="bedtime_corr_no_data">No sleep data</string>
+    <string name="bedtime_corr_line">%1$s - %2$s</string>
+    <string name="bedtime_corr_no_nights">No tagged nights yet</string>
+    <string name="bedtime_corr_wait_sessions">%1$d tagged; waiting for sleep sessions</string>
+    <string name="bedtime_corr_with_sessions">%1$d/%2$d tagged nights with local sleep data</string>
+    <string name="bedtime_corr_delta_none">Start Sonar or smart wake to compare restlessness</string>
+    <string name="bedtime_corr_delta_positive">+%1$dm restless vs baseline</string>
+    <string name="bedtime_corr_delta_negative">%1$dm restless vs baseline</string>
+    <string name="bedtime_corr_delta_equal">Matches baseline restlessness</string>
+    <string name="bedtime_tag_tonight">Tonight</string>
+    <string name="bedtime_tag_last_night">Last night</string>
+
+    <!-- Sonar sleep tracking -->
+    <string name="bedtime_sonar_title">Sonar sleep tracking</string>
+    <string name="bedtime_sonar_desc_active">Experimental overnight movement monitoring is running locally.</string>
+    <string name="bedtime_sonar_desc_idle">Start a local ultrasonic movement session from Bedtime when you want extra context.</string>
+    <string name="bedtime_sonar_active">Active</string>
+    <string name="bedtime_sonar_off">Off</string>
+    <string name="bedtime_sonar_no_audio">No audio saved</string>
+    <string name="bedtime_sonar_start">Start</string>
+    <string name="bedtime_sonar_stop">Stop</string>
+    <string name="bedtime_sonar_accessibility_stop">Stop sleep-motion tracking</string>
+    <string name="bedtime_sonar_accessibility_start">Start sleep-motion tracking</string>
+    <string name="bedtime_sonar_perm_needed">Grant microphone permission to use local sonar sleep tracking.</string>
+    <string name="bedtime_sonar_starting">Starting sonar and confirming microphone monitoring.</string>
+    <string name="bedtime_sonar_start_failed">Sonar could not start: %1$s</string>
+    <string name="bedtime_sonar_service_unavailable">service unavailable</string>
+    <string name="bedtime_sonar_stopping">Stopping sonar tracking and saving a local summary.</string>
+    <string name="bedtime_sonar_stop_failed">Sonar could not stop cleanly: %1$s</string>
+    <string name="bedtime_sonar_perm_denied">Microphone permission was denied. Sonar stays off.</string>
+    <string name="bedtime_sonar_monitoring">Monitoring movement and loud sleep sounds. No raw audio is recorded.</string>
+    <string name="bedtime_sonar_last_saved">Last sonar session saved locally.</string>
+    <string name="bedtime_sonar_ready">Ready to monitor local movement during sleep.</string>
+    <string name="bedtime_sonar_confirm_failed">Sonar could not confirm microphone monitoring. Try again.</string>
+    <string name="bedtime_sonar_last_session">Last session: %1$dm, %2$dm movement, %3$dm restless, %4$dm still</string>
+    <string name="bedtime_sonar_bursts">; %1$d loud bursts, peak %2$d dB est.</string>
+    <string name="bedtime_sonar_no_bursts">; no loud bursts</string>
+    <string name="bedtime_snore_intensity">Peak %1$d dB est. / avg %2$d</string>
+
+    <!-- Shared bedtime duration units -->
+    <string name="bedtime_duration_h_m">%1$dh %2$dm</string>
+    <string name="bedtime_duration_h">%1$dh</string>
+    <string name="bedtime_duration_m">%1$dm</string>
+    <string name="bedtime_duration_m_s">%1$dm %2$ds</string>
+    <string name="bedtime_next_alarm">Next alarm: %1$s</string>
+    <string name="bedtime_no_alarm_set">No alarm set</string>
+    <string name="bedtime_sleep_cycle_option">%1$s (%2$dh %3$dm)</string>
+    <string name="bedtime_noise_none">No baseline</string>
+    <string name="bedtime_noise_quiet">Quiet</string>
+    <string name="bedtime_noise_moderate">Moderate</string>
+    <string name="bedtime_noise_loud">Loud</string>
+    <string name="bedtime_noise_checks_reminder">Checks at reminder</string>
+    <string name="bedtime_noise_mic_needed">Mic permission needed</string>
+    <string name="bedtime_noise_last_checked">Last %1$s; no audio saved</string>
+
+    <!-- Health Connect sleep -->
+    <string name="bedtime_health_title">Health Connect sleep</string>
+    <string name="bedtime_health_desc_update">Update Health Connect before recent sleep sessions can appear here.</string>
+    <string name="bedtime_health_desc_unavailable">Health Connect is not available on this device.</string>
+    <string name="bedtime_health_desc_permission">Grant READ_SLEEP in Settings to fold recent sessions into bedtime planning.</string>
+    <string name="bedtime_health_desc_sessions">Recent sessions stay local and help compare your target with actual sleep.</string>
+    <string name="bedtime_health_desc_none">READ_SLEEP is granted, but no recent sleep sessions were found in the last 14 days.</string>
+    <string name="bedtime_health_permission_granted">READ_SLEEP granted</string>
+    <string name="bedtime_health_permission_needed">Permission needed</string>
+    <string name="bedtime_health_sessions_chip">%1$d sessions</string>
+    <string name="bedtime_health_last_session">Last session: %1$s</string>
+    <string name="bedtime_health_stage_light">Light</string>
+    <string name="bedtime_health_stage_deep">Deep</string>
+    <string name="bedtime_health_stage_rem">REM</string>
+    <string name="bedtime_health_stage_awake">Awake</string>
+    <string name="bedtime_health_attention">Health Connect needs attention</string>
+
+    <!-- Chronotype estimate -->
+    <string name="bedtime_chronotype_not_set">Not set</string>
+    <string name="bedtime_chronotype_early">Early type</string>
+    <string name="bedtime_chronotype_balanced">Balanced</string>
+    <string name="bedtime_chronotype_late">Late type</string>
+    <string name="bedtime_chronotype_answered">%1$d/%2$d answered</string>
+    <string name="bedtime_chronotype_local_estimate">Local estimate</string>
+    <string name="bedtime_chronotype_fits_target">Fits %1$s sleep target</string>
+    <string name="bedtime_chronotype_range">%1$s - %2$s</string>
+    <string name="bedtime_chronotype_title">Chronotype estimate</string>
+    <string name="bedtime_chronotype_desc_complete">Your natural timing preference is folded into the sleep target.</string>
+    <string name="bedtime_chronotype_desc_idle">Estimate your morning/evening tilt for a calmer target window.</string>
+    <string name="chronotype_prompt_0">On a free day, when do you naturally wake after enough sleep?</string>
+    <string name="chronotype_prompt_1">When does focused work feel easiest?</string>
+    <string name="chronotype_prompt_2">If tomorrow has no obligations, when would you choose bedtime?</string>
+    <string name="chronotype_prompt_3">How do early alarms usually feel?</string>
+    <string name="chronotype_prompt_4">When does your energy usually peak?</string>
+    <string-array name="chronotype_options_0">
+        <item>Before 6:30</item>
+        <item>6:30-7:30</item>
+        <item>7:30-8:30</item>
+        <item>8:30-10:00</item>
+        <item>After 10:00</item>
+    </string-array>
+    <string-array name="chronotype_options_1">
+        <item>Early morning</item>
+        <item>Mid-morning</item>
+        <item>Noon</item>
+        <item>Late afternoon</item>
+        <item>Evening</item>
+    </string-array>
+    <string-array name="chronotype_options_2">
+        <item>Before 9:30</item>
+        <item>9:30-10:30</item>
+        <item>10:30-11:30</item>
+        <item>11:30-12:30</item>
+        <item>After 12:30</item>
+    </string-array>
+    <string-array name="chronotype_options_3">
+        <item>Easy</item>
+        <item>Slightly slow</item>
+        <item>Manageable</item>
+        <item>Hard</item>
+        <item>Very hard</item>
+    </string-array>
+    <string-array name="chronotype_options_4">
+        <item>Sunrise</item>
+        <item>Morning</item>
+        <item>Midday</item>
+        <item>Afternoon</item>
+        <item>Late evening</item>
+    </string-array>
+
+    <!-- Guided breathing -->
+    <string name="bedtime_breathing_title">Guided breathing</string>
+    <string name="bedtime_breathing_desc_running">Follow the count and keep the phone nearby while you settle down.</string>
+    <string name="bedtime_breathing_desc_idle">Run a short 4-7-8 or box-breathing reset before sleep.</string>
+    <string name="bedtime_breathing_cycle">Cycle %1$d/%2$d</string>
+    <string name="bedtime_breathing_inhale">Inhale</string>
+    <string name="bedtime_breathing_hold">Hold</string>
+    <string name="bedtime_breathing_exhale">Exhale</string>
+    <string name="bedtime_breathing_complete">Complete</string>
+    <string name="bedtime_breathing_cue_inhale">Breathe in slowly through your nose.</string>
+    <string name="bedtime_breathing_cue_hold">Keep your chest relaxed and still.</string>
+    <string name="bedtime_breathing_cue_hold_soft">Stay soft before the next breath.</string>
+    <string name="bedtime_breathing_cue_exhale">Release the breath slowly.</string>
+    <string name="bedtime_breathing_cue_done">Let your breathing return to normal.</string>
+    <string name="bedtime_breathing_done">Done</string>
+    <string name="bedtime_breathing_left">%1$s left</string>
+    <string name="bedtime_breathing_pause">Pause</string>
+    <string name="bedtime_breathing_restart">Restart</string>
+    <string name="bedtime_breathing_start">Start</string>
+    <string name="bedtime_breathing_reset">Reset</string>
+    <string name="bedtime_breathing_accessibility_pause">Pause guided breathing</string>
+    <string name="bedtime_breathing_accessibility_start">Start guided breathing</string>
+    <string name="bedtime_breathing_pattern_box">Box</string>
+
+    <!-- Wind-down checklist -->
+    <string name="bedtime_checklist_title">Wind-down checklist</string>
+    <string name="bedtime_checklist_desc">Tick each step as you settle in for the night.</string>
+    <string name="bedtime_checklist_done_count">%1$d/%2$d done</string>
+    <string name="bedtime_checklist_completed">Completed</string>
+    <string name="bedtime_checklist_not_done">Not done</string>
+    <string name="bedtime_checklist_done">Done</string>
+    <string name="bedtime_checklist_up_next">Up next</string>
+    <string name="bedtime_checklist_reset">Reset checklist</string>
+
+    <!-- Bedtime DND status (system rule sync) -->
+    <string name="bedtime_dnd_status_off">Off</string>
+    <string name="bedtime_dnd_status_needs_access">Needs DND access</string>
+    <string name="bedtime_dnd_status_active_until">Active until %1$s</string>
+    <string name="bedtime_dnd_status_ready_at">Ready at %1$s</string>
+    <string name="bedtime_dnd_sync_failed">Rule sync failed</string>
+    <string name="bedtime_dnd_condition_unavailable">Bedtime DND schedule unavailable</string>
+    <string name="bedtime_dnd_condition_active">Bedtime DND active until %1$s</string>
+    <string name="bedtime_dnd_condition_starts">Bedtime DND starts at %1$s</string>
+
     <!-- Fossify import feedback -->
     <plurals name="settings_fossify_import_success"><item quantity="one">Imported %1$d Fossify alarm as disabled for review.</item><item quantity="other">Imported %1$d Fossify alarms as disabled for review.</item></plurals>
     <string name="settings_fossify_preview_not_export">Couldn\'t preview this file. It doesn\'t look like a Fossify Clock export — choose the JSON file exported by Fossify Clock.</string>
@@ -1310,5 +1574,584 @@
     <string name="onboarding_test_screen_body">Your device can launch the alarm screen, play audio, and vibrate. This did not create or change any saved alarms.</string>
     <string name="onboarding_test_dismiss">Dismiss test alarm</string>
     <string name="onboarding_test_footer">If you did not hear or feel this test, review volume, Do Not Disturb, and battery settings before relying on an overnight alarm.</string>
+
+    <string name="stopwatch_title">Stopwatch</string>
+    <string name="stopwatch_close">Close stopwatch</string>
+    <string name="stopwatch_overline">Timing</string>
+    <string name="stopwatch_subtitle_idle">Start a precise running timer and mark laps whenever you need a split.</string>
+    <string name="stopwatch_subtitle_running">Timing live. Mark laps as the session unfolds.</string>
+    <string name="stopwatch_subtitle_paused">Paused in place. Resume when you are ready or reset for a clean run.</string>
+    <string name="stopwatch_status_ready">Ready</string>
+    <string name="stopwatch_status_running">Running</string>
+    <string name="stopwatch_status_paused">Paused</string>
+    <plurals name="stopwatch_laps_count">
+        <item quantity="one">%1$d lap</item>
+        <item quantity="other">%1$d laps</item>
+    </plurals>
+    <string name="stopwatch_current_run">Current run</string>
+    <string name="stopwatch_current_run_desc">A high-contrast display built for quick glances.</string>
+    <string name="stopwatch_no_laps_title">No laps recorded yet</string>
+    <string name="stopwatch_no_laps_desc">Tap Lap while the stopwatch is running to capture split times and compare pace.</string>
+    <string name="stopwatch_lap_history">Lap history</string>
+    <string name="stopwatch_lap_history_desc">Best and slowest splits are highlighted automatically.</string>
+    <string name="stopwatch_start">Start stopwatch</string>
+    <string name="stopwatch_lap">Lap</string>
+    <string name="stopwatch_pause">Pause</string>
+    <string name="stopwatch_reset">Reset</string>
+    <string name="stopwatch_resume">Resume</string>
+    <string name="stopwatch_lap_number">Lap %1$d</string>
+    <string name="stopwatch_split_best">Best split</string>
+    <string name="stopwatch_split_worst">Slowest split</string>
+    <string name="stopwatch_split">Split</string>
+    <string name="stopwatch_split_time">Split time</string>
+    <string name="stopwatch_total">Total</string>
+
+    <string name="timer_title">Timer</string>
+    <string name="timer_stopwatch_action">Stopwatch</string>
+    <plurals name="timer_active_count">
+        <item quantity="one">%1$d timer active</item>
+        <item quantity="other">%1$d timers active</item>
+    </plurals>
+    <string name="timer_active_timers">Active timers</string>
+    <string name="timer_blank_label">Timer</string>
+    <string name="timer_time_up">Time’s up</string>
+    <string name="timer_paused">Paused</string>
+    <string name="timer_dismiss">Dismiss</string>
+    <string name="timer_stop_cd">Stop timer</string>
+    <string name="timer_pause_cd">Pause timer</string>
+    <string name="timer_resume_cd">Resume timer</string>
+    <string name="timer_clear_entry">Clear entry</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_preset_minutes">%1$d min</string>
+    <string name="timer_key_delete">Delete digit</string>
+    <string name="timer_key_doublezero">Add double zero</string>
+    <string name="timer_key_enter">Enter %1$d</string>
+
+    <string name="status_enabled">Enabled</string>
+    <string name="status_disabled">Disabled</string>
+    <string name="selected_state">Selected</string>
+    <string name="not_selected">Not selected</string>
+
+    <string name="alarm_history">Alarm history</string>
+    <string name="alarm_stats_close">Close</string>
+    <string name="alarm_stats_last_days">Last 30 days</string>
+    <string name="alarm_stats_never_fired">This alarm hasn\'t fired in the last 30 days yet.</string>
+    <plurals name="alarm_stats_fired">
+        <item quantity="one">Fired %1$d time</item>
+        <item quantity="other">Fired %1$d times</item>
+    </plurals>
+    <string name="alarm_stats_avg_snoozes">Avg %1$s snoozes per fire</string>
+    <string name="alarm_stats_avg_dismiss">Avg dismiss in %1$ss</string>
+    <plurals name="alarm_stats_missed">
+        <item quantity="one">%1$d missed</item>
+        <item quantity="other">%1$d missed</item>
+    </plurals>
+    <string name="alarm_deleted">Alarm deleted</string>
+    <string name="undo">Undo</string>
+    <plurals name="alarm_bulk_delete_confirm">
+        <item quantity="one">Delete alarm</item>
+        <item quantity="other">Delete %1$d alarms</item>
+    </plurals>
+    <plurals name="alarm_bulk_delete_title">
+        <item quantity="one">Delete selected alarm?</item>
+        <item quantity="other">Delete %1$d selected alarms?</item>
+    </plurals>
+    <string name="alarm_bulk_delete_all_body">This will remove every alarm currently visible in the list. Use this only if you are sure.</string>
+    <string name="alarm_bulk_delete_selected_body">This removes only the alarms currently selected. This bulk action does not offer per-alarm undo.</string>
+    <string name="alarm_sort_time">Sort by time</string>
+    <string name="alarm_sort_manual">Manual order</string>
+    <string name="alarm_sort_newest">Newest first</string>
+    <string name="alarm_sort_enabled">Active first</string>
+    <string name="groups">Groups</string>
+    <string name="profiles">Profiles</string>
+    <string name="alarm_search_hint">Try \u201cweekday\u201d, \u201cgym\u201d, or \u201cmedication\u201d</string>
+    <string name="clear_search">Clear search</string>
+    <string name="no_alarms_title">No alarms yet</string>
+    <string name="no_alarms_desc">Create your first wake-up, or start from a template.</string>
+    <string name="search_no_match_title">No alarms match that search</string>
+    <string name="search_no_match_desc">Try a different label or clear your filters to bring everything back.</string>
+    <string name="clear_filters">Clear filters</string>
+    <plurals name="duplicate_alarms">
+        <item quantity="one">Duplicate alarm</item>
+        <item quantity="other">%1$d duplicate alarms</item>
+    </plurals>
+    <string name="duplicate_alarms_msg">Identical time, days and label. Remove the extras, keeping the first of each.</string>
+    <plurals name="remove_duplicates">
+        <item quantity="one">Remove duplicate</item>
+        <item quantity="other">Remove %1$d duplicates</item>
+    </plurals>
+    <string name="conflict_time_title">Duplicate fire time</string>
+    <string name="conflict_time_msg">Multiple enabled alarms are set for %1$s. Review them if that was not intentional.</string>
+    <string name="templates">Templates</string>
+    <string name="create_alarm">Create alarm</string>
+    <string name="browse_templates">Browse templates</string>
+    <string name="cd_alarm_detail_pane">Alarm detail pane</string>
+    <string name="cd_alarm_detail_pane_for">Alarm detail pane for %1$s</string>
+    <string name="select_alarm_title">Select an alarm</string>
+    <string name="select_alarm_desc">Choose an alarm from the list to review its next fire time and actions.</string>
+    <string name="alarm_details">Alarm details</string>
+    <string name="vacation_paused_detail">Paused until vacation ends</string>
+    <string name="vacation_paused_chip">Paused by vacation</string>
+    <string name="silent">Silent</string>
+    <string name="alarm_state">Alarm state</string>
+    <string name="alarm_toggle_cd">%1$s alarm</string>
+    <string name="alarm_state_toggle_running">Tap to pause. Long-press to force-pause.</string>
+    <string name="alarm_state_toggle_off">Tap to enable this alarm.</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="share">Share</string>
+    <string name="history">History</string>
+    <string name="delete">Delete</string>
+    <string name="skip_next">Skip next occurrence</string>
+    <string name="header_phone_watch">Phone \u21c4 Watch</string>
+    <string name="synced">Synced</string>
+    <string name="vacation_active">Vacation mode active</string>
+    <string name="autosync_enabled">Auto-sync enabled</string>
+    <string name="sync_watch">Sync watch</string>
+    <string name="all">All</string>
+    <string name="cd_drag_handle_for">Drag handle for %1$s</string>
+    <string name="cd_drag_handle_unavailable">Drag handle unavailable</string>
+    <string name="quick_alarms">Quick alarms</string>
+    <string name="quick_10min">10 min</string>
+    <string name="quick_30min">30 min</string>
+    <string name="quick_1hour">1 hour</string>
+    <string name="quick_2hours">2 hours</string>
+    <string name="quick_alarm_cd">Set quick alarm for %1$s</string>
+    <string name="power_nap">Power nap</string>
+    <string name="quick_nap_cd">Set %1$d-minute power nap</string>
+    <string name="quick_nap_default">, default length</string>
+    <string name="test_ring">Test ring</string>
+    <string name="cd_edit">Edit</string>
+    <string name="change_from_watch">Created/changed on watch</string>
+    <string name="change_from_phone">Created/changed on phone</string>
+    <string name="cd_clear_selection">Clear selection</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="bulk_all_note">Bulk actions apply to everything currently on screen</string>
+    <string name="bulk_selected_note">Bulk actions apply only to the alarms you selected</string>
+    <string name="select_visible">Select visible</string>
+    <string name="enable">Enable</string>
+    <string name="pause">Pause</string>
+    <string name="share_alarm_title">Alarm %1$s</string>
+    <string name="share_subject">WakeSync alarm: %1$s</string>
+    <string name="share_time">Time: %1$s</string>
+    <string name="share_import">Import: %1$s</string>
+    <string name="share_alarm_chooser">Share alarm</string>
+    <string name="share_no_app">No app is available to share this alarm.</string>
+    <string name="alarm_in_hours_mins">in %1$sh %2$sm</string>
+    <string name="alarm_in_minutes">in %1$sm</string>
+    <string name="alarm_in_less_minute">in &lt;1m</string>
+    <string name="alarm_paused_until_enable">Paused until you re-enable this alarm</string>
+    <string name="next_occurrence">Next occurrence: %1$s</string>
+
+    <string name="challenge_math_easy">Math (Easy)</string>
+    <string name="challenge_math_medium">Math (Medium)</string>
+    <string name="challenge_math_hard">Math (Hard)</string>
+    <string name="challenge_shake">Shake Phone</string>
+    <string name="challenge_sequence">Number Sequence</string>
+    <string name="challenge_memory_pattern">Memory Pattern</string>
+    <string name="challenge_typing">Type a Phrase</string>
+    <string name="challenge_voice_phrase">Voice Phrase</string>
+    <string name="challenge_handwriting">Handwriting</string>
+    <string name="challenge_walk_steps">Walk Steps</string>
+    <string name="challenge_nfc_scan">NFC Tag Scan</string>
+    <string name="challenge_barcode_scan">Barcode Scan</string>
+    <string name="challenge_photo_match">Photo Match</string>
+    <string name="challenge_squat">Squats</string>
+    <string name="challenge_wifi_connect">Wi-Fi Connect</string>
+    <string name="challenge_maze">Maze Puzzle</string>
+    <string name="challenge_count_sheep">Count the Sheep</string>
+    <string name="challenge_simon_says">Simon Says</string>
+    <string name="challenge_date_backwards">Type Date Backwards</string>
+    <string name="challenge_stroop">Stroop Color Test</string>
+    <string name="challenge_rps">Rock Paper Scissors</string>
+    <string name="challenge_emoji_memory">Emoji Memory</string>
+    <string name="challenge_typing_speed">Typing Speed</string>
+    <string name="challenge_wordle">Wordle</string>
+    <string name="challenge_pvt">Reaction Test</string>
+    <string name="challenge_push_up">Push-ups</string>
+    <string name="challenge_plank_hold">Plank Hold</string>
+
+    <plurals name="backup_exported">
+        <item quantity="one">Backup exported: %1$d alarm.</item>
+        <item quantity="other">Backup exported: %1$d alarms.</item>
+    </plurals>
+    <plurals name="backup_exported_encrypted">
+        <item quantity="one">Encrypted backup exported: %1$d alarm.</item>
+        <item quantity="other">Encrypted backup exported: %1$d alarms.</item>
+    </plurals>
+    <plurals name="backup_imported">
+        <item quantity="one">Backup imported: %1$d alarm.</item>
+        <item quantity="other">Backup imported: %1$d alarms.</item>
+    </plurals>
+    <plurals name="backup_imported_encrypted">
+        <item quantity="one">Encrypted backup imported: %1$d alarm.</item>
+        <item quantity="other">Encrypted backup imported: %1$d alarms.</item>
+    </plurals>
+    <string name="backup_complete">Backup complete.</string>
+    <string name="backup_fail_export">Couldn\'t export backup.</string>
+    <string name="backup_fail_export_encrypted">Couldn\'t export encrypted backup.</string>
+    <string name="backup_fail_import">Couldn\'t import backup.</string>
+    <string name="backup_fail_import_encrypted">Couldn\'t import encrypted backup.</string>
+    <string name="backup_fail_preview">Couldn\'t preview backup.</string>
+    <string name="backup_fail_preview_encrypted">Couldn\'t preview encrypted backup.</string>
+    <string name="backup_fail_support">Couldn\'t create support bundle.</string>
+    <string name="backup_hint_passphrase">Check the passphrase and choose the encrypted backup again.</string>
+    <string name="backup_hint_storage">Grant file access and try again.</string>
+    <string name="backup_hint_file_location">Choose a file location this device can still access.</string>
+    <string name="backup_hint_access">Check storage access and try again.</string>
+    <string name="backup_hint_version">Choose a backup from a supported app version.</string>
+    <string name="backup_hint_invalid_file">Choose a valid WakeSync backup file.</string>
+    <string name="backup_hint_destination">Check the file or destination and try again.</string>
+    <string name="support_export_ready">Support bundle ready to share</string>
+    <string name="crash_log_ready">Crash log ready to share</string>
+    <string name="support_no_share_app">No app is available to share the support bundle</string>
+
+    <string name="hue_checking">Checking Hue bridge...</string>
+    <string name="hue_not_checked_local">Hue bridge not checked — allow local network access first</string>
+    <string name="hue_reachable_v2_cert">Hue bridge reachable (API v2) — certificate saved</string>
+    <string name="hue_reachable_v2">Hue bridge reachable (API v2)</string>
+    <string name="hue_cert_changed">Hue certificate changed — verify the bridge, then forget the saved certificate</string>
+    <string name="hue_invalid_fingerprint">Hue bridge returned an invalid certificate fingerprint</string>
+    <string name="hue_reachable_legacy">Hue bridge reachable (legacy API v1 over HTTP)</string>
+    <string name="hue_not_checked_creds">Hue bridge not checked — enter a valid IP and API key</string>
+    <string name="hue_not_found">Hue bridge not found — check IP and key</string>
+    <string name="hue_v2_unreachable">Hue API v2 not reachable — legacy HTTP is off</string>
+
+    <string name="readiness_no_motion_shake">This device has no motion sensor for the shake challenge.</string>
+    <string name="readiness_no_motion_squat">This device has no motion sensor for the squat challenge.</string>
+    <string name="readiness_no_motion_pushup">This device has no motion sensor for the push-up challenge.</string>
+    <string name="readiness_no_motion_plank">This device has no motion sensor for the plank-hold challenge.</string>
+    <string name="readiness_no_step_counter">This device has no step-counter sensor for the walk challenge.</string>
+    <string name="readiness_activity_grant">Grant physical-activity permission so steps can be counted.</string>
+    <string name="readiness_speech_unavailable">Android speech recognition is unavailable; typed fallback remains available.</string>
+    <string name="readiness_mic_permission">Grant microphone permission so the phrase can be recognized.</string>
+    <string name="readiness_handwriting_unavailable">Handwriting recognition is unavailable in this build; typed fallback remains available.</string>
+    <string name="readiness_no_nfc">This device has no NFC hardware for the tag challenge.</string>
+    <string name="readiness_register_nfc">Register an NFC tag before saving.</string>
+    <string name="readiness_nfc_off">Turn on NFC before this alarm fires.</string>
+    <string name="readiness_no_camera_barcode">This device has no camera to scan the barcode.</string>
+    <string name="readiness_register_barcode">Register a barcode value before saving.</string>
+    <string name="readiness_camera_permission_barcode">Grant camera permission to scan the barcode.</string>
+    <string name="readiness_no_camera_photo">This device has no camera for the photo-match challenge.</string>
+    <string name="readiness_register_photo">Capture a reference photo before saving.</string>
+    <string name="readiness_camera_permission_photo">Grant camera permission to match the photo.</string>
+    <string name="readiness_no_wifi">This device has no Wi-Fi for the network challenge.</string>
+    <string name="readiness_register_ssid">Enter the Wi-Fi network name before saving.</string>
+    <string name="readiness_location_permission">Grant location permission so the Wi-Fi network can be detected.</string>
+    <string name="readiness_ready">Ready to use.</string>
+
+    <string name="stats_title">Statistics</string>
+    <string name="stats_overline">Alarm history</string>
+    <string name="stats_close">Close statistics</string>
+    <string name="stats_loading">Loading alarm statistics</string>
+    <string name="stats_summary_collecting">Collecting history and response patterns.</string>
+    <string name="stats_summary_empty">Your alarm habits will start to appear once you build some history.</string>
+    <string name="stats_summary_track">Track consistency, snooze behavior, and which mornings are easiest to handle.</string>
+    <string name="stats_this_week_chip">%1$d this week</string>
+    <string name="stats_recent_events_chip">%1$d recent events</string>
+    <string name="stats_streak">Streak</string>
+    <string name="stats_this_week">This week</string>
+    <string name="stats_snoozed">Snoozed</string>
+    <string name="stats_avg_wake_title">Average wake-up time</string>
+    <string name="stats_avg_wake_desc">How long it usually takes to dismiss an alarm after it starts.</string>
+    <string name="stats_avg_response">average response</string>
+    <string name="stats_outcome_mix">Outcome mix</string>
+    <string name="stats_outcome_mix_desc">How alarms usually resolve.</string>
+    <string name="stats_dismissed">Dismissed</string>
+    <string name="stats_skipped">Skipped</string>
+    <string name="stats_missed">Missed</string>
+    <string name="stats_busiest_day">Busiest day</string>
+    <string name="stats_busiest_desc">Where alarms cluster most often.</string>
+    <string name="stats_no_data">No data</string>
+    <plurals name="stats_alarms_recorded">
+        <item quantity="one">%1$d alarm recorded</item>
+        <item quantity="other">%1$d alarms recorded</item>
+    </plurals>
+    <string name="stats_history_fill">Alarm history will fill this in.</string>
+    <string name="stats_fastest_responses">Fastest responses: %1$s • %2$s</string>
+    <string name="stats_need_more_history">Need more dismiss history for day-by-day response trends.</string>
+    <string name="stats_by_day">Alarms by day</string>
+    <string name="stats_by_day_desc">A quick visual read on which days carry the most alarm load.</string>
+    <string name="stats_recent_history">Recent history</string>
+    <string name="stats_recent_history_desc">The last few alarm outcomes, useful for spotting patterns.</string>
+    <string name="stats_clear_history">Clear history</string>
+    <string name="stats_clear_dialog_title">Clear alarm history?</string>
+    <string name="stats_clear_dialog_body">This removes recorded alarm outcomes and resets the statistics shown on this screen. It does not delete your actual alarms.</string>
+    <string name="stats_no_history">No alarm history yet</string>
+    <string name="stats_no_history_desc">Dismissed, snoozed, skipped, and missed alarms will appear here once the app has something to learn from.</string>
+    <string name="stats_no_match">No history matches</string>
+    <string name="stats_no_match_desc">Clear filters or try another alarm label, challenge, action, or day.</string>
+    <string name="stats_find_patterns">Find patterns</string>
+    <string name="stats_filter_result">%1$d of %2$d recent events match</string>
+    <string name="stats_filter_hint">Filter by alarm label, challenge, action, or weekday.</string>
+    <string name="stats_clear">Clear</string>
+    <string name="stats_search_placeholder">Search label, challenge, action, or day</string>
+    <string name="stats_clear_search">Clear search</string>
+    <string name="stats_filter_outcome">Outcome</string>
+    <string name="stats_filter_day">Day</string>
+    <string name="stats_all_days">All days</string>
+    <plurals name="stats_streak_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="stats_streak_label">%1$s wake streak</string>
+    <string name="stats_wake_streak">Wake streak</string>
+    <string name="stats_start_streak">Start streak</string>
+    <string name="stats_best">Best %1$s</string>
+    <string name="stats_next_goal">Next %1$d</string>
+    <string name="stats_next_badge">Next streak badge</string>
+    <string name="stats_streak_days_progress">%1$d / %2$d days</string>
+    <string name="stats_streak_status_zero">Dismiss one alarm to start building a visible morning streak.</string>
+    <string name="stats_streak_status_today">Today\'s wake is already counted. Keep the chain going tomorrow.</string>
+    <string name="stats_streak_status_keep">Still alive from yesterday. Dismiss today\'s alarm to protect it.</string>
+    <string name="stats_compact_days">%1$dd</string>
+    <string name="stats_sleep_context">Sleep context</string>
+    <string name="stats_hc_update_required">Update Health Connect before sleep sessions can be included.</string>
+    <string name="stats_hc_unavailable">Health Connect is not available on this device.</string>
+    <string name="stats_hc_grant_read">Grant READ_SLEEP in Settings to compare wake behavior with recent sleep.</string>
+    <string name="stats_hc_sessions_local">Recent Health Connect sessions stay local and are shown beside alarm history.</string>
+    <string name="stats_hc_no_recent">READ_SLEEP is granted, but no recent sleep sessions were found.</string>
+    <string name="stats_hc_correlation_desc">Compares recent sleep duration with dismiss speed, snoozes, and challenge retries on this device.</string>
+    <string name="stats_hc_enable_sleep">Enable Health Connect to layer sleep duration over local wake behavior.</string>
+    <string name="stats_sleep_ready_wait_wake">Sleep sessions are ready. Alarm outcomes will add wake-behavior bars once they occur.</string>
+    <string name="stats_wake_ready_wait_sleep">Wake-behavior bars are ready. Sleep bars appear after Health Connect returns recent sessions.</string>
+    <string name="stats_chart_built_locally">Recent sleep sessions and alarm outcomes will build this chart locally.</string>
+    <string name="stats_read_granted">READ_SLEEP granted</string>
+    <string name="stats_permission_needed">Permission needed</string>
+    <plurals name="stats_sessions">
+        <item quantity="one">%1$d session</item>
+        <item quantity="other">%1$d sessions</item>
+    </plurals>
+    <string name="stats_last">Last %1$s</string>
+    <string name="stats_deep">Deep %1$s</string>
+    <string name="stats_rem">REM %1$s</string>
+    <string name="stats_hc_attention">Health Connect needs attention</string>
+    <string name="stats_wake_consistency">Wake consistency</string>
+    <string name="stats_wake_consistency_desc">How steady your wake-up times have been, computed on-device from your recent dismisses.</string>
+    <string name="stats_wake_consistency_more">Dismiss a few more alarms to see how consistent your wake times are.</string>
+    <string name="stats_from_wakeups">from %1$d recent wake-ups</string>
+    <string name="stats_wc_very">Very consistent</string>
+    <string name="stats_wc_fair">Fairly consistent</string>
+    <string name="stats_wc_somewhat">Somewhat variable</string>
+    <string name="stats_wc_highly">Highly variable</string>
+    <string name="stats_sleep_wake">Sleep and wake patterns</string>
+    <string name="stats_no_trend">No sleep or wake trend yet</string>
+    <string name="stats_no_trend_desc">Alarm history and optional Health Connect sleep sessions will build this view locally.</string>
+    <string name="stats_sleep_avg">Sleep %1$s avg</string>
+    <string name="stats_sleep_score">Sleep score %1$d</string>
+    <string name="stats_sleep_debt">Sleep debt %1$s</string>
+    <string name="stats_response_avg">Response %1$s avg</string>
+    <plurals name="stats_snoozes_count">
+        <item quantity="one">%1$d snooze</item>
+        <item quantity="other">%1$d snoozes</item>
+    </plurals>
+    <plurals name="stats_retries">
+        <item quantity="one">%1$d retry</item>
+        <item quantity="other">%1$d retries</item>
+    </plurals>
+    <string name="stats_slower_after_short">%1$s slower after short sleep</string>
+    <string name="stats_faster_after_short">%1$s faster after short sleep</string>
+    <string name="stats_chart_sleep">Sleep</string>
+    <string name="stats_chart_dismiss">Dismiss</string>
+    <string name="stats_chart_snooze">Snooze</string>
+    <string name="stats_chart_retry">Retry</string>
+    <string name="stats_motion_buckets">Sleep motion buckets</string>
+    <string name="stats_motion_desc_empty">Smart alarm and Sonar sessions will save compact local movement buckets here.</string>
+    <string name="stats_motion_desc_sonar">Experimental Sonar buckets come from microphone reflection analysis. No raw audio is retained.</string>
+    <string name="stats_motion_desc_phone">Experimental phone-motion buckets from smart alarm monitoring. They are not medical sleep stages.</string>
+    <string name="stats_no_motion">No sleep-motion sessions yet</string>
+    <string name="stats_no_motion_desc">Enable a smart alarm window or start Sonar from Bedtime to collect compact local summaries.</string>
+    <string name="stats_min">%1$d min</string>
+    <string name="stats_sonar_session">Sonar session</string>
+    <string name="stats_fired_early">Fired early</string>
+    <string name="stats_reached_target">Reached target</string>
+    <string name="stats_movement_index">%1$s index %2$.2f</string>
+    <string name="stats_decision">Decision %1$s</string>
+    <string name="stats_sonar_movement">Movement</string>
+    <string name="stats_motion">Motion</string>
+    <string name="stats_sonar_restless">Restless</string>
+    <string name="stats_sonar_still">Still</string>
+    <string name="stats_motion_awake">Awake motion</string>
+    <string name="stats_motion_light">Light motion</string>
+    <string name="stats_motion_still">Still motion</string>
+    <string name="stats_sonar_breakdown">%1$dm movement · %2$dm restless · %3$dm still</string>
+    <string name="stats_motion_breakdown">%1$dm awake motion · %2$dm light motion · %3$dm still motion</string>
+    <string name="stats_sm_source_sonar">Source: sonar RMS after %1$dm observed; no raw audio retained</string>
+    <string name="stats_sm_decision_phone">Decision: %1$s after %2$dm observed (%3$s)</string>
+    <string name="stats_sw_light_motion">light motion</string>
+    <string name="stats_sw_not_enough">not enough data</string>
+    <string name="stats_sw_too_active">too active</string>
+    <string name="stats_sw_still">still motion</string>
+    <string name="stats_sw_unstable_light">unstable light motion</string>
+    <string name="stats_sw_final_minute">final minute</string>
+    <string name="stats_sw_timeout">service timeout</string>
+    <string name="stats_sw_stopped">session stopped</string>
+    <string name="stats_sw_start_failed">start failed</string>
+    <string name="stats_sw_target_time">target time</string>
+    <string name="stats_sw_unknown">unknown</string>
+    <string name="stats_event">Alarm event</string>
+    <string name="stats_alarm_default">Alarm</string>
+    <string name="stats_day_monday">Monday</string>
+    <string name="stats_day_tuesday">Tuesday</string>
+    <string name="stats_day_wednesday">Wednesday</string>
+    <string name="stats_day_thursday">Thursday</string>
+    <string name="stats_day_friday">Friday</string>
+    <string name="stats_day_saturday">Saturday</string>
+    <string name="stats_day_sunday">Sunday</string>
+
+    <string name="share_import_back">Discard shared alarm</string>
+    <string name="share_import_title_review">Review shared alarm</string>
+    <string name="share_import_subtitle">Saved imports stay off until you review and enable them.</string>
+    <string name="share_import_default_label">Shared alarm</string>
+    <string name="share_import_row_time">Time</string>
+    <string name="share_import_row_repeat">Repeat</string>
+    <string name="share_import_row_challenge">Challenge</string>
+    <string name="share_import_row_sound">Sound</string>
+    <string name="share_import_row_status">Status</string>
+    <string name="share_import_status_off">Saved off until reviewed</string>
+    <string name="share_import_private_title">Private references</string>
+    <string name="share_import_private_clean">Clean</string>
+    <string name="share_import_private_review">Review</string>
+    <string name="share_import_private_none_desc">No contact, location, Wi-Fi, media, or challenge reference was found.</string>
+    <string name="share_import_private_strip_desc">Sanitizing keeps the wake time and repeat pattern, but removes values that can identify devices, places, people, media, or challenge secrets.</string>
+    <string name="share_import_error_title">Import could not be saved</string>
+    <string name="share_import_save_error">Could not save this shared alarm. Check the link and try again.</string>
+    <string name="share_import_discard">Discard</string>
+    <string name="share_import_saving">Saving</string>
+    <string name="share_import_save_off">Save, keep off</string>
+    <string name="share_import_challenge_none">None</string>
+    <string name="share_import_sound_pool">Random ringtone pool</string>
+    <string name="share_import_sound_silent">Silent alarm</string>
+    <string name="share_import_sound_custom">Custom ringtone</string>
+    <string name="share_import_sound_default">Device default</string>
+    <string name="share_import_strip_toggle">Strip private references</string>
+    <string name="share_import_strip_toggle_recommended">Recommended for alarms from other people or public links.</string>
+    <string name="share_import_strip_toggle_optional">Keep only when you trust the sender and need these references.</string>
+    <string name="share_import_risk_ringtone">Custom sound URI</string>
+    <string name="share_import_risk_guardian">Guardian Angel contact</string>
+    <string name="share_import_risk_hue">Philips Hue sunrise setting</string>
+    <string name="share_import_risk_nfc">NFC tag identifier</string>
+    <string name="share_import_risk_barcode">Barcode or QR value</string>
+    <string name="share_import_risk_photo">Photo match URI</string>
+    <string name="share_import_risk_wifi">Wi-Fi SSID</string>
+    <string name="share_import_risk_location">Location dismiss coordinates</string>
+    <string name="share_import_risk_routine">Morning routine text</string>
+    <string name="share_import_risk_challenge">Reference-backed challenge</string>
+    <string name="share_import_risk_chain">Challenge chain reference</string>
+
+    <string name="dashboard_today">Today</string>
+    <string name="dashboard_today_quiet">Today is quiet</string>
+    <string name="dashboard_day_clear">Your day is clear.</string>
+    <string name="dashboard_next_alarm">Next alarm</string>
+    <string name="dashboard_view">View</string>
+    <string name="dashboard_schedule">Schedule</string>
+    <string name="dashboard_calendar_access">Calendar access</string>
+    <string name="dashboard_calendar_access_desc">Allow calendar access to see today’s events.</string>
+    <string name="dashboard_nothing_scheduled">Nothing scheduled today</string>
+    <string name="dashboard_calendar_permission_error">Calendar permission needed</string>
+    <string name="dashboard_calendar_load_error">Unable to load calendar</string>
+
+    <string name="ringtone_section_title">Alarm Sound</string>
+    <string name="ringtone_section_desc">Preview tones before applying them. Default and silent options stay available at the top.</string>
+    <plurals name="ringtone_results">
+        <item quantity="one">%1$d result</item>
+        <item quantity="other">%1$d results</item>
+    </plurals>
+    <string name="ringtone_from_folder">From folder</string>
+    <string name="ringtone_folder_source">Folder source</string>
+    <string name="ringtone_folder_added">Folder added. Its audio files are now available below.</string>
+    <string name="ringtone_folder_access_failed">Could not keep access to that folder. Choose it again if needed.</string>
+    <string name="ringtone_tap_preview">Tap a tone to preview</string>
+    <string name="ringtone_preview_playing">Preview playing</string>
+    <string name="ringtone_preview_unavailable">Preview unavailable</string>
+    <string name="ringtone_preview_error">Could not preview that tone. You can still select it for the alarm.</string>
+    <string name="ringtone_list_limited">Sound list limited</string>
+    <string name="ringtone_list_limited_desc">The device sound list could not be read. Default and Silent are still available.</string>
+    <string name="ringtone_search_cd">Search</string>
+    <string name="ringtone_search_placeholder">Search alarm sounds</string>
+    <string name="ringtone_no_results">No matching tones</string>
+    <string name="ringtone_no_results_desc">Nothing matches &quot;%1$s&quot;. Try a shorter or different term.</string>
+    <string name="ringtone_selected">Selected</string>
+    <string name="ringtone_previewing">Previewing</string>
+    <string name="ringtone_recommended">Recommended</string>
+    <string name="ringtone_quiet_mode">Quiet mode</string>
+    <string name="ringtone_current_sound_cd">Current alarm sound</string>
+    <string name="ringtone_use">Use</string>
+    <string name="ringtone_stop_preview_cd">Stop preview</string>
+    <string name="ringtone_preview_sound_cd">Preview sound</string>
+    <string name="ringtone_subtitle_default">Uses the system default alarm sound.</string>
+    <string name="ringtone_subtitle_silent">No audio. Best paired with vibration or other wake effects.</string>
+    <string name="ringtone_subtitle_preview">Tap to preview, then choose Use when it feels right.</string>
+    <string name="ringtone_subtitle_ready">Ready to apply.</string>
+    <string name="ringtone_default_alarm">Default Alarm</string>
+    <string name="ringtone_silent">Silent</string>
+
+    <string name="firing_no_photo_captured">No photo captured. Try again.</string>
+    <string name="firing_camera_permission_needed">Camera permission is required for photo match.</string>
+    <string name="firing_activity_recognition_needed">Activity recognition permission is required to count steps on this device.</string>
+    <string name="firing_location_permission_wifi">Location permission is required for Android to reveal the current Wi-Fi network name.</string>
+    <string name="firing_location_permission_dismiss">Location permission is required before dismiss can unlock.</string>
+    <string name="firing_no_step_sensor">This device does not expose a step sensor.</string>
+    <string name="firing_no_motion_sensor_squats">This device does not expose a motion sensor to count squats.</string>
+    <string name="firing_no_motion_sensor_pushups">This device does not expose a motion sensor to count push-ups.</string>
+    <string name="firing_no_wifi_details">This device does not expose Wi-Fi connection details.</string>
+    <string name="firing_wifi_blocked">Android blocked access to the current Wi-Fi network name.</string>
+    <string name="firing_wifi_unreadable">Unable to read the current Wi-Fi network. Make sure location is enabled and you are connected to Wi-Fi.</string>
+    <string name="firing_no_location_service">This device does not expose a location service.</string>
+    <string name="firing_location_blocked">Android blocked location access during alarm firing.</string>
+    <string name="firing_no_location_provider">No usable location provider is available.</string>
+    <string name="firing_location_off">Turn on device Location to unlock dismissal after leaving the saved place.</string>
+    <string name="firing_location_saved_place_none">No saved place is set, so location dismissal is not locked.</string>
+    <string name="firing_location_waiting">Waiting for a location fix. Leave the saved %1$d m area to unlock dismiss.</string>
+    <string name="firing_location_confirmed_outside">Location confirmed: %1$d m from the saved place. Dismiss is unlocked.</string>
+    <string name="firing_location_still_inside">Still inside the saved area: %1$d m away. Move about %2$d m farther to unlock dismiss.</string>
+    <string name="firing_voice_matched">Voice phrase matched.</string>
+    <string name="firing_voice_not_detected">No phrase was detected. Try again or use the typed fallback.</string>
+    <string name="firing_voice_heard">Heard \"%1$s\". Say the phrase shown below.</string>
+    <string name="firing_handwriting_draw_first">Draw the word before checking it.</string>
+    <string name="firing_handwriting_checking">Checking handwriting...</string>
+    <string name="firing_handwriting_unavailable">Handwriting recognition is unavailable. Type the word instead.</string>
+    <string name="firing_handwriting_matched">Handwriting matched.</string>
+    <string name="firing_handwriting_recognized">Recognized \"%1$s\". Draw the word again.</string>
+    <string name="firing_handwriting_no_match">No handwriting match. Draw the word again.</string>
+    <string name="firing_typing_matched">Typed word matched.</string>
+    <string name="firing_typing_draw_or_type">Type the displayed word or draw it again.</string>
+    <string name="firing_typing_mismatch">Typed \"%1$s\". Match the displayed word exactly.</string>
+    <string name="firing_nfc_wrong_tag">Wrong tag — use the registered tag.</string>
+    <string name="firing_barcode_wrong_code">Wrong code — scan the registered barcode.</string>
+    <string name="firing_photo_no_match">Not a match — try again (%1$d%% similar)</string>
+
+    <string name="wake_confirm_countdown_desc">Confirm within %1$ds or the alarm will ring again.</string>
+    <string name="wake_confirm_times_up">Time’s up — the alarm is ringing again.</string>
+    <string name="wake_confirm_desc">A quick second check for alarms that need extra accountability.</string>
+    <plurals name="wake_confirm_refires_left">
+        <item quantity="one">%1$d re-fire left</item>
+        <item quantity="other">%1$d re-fires left</item>
+    </plurals>
+    <plurals name="wake_confirm_protection_footer">
+        <item quantity="one">Closing this screen keeps wake-check protection active. The alarm can ring %1$d more time if you don’t confirm.</item>
+        <item quantity="other">Closing this screen keeps wake-check protection active. The alarm can ring up to %1$d more times if you don’t confirm.</item>
+    </plurals>
+
+    <string name="briefing_good_morning">Good morning</string>
+    <string name="briefing_subtitle">You’re clear of the alarm. Here’s the shortest path into the day.</string>
+    <string name="briefing_next_event">Next event</string>
+    <string name="briefing_open_schedule">Open schedule</string>
+    <plurals name="briefing_routine_items">
+        <item quantity="one">%1$d routine item</item>
+        <item quantity="other">%1$d routine items</item>
+    </plurals>
+    <string name="briefing_title">Morning briefing</string>
+    <string name="briefing_desc">A quick snapshot so you can start moving with context.</string>
+    <string name="briefing_nothing_urgent">Nothing urgent is queued right now. Enjoy a calmer start to the day.</string>
+    <string name="briefing_routine_title">Morning routine</string>
+    <string name="briefing_routine_desc">A short checklist to get momentum without decision fatigue.</string>
+    <string name="briefing_close">Close briefing</string>
+    <string name="briefing_close_note">This closes intentionally so the handoff from alarm to morning feels clean, not abrupt.</string>
+
+    <string name="night_clock_bedside">Bedside mode</string>
+    <string name="night_clock_long_press_exit">Long press anywhere to exit</string>
 
 </resources>

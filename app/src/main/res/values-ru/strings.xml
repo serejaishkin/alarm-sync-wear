@@ -710,6 +710,270 @@
     <string name="bedtime_picker_keep_current">Оставить текущее</string>
     <string name="bedtime_jetlag_travel_target">Цель для поездки</string>
     <string name="bedtime_jetlag_choose_target_wake">Выбрать целевое время подъёма</string>
+
+    <!-- Экран «Режим сна» -->
+    <string name="bedtime_screen_title">Режим сна</string>
+    <string name="bedtime_screen_overline">Планирование сна</string>
+    <string name="bedtime_summary_alarm">Стройте режим вокруг будильника %1$s, защищая %2$s сна.</string>
+    <string name="bedtime_summary_enabled">Напоминание о подготовке ко сну включено. Добавьте будильник, чтобы получить рекомендуемое время сна.</string>
+    <string name="bedtime_summary_disabled">Выстройте спокойный вечерний ритуал: напоминание, цель и деликатные сигналы ко сну.</string>
+    <string name="bedtime_reminder_on">Напоминание вкл.</string>
+    <string name="bedtime_reminder_off">Напоминание выкл.</string>
+    <string name="bedtime_no_alarm_linked">Будильник не привязан</string>
+    <string name="bedtime_close">Закрыть «Режим сна»</string>
+    <string name="bedtime_reminder_title">Напоминание о сне</string>
+    <string name="bedtime_reminder_active_desc">Напомнить за %1$d минут до %2$s.</string>
+    <string name="bedtime_reminder_inactive_desc">Получайте подсказку перед целевым временем сна, чтобы вечера были спокойнее.</string>
+    <string name="bedtime_min_early">за %1$d мин</string>
+    <string name="bedtime_optional">Необязательно</string>
+    <string name="bedtime_linked_alarm">Привязан к будильнику</string>
+    <string name="bedtime_needs_alarm">Нужен будильник</string>
+    <string name="bedtime_dnd_title">Режим «Не беспокоить»</string>
+    <string name="bedtime_dnd_desc_grant">Разрешите доступ к режиму «Не беспокоить», чтобы WakeSync управлял правилом сна только для будильников.</string>
+    <string name="bedtime_dnd_desc_active">Режим «только будильники» активен в вашем окне сна.</string>
+    <string name="bedtime_dnd_desc_silence">Приглушает уведомления с момента сна до следующего будильника.</string>
+    <string name="bedtime_dnd_desc_create">Создайте правило сна только для будильников от имени приложения.</string>
+    <string name="bedtime_dnd_alarms_only">Только будильники</string>
+    <string name="bedtime_dnd_error">Синхронизация «Не беспокоить» требует внимания: %1$s</string>
+    <string name="bedtime_dnd_grant_button">Разрешить доступ к «Не беспокоить»</string>
+    <string name="bedtime_battery_warning">Батарея на %1$d%% — подключите зарядку перед сном, чтобы будильник сработал</string>
+    <string name="bedtime_stay_up_title">Не спите до %1$s</string>
+    <string name="bedtime_stay_up_tonight">Не ложиться спать сегодня</string>
+    <string name="bedtime_stay_up_subtitle">Отложить сегодняшнее напоминание о сне</string>
+    <string name="bedtime_stay_up_hours">+%1$d ч</string>
+    <string name="bedtime_window_title">Окно сна на сегодня</string>
+    <string name="bedtime_window_desc">Используйте текущую цель и следующий будильник, чтобы понять, когда лечь спать.</string>
+    <string name="bedtime_current_target">Текущая цель сна</string>
+    <string name="bedtime_metric_bedtime">Сон</string>
+    <string name="bedtime_metric_wake">Подъём</string>
+    <string name="bedtime_metric_reminder">Напоминание</string>
+    <string name="bedtime_metric_room">Комната</string>
+    <string name="bedtime_tap_to_edit">Нажмите, чтобы изменить</string>
+    <string name="bedtime_helper_before_bedtime">Перед сном</string>
+    <string name="bedtime_helper_turn_on_above">Включите выше</string>
+    <string name="bedtime_no_alarm_title">Нет предстоящего будильника</string>
+    <string name="bedtime_no_alarm_desc">Установите будильник, чтобы получать рекомендации по времени сна и варианты по циклам.</string>
+    <string name="bedtime_suggested_title">Рекомендуемое время сна</string>
+    <string name="bedtime_suggested_desc">Ложитесь в %1$s, чтобы сохранить %2$s сна до следующего будильника.</string>
+    <string name="bedtime_suggestion_cd">Рекомендация</string>
+    <string name="bedtime_goal_title">Цель сна и время напоминания</string>
+    <string name="bedtime_goal_desc">Меняйте шагами по 30 минут и выбирайте, за сколько до сна напоминать.</string>
+    <string name="bedtime_goal_less">Меньше</string>
+    <string name="bedtime_goal_more">Больше</string>
+    <string name="bedtime_goal_sleep_target">Цель сна</string>
+    <string name="bedtime_goal_steps_30min">Шаг 30 минут</string>
+    <string name="bedtime_goal_reminder_lead">Время напоминания</string>
+    <string name="bedtime_cycles_title">Варианты по циклам сна</string>
+    <string name="bedtime_cycles_desc">По 90-минутным циклам сна и небольшому запасу на засыпание.</string>
+    <string name="bedtime_cycles_empty_title">Ждём следующий будильник</string>
+    <string name="bedtime_cycles_empty_desc">После установки будильника появятся варианты времени сна, совпадающие с циклами.</string>
+    <string name="bedtime_cycle_best_match">Лучший вариант</string>
+    <string name="bedtime_picker_winddown">Подготовка ко сну</string>
+    <string name="bedtime_picker_choose">Выберите время сна</string>
+    <string name="bedtime_picker_save">Сохранить время сна</string>
+
+    <!-- Библиотека звуков сна -->
+    <string name="sleep_sound_white">Белый шум</string>
+    <string name="sleep_sound_rain">Дождь</string>
+    <string name="sleep_sound_brown">Коричневый шум</string>
+    <string name="sleep_sound_ocean">Океан</string>
+    <string name="sleep_sound_fan">Вентилятор</string>
+    <string name="sleep_sound_pink">Розовый шум</string>
+    <string name="sleep_sound_violet">Фиолетовый шум</string>
+    <string name="bedtime_sounds_title">Звуки сна</string>
+    <string name="bedtime_sounds_desc">Непрерывные процедурные звуковые ландшафты без артефактов зацикливания.</string>
+    <string name="bedtime_sound_playing">Играет</string>
+    <string name="bedtime_sound_tap_preview">Нажмите для предпрослушивания</string>
+    <string name="bedtime_fade_out">Затухание через</string>
+    <string name="bedtime_never">Никогда</string>
+    <string name="bedtime_final_taper">Длительность финального затухания</string>
+    <string name="bedtime_seconds_short">%1$d с</string>
+    <string name="bedtime_stop_sound">Остановить звук</string>
+
+    <!-- Факторы перед сном -->
+    <string name="bedtime_presleep_title">Факторы перед сном</string>
+    <string name="bedtime_presleep_desc">%1$s: отметьте сигналы, которые могут повлиять на то, как легко вы проснётесь завтра.</string>
+    <string name="bedtime_presleep_no_chart">Локальная диаграмма появится, когда отмеченные ночи совпадут с данными Sonar или умного пробуждения.</string>
+    <string name="bedtime_presleep_accessibility">%1$s: %2$s</string>
+    <string name="pre_sleep_tag_caffeine">Кофеин</string>
+    <string name="pre_sleep_tag_caffeine_helper">Кофе, чай, энергетики</string>
+    <string name="pre_sleep_tag_exercise">Тренировка</string>
+    <string name="pre_sleep_tag_exercise_helper">Поздняя тренировка или занятие</string>
+    <string name="pre_sleep_tag_alcohol">Алкоголь</string>
+    <string name="pre_sleep_tag_alcohol_helper">Любой алкоголь вечером</string>
+    <string name="pre_sleep_tag_stress">Стресс</string>
+    <string name="pre_sleep_tag_stress_helper">Вечер с высоким уровнем стресса</string>
+    <string name="bedtime_corr_more_restless">Беспокойнее</string>
+    <string name="bedtime_corr_calmer">Спокойнее</string>
+    <string name="bedtime_corr_avg">в среднем %1$d мин</string>
+    <string name="bedtime_corr_no_data">Нет данных о сне</string>
+    <string name="bedtime_corr_line">%1$s — %2$s</string>
+    <string name="bedtime_corr_no_nights">Отмеченных ночей пока нет</string>
+    <string name="bedtime_corr_wait_sessions">%1$d отмечено; ждём данные о сне</string>
+    <string name="bedtime_corr_with_sessions">%1$d/%2$d отмеченных ночей с локальными данными о сне</string>
+    <string name="bedtime_corr_delta_none">Запустите Sonar или умное пробуждение, чтобы сравнить беспокойство</string>
+    <string name="bedtime_corr_delta_positive">+%1$d мин: беспокойнее обычного</string>
+    <string name="bedtime_corr_delta_negative">%1$d мин: спокойнее обычного</string>
+    <string name="bedtime_corr_delta_equal">Соответствует обычному уровню</string>
+    <string name="bedtime_tag_tonight">Сегодня вечером</string>
+    <string name="bedtime_tag_last_night">Прошлой ночью</string>
+
+    <!-- Отслеживание сна Sonar -->
+    <string name="bedtime_sonar_title">Отслеживание сна Sonar</string>
+    <string name="bedtime_sonar_desc_active">Экспериментальный локальный мониторинг движений ночью запущен.</string>
+    <string name="bedtime_sonar_desc_idle">Запустите локальную ультразвуковую сессию движений в режиме сна, когда нужен дополнительный контекст.</string>
+    <string name="bedtime_sonar_active">Активно</string>
+    <string name="bedtime_sonar_off">Выкл.</string>
+    <string name="bedtime_sonar_no_audio">Аудио не сохраняется</string>
+    <string name="bedtime_sonar_start">Старт</string>
+    <string name="bedtime_sonar_stop">Стоп</string>
+    <string name="bedtime_sonar_accessibility_stop">Остановить отслеживание движений во сне</string>
+    <string name="bedtime_sonar_accessibility_start">Запустить отслеживание движений во сне</string>
+    <string name="bedtime_sonar_perm_needed">Разрешите доступ к микрофону для локального отслеживания сна Sonar.</string>
+    <string name="bedtime_sonar_starting">Запускаем Sonar и проверяем мониторинг микрофона.</string>
+    <string name="bedtime_sonar_start_failed">Не удалось запустить Sonar: %1$s</string>
+    <string name="bedtime_sonar_service_unavailable">служба недоступна</string>
+    <string name="bedtime_sonar_stopping">Останавливаем Sonar и сохраняем локальную сводку.</string>
+    <string name="bedtime_sonar_stop_failed">Не удалось корректно остановить Sonar: %1$s</string>
+    <string name="bedtime_sonar_perm_denied">Доступ к микрофону отклонён. Sonar остаётся выключенным.</string>
+    <string name="bedtime_sonar_monitoring">Отслеживаем движения и громкие звуки во сне. Сырое аудио не записывается.</string>
+    <string name="bedtime_sonar_last_saved">Последняя сессия Sonar сохранена локально.</string>
+    <string name="bedtime_sonar_ready">Готов к локальному мониторингу движений во время сна.</string>
+    <string name="bedtime_sonar_confirm_failed">Не удалось подтвердить мониторинг микрофона. Попробуйте ещё раз.</string>
+    <string name="bedtime_sonar_last_session">Последняя сессия: %1$d мин, движение %2$d мин, беспокойство %3$d мин, покой %4$d мин</string>
+    <string name="bedtime_sonar_bursts">; %1$d громких всплесков, пик ~%2$d дБ</string>
+    <string name="bedtime_sonar_no_bursts">; без громких всплесков</string>
+    <string name="bedtime_snore_intensity">Пик ~%1$d дБ / в среднем %2$d</string>
+
+    <!-- Общие единицы длительности в режиме сна -->
+    <string name="bedtime_duration_h_m">%1$d ч %2$d мин</string>
+    <string name="bedtime_duration_h">%1$d ч</string>
+    <string name="bedtime_duration_m">%1$d мин</string>
+    <string name="bedtime_duration_m_s">%1$d мин %2$d с</string>
+    <string name="bedtime_next_alarm">Следующий будильник: %1$s</string>
+    <string name="bedtime_no_alarm_set">Будильник не установлен</string>
+    <string name="bedtime_sleep_cycle_option">%1$s (%2$d ч %3$d мин)</string>
+    <string name="bedtime_noise_none">Нет исходного уровня</string>
+    <string name="bedtime_noise_quiet">Тихо</string>
+    <string name="bedtime_noise_moderate">Умеренно</string>
+    <string name="bedtime_noise_loud">Шумно</string>
+    <string name="bedtime_noise_checks_reminder">Проверка при напоминании</string>
+    <string name="bedtime_noise_mic_needed">Нужен доступ к микрофону</string>
+    <string name="bedtime_noise_last_checked">Проверено %1$s; аудио не сохраняется</string>
+
+    <!-- Сон в Health Connect -->
+    <string name="bedtime_health_title">Сон в Health Connect</string>
+    <string name="bedtime_health_desc_update">Обновите Health Connect, чтобы здесь появились последние сессии сна.</string>
+    <string name="bedtime_health_desc_unavailable">Health Connect недоступен на этом устройстве.</string>
+    <string name="bedtime_health_desc_permission">Разрешите READ_SLEEP в настройках, чтобы учитывать сессии сна в планировании.</string>
+    <string name="bedtime_health_desc_sessions">Последние сессии хранятся локально и помогают сравнивать цель с фактическим сном.</string>
+    <string name="bedtime_health_desc_none">Доступ READ_SLEEP выдан, но за последние 14 дней сессий сна не найдено.</string>
+    <string name="bedtime_health_permission_granted">READ_SLEEP выдан</string>
+    <string name="bedtime_health_permission_needed">Нужно разрешение</string>
+    <string name="bedtime_health_sessions_chip">Сессий: %1$d</string>
+    <string name="bedtime_health_last_session">Последняя сессия: %1$s</string>
+    <string name="bedtime_health_stage_light">Лёгкий</string>
+    <string name="bedtime_health_stage_deep">Глубокий</string>
+    <string name="bedtime_health_stage_rem">REM</string>
+    <string name="bedtime_health_stage_awake">Бодрствование</string>
+    <string name="bedtime_health_attention">Health Connect требует внимания</string>
+
+    <!-- Оценка хронотипа -->
+    <string name="bedtime_chronotype_not_set">Не определён</string>
+    <string name="bedtime_chronotype_early">Жаворонок</string>
+    <string name="bedtime_chronotype_balanced">Сбалансированный</string>
+    <string name="bedtime_chronotype_late">Сова</string>
+    <string name="bedtime_chronotype_answered">Ответов: %1$d из %2$d</string>
+    <string name="bedtime_chronotype_local_estimate">Локальная оценка</string>
+    <string name="bedtime_chronotype_fits_target">Подходит к цели сна %1$s</string>
+    <string name="bedtime_chronotype_range">%1$s — %2$s</string>
+    <string name="bedtime_chronotype_title">Оценка хронотипа</string>
+    <string name="bedtime_chronotype_desc_complete">Ваши естественные предпочтения по времени учтены в цели сна.</string>
+    <string name="bedtime_chronotype_desc_idle">Определите, «жаворонок» вы или «сова», чтобы подобрать комфортное окно сна.</string>
+    <string name="chronotype_prompt_0">В свободный день, после полноценного сна, во сколько вы просыпаетесь сами?</string>
+    <string name="chronotype_prompt_1">Когда сфокусированная работа даётся легче всего?</string>
+    <string name="chronotype_prompt_2">Если завтра нет дел, во сколько вы предпочли бы лечь спать?</string>
+    <string name="chronotype_prompt_3">Как обычно воспринимаются ранние будильники?</string>
+    <string name="chronotype_prompt_4">Когда у вас обычно пик энергии?</string>
+    <string-array name="chronotype_options_0">
+        <item>До 6:30</item>
+        <item>6:30–7:30</item>
+        <item>7:30–8:30</item>
+        <item>8:30–10:00</item>
+        <item>После 10:00</item>
+    </string-array>
+    <string-array name="chronotype_options_1">
+        <item>Раннее утро</item>
+        <item>Позднее утро</item>
+        <item>Полдень</item>
+        <item>Поздний день</item>
+        <item>Вечер</item>
+    </string-array>
+    <string-array name="chronotype_options_2">
+        <item>До 21:30</item>
+        <item>21:30–22:30</item>
+        <item>22:30–23:30</item>
+        <item>23:30–00:30</item>
+        <item>После 00:30</item>
+    </string-array>
+    <string-array name="chronotype_options_3">
+        <item>Легко</item>
+        <item>Немного тяжело</item>
+        <item>Приемлемо</item>
+        <item>Тяжело</item>
+        <item>Очень тяжело</item>
+    </string-array>
+    <string-array name="chronotype_options_4">
+        <item>На рассвете</item>
+        <item>Утром</item>
+        <item>В полдень</item>
+        <item>Днём</item>
+        <item>Поздно вечером</item>
+    </string-array>
+
+    <!-- Дыхательные упражнения -->
+    <string name="bedtime_breathing_title">Дыхательные упражнения</string>
+    <string name="bedtime_breathing_desc_running">Следуйте счёту и держите телефон рядом, пока расслабляетесь.</string>
+    <string name="bedtime_breathing_desc_idle">Проведите короткую практику 4-7-8 или дыхания по квадрату перед сном.</string>
+    <string name="bedtime_breathing_cycle">Цикл %1$d/%2$d</string>
+    <string name="bedtime_breathing_inhale">Вдох</string>
+    <string name="bedtime_breathing_hold">Задержка</string>
+    <string name="bedtime_breathing_exhale">Выдох</string>
+    <string name="bedtime_breathing_complete">Готово</string>
+    <string name="bedtime_breathing_cue_inhale">Медленно вдохните через нос.</string>
+    <string name="bedtime_breathing_cue_hold">Держите грудную клетку расслабленной и неподвижной.</string>
+    <string name="bedtime_breathing_cue_hold_soft">Оставайтесь расслабленным перед следующим вдохом.</string>
+    <string name="bedtime_breathing_cue_exhale">Медленно выдохните.</string>
+    <string name="bedtime_breathing_cue_done">Позвольте дыханию вернуться в норму.</string>
+    <string name="bedtime_breathing_done">Готово</string>
+    <string name="bedtime_breathing_left">осталось %1$s</string>
+    <string name="bedtime_breathing_pause">Пауза</string>
+    <string name="bedtime_breathing_restart">Заново</string>
+    <string name="bedtime_breathing_start">Старт</string>
+    <string name="bedtime_breathing_reset">Сброс</string>
+    <string name="bedtime_breathing_accessibility_pause">Поставить дыхательную практику на паузу</string>
+    <string name="bedtime_breathing_accessibility_start">Запустить дыхательную практику</string>
+    <string name="bedtime_breathing_pattern_box">Квадрат</string>
+
+    <!-- Чек-лист подготовки ко сну -->
+    <string name="bedtime_checklist_title">Чек-лист подготовки ко сну</string>
+    <string name="bedtime_checklist_desc">Отмечайте каждый шаг по мере подготовки ко сну.</string>
+    <string name="bedtime_checklist_done_count">Выполнено %1$d из %2$d</string>
+    <string name="bedtime_checklist_completed">Выполнено</string>
+    <string name="bedtime_checklist_not_done">Не выполнено</string>
+    <string name="bedtime_checklist_done">Готово</string>
+    <string name="bedtime_checklist_up_next">Далее</string>
+    <string name="bedtime_checklist_reset">Сбросить чек-лист</string>
+
+    <!-- Статус режима «Не беспокоить» во сне (синхронизация правила) -->
+    <string name="bedtime_dnd_status_off">Выкл.</string>
+    <string name="bedtime_dnd_status_needs_access">Нужен доступ к «Не беспокоить»</string>
+    <string name="bedtime_dnd_status_active_until">Активен до %1$s</string>
+    <string name="bedtime_dnd_status_ready_at">Готов с %1$s</string>
+    <string name="bedtime_dnd_sync_failed">Не удалось синхронизировать правило</string>
+    <string name="bedtime_dnd_condition_unavailable">Расписание «Не беспокоить» во сне недоступно</string>
+    <string name="bedtime_dnd_condition_active">Режим «Не беспокоить» во сне активен до %1$s</string>
+    <string name="bedtime_dnd_condition_starts">Режим «Не беспокоить» во сне начнётся в %1$s</string>
     <string name="settings_webhook_log_empty">Доставок пока нет. События появятся после следующего будильника или теста.</string>
     <string name="alarm_edit_save_error_missing_refs">Сначала завершите настройку задания: не хватает %1$s.</string>
     <string name="alarm_edit_save_error_location">Сохраните текущее место перед включением отключения по местоположению.</string>
@@ -1266,5 +1530,628 @@
     <string name="onboarding_test_screen_body">Ваше устройство может открыть экран будильника, воспроизвести звук и вибрацию. Сохранённые будильники не создавались и не изменялись.</string>
     <string name="onboarding_test_dismiss">Отклонить тестовый будильник</string>
     <string name="onboarding_test_footer">Если вы не услышали и не почувствовали этот тест, проверьте громкость, режим «Не беспокоить» и настройки батареи, прежде чем полагаться на ночной будильник.</string>
+
+    <string name="stopwatch_title">Секундомер</string>
+    <string name="stopwatch_close">Закрыть секундомер</string>
+    <string name="stopwatch_overline">Хронометраж</string>
+    <string name="stopwatch_subtitle_idle">Запустите точный таймер и отмечайте круги, когда понадобится сплит.</string>
+    <string name="stopwatch_subtitle_running">Идёт отсчёт. Отмечайте круги по ходу сессии.</string>
+    <string name="stopwatch_subtitle_paused">Пауза. Продолжите, когда будете готовы, или сбросьте для чистого забега.</string>
+    <string name="stopwatch_status_ready">Готово</string>
+    <string name="stopwatch_status_running">Идёт</string>
+    <string name="stopwatch_status_paused">Пауза</string>
+    <plurals name="stopwatch_laps_count">
+        <item quantity="one">%1$d круг</item>
+        <item quantity="few">%1$d круга</item>
+        <item quantity="many">%1$d кругов</item>
+        <item quantity="other">%1$d кругов</item>
+    </plurals>
+    <string name="stopwatch_current_run">Текущий забег</string>
+    <string name="stopwatch_current_run_desc">Контрастный экран для быстрых взглядов.</string>
+    <string name="stopwatch_no_laps_title">Кругов ещё нет</string>
+    <string name="stopwatch_no_laps_desc">Нажимайте «Круг», пока секундомер работает, чтобы фиксировать сплиты и сравнивать темп.</string>
+    <string name="stopwatch_lap_history">История кругов</string>
+    <string name="stopwatch_lap_history_desc">Лучшие и самые медленные сплиты выделяются автоматически.</string>
+    <string name="stopwatch_start">Запустить секундомер</string>
+    <string name="stopwatch_lap">Круг</string>
+    <string name="stopwatch_pause">Пауза</string>
+    <string name="stopwatch_reset">Сброс</string>
+    <string name="stopwatch_resume">Продолжить</string>
+    <string name="stopwatch_lap_number">Круг %1$d</string>
+    <string name="stopwatch_split_best">Лучший сплит</string>
+    <string name="stopwatch_split_worst">Медленный сплит</string>
+    <string name="stopwatch_split">Сплит</string>
+    <string name="stopwatch_split_time">Время сплита</string>
+    <string name="stopwatch_total">Итого</string>
+
+    <string name="timer_title">Таймер</string>
+    <string name="timer_stopwatch_action">Секундомер</string>
+    <plurals name="timer_active_count">
+        <item quantity="one">активен %1$d таймер</item>
+        <item quantity="few">активны %1$d таймера</item>
+        <item quantity="many">активно %1$d таймеров</item>
+        <item quantity="other">активно %1$d таймеров</item>
+    </plurals>
+    <string name="timer_active_timers">Активные таймеры</string>
+    <string name="timer_blank_label">Таймер</string>
+    <string name="timer_time_up">Время вышло</string>
+    <string name="timer_paused">Пауза</string>
+    <string name="timer_dismiss">Готово</string>
+    <string name="timer_stop_cd">Остановить таймер</string>
+    <string name="timer_pause_cd">Поставить таймер на паузу</string>
+    <string name="timer_resume_cd">Продолжить таймер</string>
+    <string name="timer_clear_entry">Очистить</string>
+    <string name="timer_start">Старт</string>
+    <string name="timer_preset_minutes">%1$d мин</string>
+    <string name="timer_key_delete">Удалить цифру</string>
+    <string name="timer_key_doublezero">Добавить два нуля</string>
+    <string name="timer_key_enter">Ввести %1$d</string>
+
+    <string name="status_enabled">Включён</string>
+    <string name="status_disabled">Выключен</string>
+    <string name="selected_state">Выбран</string>
+    <string name="not_selected">Не выбран</string>
+
+    <string name="alarm_history">История будильника</string>
+    <string name="alarm_stats_close">Закрыть</string>
+    <string name="alarm_stats_last_days">Последние 30 дней</string>
+    <string name="alarm_stats_never_fired">Этот будильник ещё не срабатывал за последние 30 дней.</string>
+    <plurals name="alarm_stats_fired">
+        <item quantity="one">Сработал %1$d раз</item>
+        <item quantity="few">Сработал %1$d раза</item>
+        <item quantity="many">Срабатываний: %1$d</item>
+        <item quantity="other">Срабатываний: %1$d</item>
+    </plurals>
+    <string name="alarm_stats_avg_snoozes">Средняя отложка: %1$s за срабатывание</string>
+    <string name="alarm_stats_avg_dismiss">Отключение в среднем через %1$s с</string>
+    <plurals name="alarm_stats_missed">
+        <item quantity="one">%1$d пропуск</item>
+        <item quantity="few">%1$d пропуска</item>
+        <item quantity="many">%1$d пропусков</item>
+        <item quantity="other">%1$d пропусков</item>
+    </plurals>
+    <string name="alarm_deleted">Будильник удалён</string>
+    <string name="undo">Отменить</string>
+    <plurals name="alarm_bulk_delete_confirm">
+        <item quantity="one">Удалить будильник</item>
+        <item quantity="few">Удалить %1$d будильника</item>
+        <item quantity="many">Удалить %1$d будильников</item>
+        <item quantity="other">Удалить %1$d будильников</item>
+    </plurals>
+    <plurals name="alarm_bulk_delete_title">
+        <item quantity="one">Удалить выбранный будильник?</item>
+        <item quantity="few">Удалить %1$d выбранных будильника?</item>
+        <item quantity="many">Удалить %1$d выбранных будильников?</item>
+        <item quantity="other">Удалить %1$d выбранных будильников?</item>
+    </plurals>
+    <string name="alarm_bulk_delete_all_body">Будут удалены все будильники, видимые в списке сейчас. Используйте только если уверены.</string>
+    <string name="alarm_bulk_delete_selected_body">Будут удалены только выбранные будильники. Для массового действия отмена не предусмотрена.</string>
+    <string name="alarm_sort_time">По времени</string>
+    <string name="alarm_sort_manual">Вручную</string>
+    <string name="alarm_sort_newest">Сначала новые</string>
+    <string name="alarm_sort_enabled">Сначала активные</string>
+    <string name="groups">Группы</string>
+    <string name="profiles">Профили</string>
+    <string name="alarm_search_hint">Попробуйте «будни», «тренировка» или «лекарство»</string>
+    <string name="clear_search">Очистить поиск</string>
+    <string name="no_alarms_title">Будильников пока нет</string>
+    <string name="no_alarms_desc">Создайте первый будильник или начните с шаблона.</string>
+    <string name="search_no_match_title">По этому запросу ничего не найдено</string>
+    <string name="search_no_match_desc">Попробуйте другое название или очистите фильтры.</string>
+    <string name="clear_filters">Очистить фильтры</string>
+    <plurals name="duplicate_alarms">
+        <item quantity="one">Дубликат будильника</item>
+        <item quantity="few">%1$d дубликата</item>
+        <item quantity="many">%1$d дубликатов</item>
+        <item quantity="other">%1$d дубликатов</item>
+    </plurals>
+    <string name="duplicate_alarms_msg">Одинаковые время, дни и название. Удалите лишние, оставив первый из каждой группы.</string>
+    <plurals name="remove_duplicates">
+        <item quantity="one">Удалить дубликат</item>
+        <item quantity="few">Удалить %1$d дубликата</item>
+        <item quantity="many">Удалить %1$d дубликатов</item>
+        <item quantity="other">Удалить %1$d дубликатов</item>
+    </plurals>
+    <string name="conflict_time_title">Совпадает время срабатывания</string>
+    <string name="conflict_time_msg">Несколько включённых будильников назначены на %1$s. Проверьте, если это не было задумано.</string>
+    <string name="templates">Шаблоны</string>
+    <string name="create_alarm">Создать будильник</string>
+    <string name="browse_templates">Шаблоны</string>
+    <string name="cd_alarm_detail_pane">Панель сведений о будильнике</string>
+    <string name="cd_alarm_detail_pane_for">Панель сведений о будильнике %1$s</string>
+    <string name="select_alarm_title">Выберите будильник</string>
+    <string name="select_alarm_desc">Выберите будильник в списке, чтобы посмотреть время следующего срабатывания и действия.</string>
+    <string name="alarm_details">Сведения о будильнике</string>
+    <string name="vacation_paused_detail">Приостановлен до конца отпуска</string>
+    <string name="vacation_paused_chip">Приостановлен отпуском</string>
+    <string name="silent">Без звука</string>
+    <string name="alarm_state">Состояние будильника</string>
+    <string name="alarm_toggle_cd">Будильник %1$s</string>
+    <string name="alarm_state_toggle_running">Нажмите, чтобы приостановить. Долгое нажатие — принудительно.</string>
+    <string name="alarm_state_toggle_off">Нажмите, чтобы включить будильник.</string>
+    <string name="duplicate">Дубликат</string>
+    <string name="share">Поделиться</string>
+    <string name="history">История</string>
+    <string name="delete">Удалить</string>
+    <string name="skip_next">Пропустить следующий раз</string>
+    <string name="header_phone_watch">Телефон \u21c4 Часы</string>
+    <string name="synced">Синхронизировано</string>
+    <string name="vacation_active">Режим отпуска активен</string>
+    <string name="autosync_enabled">Автосинхронизация включена</string>
+    <string name="sync_watch">Синхронизировать часы</string>
+    <string name="all">Все</string>
+    <string name="cd_drag_handle_for">Ручка перетаскивания для %1$s</string>
+    <string name="cd_drag_handle_unavailable">Перетаскивание недоступно</string>
+    <string name="quick_alarms">Быстрые будильники</string>
+    <string name="quick_10min">10 мин</string>
+    <string name="quick_30min">30 мин</string>
+    <string name="quick_1hour">1 час</string>
+    <string name="quick_2hours">2 часа</string>
+    <string name="quick_alarm_cd">Быстрый будильник на %1$s</string>
+    <string name="power_nap">Быстрый сон</string>
+    <string name="quick_nap_cd">Быстрый сон на %1$d минут</string>
+    <string name="quick_nap_default">, длина по умолчанию</string>
+    <string name="test_ring">Тестовый звонок</string>
+    <string name="cd_edit">Изменить</string>
+    <string name="change_from_watch">Создан/изменён на часах</string>
+    <string name="change_from_phone">Создан/изменён на телефоне</string>
+    <string name="cd_clear_selection">Снять выделение</string>
+    <plurals name="selection_count">
+        <item quantity="one">выбрано %1$d</item>
+        <item quantity="few">выбрано %1$d</item>
+        <item quantity="many">выбрано %1$d</item>
+        <item quantity="other">выбрано %1$d</item>
+    </plurals>
+    <string name="bulk_all_note">Массовые действия применяются ко всему на экране</string>
+    <string name="bulk_selected_note">Массовые действия применяются только к выбранным будильникам</string>
+    <string name="select_visible">Выбрать видимые</string>
+    <string name="enable">Включить</string>
+    <string name="pause">Пауза</string>
+    <string name="share_alarm_title">Будильник %1$s</string>
+    <string name="share_subject">Будильник WakeSync: %1$s</string>
+    <string name="share_time">Время: %1$s</string>
+    <string name="share_import">Импорт: %1$s</string>
+    <string name="share_alarm_chooser">Поделиться будильником</string>
+    <string name="share_no_app">Нет приложения, которым можно поделиться этим будильником.</string>
+    <string name="alarm_in_hours_mins">через %1$s ч %2$s мин</string>
+    <string name="alarm_in_minutes">через %1$s мин</string>
+    <string name="alarm_in_less_minute">менее чем через 1 мин</string>
+    <string name="alarm_paused_until_enable">Приостановлен, пока вы не включите его снова</string>
+    <string name="next_occurrence">Следующее срабатывание: %1$s</string>
+
+    <string name="challenge_math_easy">Математика (лёгкая)</string>
+    <string name="challenge_math_medium">Математика (средняя)</string>
+    <string name="challenge_math_hard">Математика (сложная)</string>
+    <string name="challenge_shake">Встряхнуть телефон</string>
+    <string name="challenge_sequence">Последовательность чисел</string>
+    <string name="challenge_memory_pattern">Образец для запоминания</string>
+    <string name="challenge_typing">Ввести фразу</string>
+    <string name="challenge_voice_phrase">Голосовая фраза</string>
+    <string name="challenge_handwriting">От руки</string>
+    <string name="challenge_walk_steps">Сделать шаги</string>
+    <string name="challenge_nfc_scan">Сканировать метку NFC</string>
+    <string name="challenge_barcode_scan">Сканировать штрихкод</string>
+    <string name="challenge_photo_match">Совпадение фотографии</string>
+    <string name="challenge_squat">Приседания</string>
+    <string name="challenge_wifi_connect">Подключиться к Wi-Fi</string>
+    <string name="challenge_maze">Лабиринт</string>
+    <string name="challenge_count_sheep">Сосчитать овец</string>
+    <string name="challenge_simon_says">Саймон говорит</string>
+    <string name="challenge_date_backwards">Ввести дату задом наперёд</string>
+    <string name="challenge_stroop">Тест Струпа</string>
+    <string name="challenge_rps">Камень ножницы бумага</string>
+    <string name="challenge_emoji_memory">Эмодзи-мемори</string>
+    <string name="challenge_typing_speed">Скорость печати</string>
+    <string name="challenge_wordle">Вордли</string>
+    <string name="challenge_pvt">Тест на реакцию</string>
+    <string name="challenge_push_up">Отжимания</string>
+    <string name="challenge_plank_hold">Планка</string>
+
+    <plurals name="backup_exported">
+        <item quantity="one">Резервная копия экспортирована: %1$d будильник.</item>
+        <item quantity="few">Резервная копия экспортирована: %1$d будильника.</item>
+        <item quantity="many">Резервная копия экспортирована: %1$d будильников.</item>
+        <item quantity="other">Резервная копия экспортирована: %1$d будильников.</item>
+    </plurals>
+    <plurals name="backup_exported_encrypted">
+        <item quantity="one">Зашифрованная резервная копия экспортирована: %1$d будильник.</item>
+        <item quantity="few">Зашифрованная резервная копия экспортирована: %1$d будильника.</item>
+        <item quantity="many">Зашифрованная резервная копия экспортирована: %1$d будильников.</item>
+        <item quantity="other">Зашифрованная резервная копия экспортирована: %1$d будильников.</item>
+    </plurals>
+    <plurals name="backup_imported">
+        <item quantity="one">Резервная копия импортирована: %1$d будильник.</item>
+        <item quantity="few">Резервная копия импортирована: %1$d будильника.</item>
+        <item quantity="many">Резервная копия импортирована: %1$d будильников.</item>
+        <item quantity="other">Резервная копия импортирована: %1$d будильников.</item>
+    </plurals>
+    <plurals name="backup_imported_encrypted">
+        <item quantity="one">Зашифрованная резервная копия импортирована: %1$d будильник.</item>
+        <item quantity="few">Зашифрованная резервная копия импортирована: %1$d будильника.</item>
+        <item quantity="many">Зашифрованная резервная копия импортирована: %1$d будильников.</item>
+        <item quantity="other">Зашифрованная резервная копия импортирована: %1$d будильников.</item>
+    </plurals>
+    <string name="backup_complete">Резервная копия готова.</string>
+    <string name="backup_fail_export">Не удалось экспортировать резервную копию.</string>
+    <string name="backup_fail_export_encrypted">Не удалось экспортировать зашифрованную резервную копию.</string>
+    <string name="backup_fail_import">Не удалось импортировать резервную копию.</string>
+    <string name="backup_fail_import_encrypted">Не удалось импортировать зашифрованную резервную копию.</string>
+    <string name="backup_fail_preview">Не удалось просмотреть резервную копию.</string>
+    <string name="backup_fail_preview_encrypted">Не удалось просмотреть зашифрованную резервную копию.</string>
+    <string name="backup_fail_support">Не удалось создать пакет поддержки.</string>
+    <string name="backup_hint_passphrase">Проверьте парольную фразу и выберите зашифрованную резервную копию снова.</string>
+    <string name="backup_hint_storage">Разрешите доступ к файлам и попробуйте снова.</string>
+    <string name="backup_hint_file_location">Выберите местоположение файла, доступное этому устройству.</string>
+    <string name="backup_hint_access">Проверьте доступ к хранилищу и попробуйте снова.</string>
+    <string name="backup_hint_version">Выберите резервную копию из поддерживаемой версии приложения.</string>
+    <string name="backup_hint_invalid_file">Выберите корректный файл резервной копии WakeSync.</string>
+    <string name="backup_hint_destination">Проверьте файл или место назначения и попробуйте снова.</string>
+    <string name="support_export_ready">Пакет поддержки готов к отправке</string>
+    <string name="crash_log_ready">Журнал сбоев готов к отправке</string>
+    <string name="support_no_share_app">Нет приложения, которым можно отправить пакет поддержки</string>
+
+    <string name="hue_checking">Проверка моста Hue...</string>
+    <string name="hue_not_checked_local">Мост Hue не проверен — сначала разрешите доступ к локальной сети</string>
+    <string name="hue_reachable_v2_cert">Мост Hue доступен (API v2) — сертификат сохранён</string>
+    <string name="hue_reachable_v2">Мост Hue доступен (API v2)</string>
+    <string name="hue_cert_changed">Сертификат Hue изменился — проверьте мост, затем удалите сохранённый сертификат</string>
+    <string name="hue_invalid_fingerprint">Мост Hue вернул недействительный отпечаток сертификата</string>
+    <string name="hue_reachable_legacy">Мост Hue доступен (старый API v1 по HTTP)</string>
+    <string name="hue_not_checked_creds">Мост Hue не проверен — введите корректный IP и ключ API</string>
+    <string name="hue_not_found">Мост Hue не найден — проверьте IP и ключ</string>
+    <string name="hue_v2_unreachable">API v2 Hue недоступен — старый HTTP выключен</string>
+
+    <string name="readiness_no_motion_shake">На этом устройстве нет датчика движения для задания со встряхиванием.</string>
+    <string name="readiness_no_motion_squat">На этом устройстве нет датчика движения для задания с приседаниями.</string>
+    <string name="readiness_no_motion_pushup">На этом устройстве нет датчика движения для задания с отжиманиями.</string>
+    <string name="readiness_no_motion_plank">На этом устройстве нет датчика движения для задания с планкой.</string>
+    <string name="readiness_no_step_counter">На этом устройстве нет датчика шагов для задания с ходьбой.</string>
+    <string name="readiness_activity_grant">Разрешите доступ к данным о физической активности, чтобы можно было считать шаги.</string>
+    <string name="readiness_speech_unavailable">Распознавание речи Android недоступно; доступен ввод текста как запасной вариант.</string>
+    <string name="readiness_mic_permission">Разрешите доступ к микрофону, чтобы распознать фразу.</string>
+    <string name="readiness_handwriting_unavailable">Распознавание рукописного ввода недоступно в этой сборке; доступен ввод текста.</string>
+    <string name="readiness_no_nfc">На этом устройстве нет модуля NFC для задания с меткой.</string>
+    <string name="readiness_register_nfc">Зарегистрируйте NFC-метку перед сохранением.</string>
+    <string name="readiness_nfc_off">Включите NFC до срабатывания будильника.</string>
+    <string name="readiness_no_camera_barcode">На этом устройстве нет камеры для сканирования штрихкода.</string>
+    <string name="readiness_register_barcode">Зарегистрируйте значение штрихкода перед сохранением.</string>
+    <string name="readiness_camera_permission_barcode">Разрешите доступ к камере для сканирования штрихкода.</string>
+    <string name="readiness_no_camera_photo">На этом устройстве нет камеры для задания с сопоставлением фото.</string>
+    <string name="readiness_register_photo">Сфотографируйте образец перед сохранением.</string>
+    <string name="readiness_camera_permission_photo">Разрешите доступ к камере для сопоставления фото.</string>
+    <string name="readiness_no_wifi">На этом устройстве нет Wi-Fi для сетевого задания.</string>
+    <string name="readiness_register_ssid">Укажите имя Wi-Fi сети перед сохранением.</string>
+    <string name="readiness_location_permission">Разрешите доступ к местоположению, чтобы обнаружить Wi-Fi сеть.</string>
+    <string name="readiness_ready">Всё готово.</string>
+
+    <string name="stats_title">Статистика</string>
+    <string name="stats_overline">История будильников</string>
+    <string name="stats_close">Закрыть статистику</string>
+    <string name="stats_loading">Загрузка статистики будильников</string>
+    <string name="stats_summary_collecting">Собираем историю и паттерны ответов.</string>
+    <string name="stats_summary_empty">Ваши привычки по будильникам появятся после накопления истории.</string>
+    <string name="stats_summary_track">Следите за регулярностью, повторными срабатываниями и тем, какие утра даются легче всего.</string>
+    <string name="stats_this_week_chip">%1$d за неделю</string>
+    <string name="stats_recent_events_chip">%1$d недавних событий</string>
+    <string name="stats_streak">Серия</string>
+    <string name="stats_this_week">За неделю</string>
+    <string name="stats_snoozed">С повтором</string>
+    <string name="stats_avg_wake_title">Среднее время пробуждения</string>
+    <string name="stats_avg_wake_desc">Сколько обычно занимает отключение будильника после его начала.</string>
+    <string name="stats_avg_response">средний ответ</string>
+    <string name="stats_outcome_mix">Распределение итогов</string>
+    <string name="stats_outcome_mix_desc">Как обычно завершаются будильники.</string>
+    <string name="stats_dismissed">Отключён</string>
+    <string name="stats_skipped">Пропущен</string>
+    <string name="stats_missed">Не сработал</string>
+    <string name="stats_busiest_day">Самый насыщенный день</string>
+    <string name="stats_busiest_desc">Когда будильники срабатывают чаще всего.</string>
+    <string name="stats_no_data">Нет данных</string>
+    <plurals name="stats_alarms_recorded">
+        <item quantity="one">Записан %1$d будильник</item>
+        <item quantity="few">Записано %1$d будильника</item>
+        <item quantity="many">Записано %1$d будильников</item>
+        <item quantity="other">Записано %1$d будильников</item>
+    </plurals>
+    <string name="stats_history_fill">История будильников заполнит это.</string>
+    <string name="stats_fastest_responses">Самый быстрый ответ: %1$s • %2$s</string>
+    <string name="stats_need_more_history">Нужно больше истории отключений для трендов по дням.</string>
+    <string name="stats_by_day">Будильники по дням</string>
+    <string name="stats_by_day_desc">Наглядное представление, в какие дни больше всего будильников.</string>
+    <string name="stats_recent_history">Последние события</string>
+    <string name="stats_recent_history_desc">Последние результаты будильников — удобно для поиска закономерностей.</string>
+    <string name="stats_clear_history">Очистить историю</string>
+    <string name="stats_clear_dialog_title">Очистить историю будильников?</string>
+    <string name="stats_clear_dialog_body">Будут удалены записанные результаты и сброшена статистика на этом экране. Сами будильники не удаляются.</string>
+    <string name="stats_no_history">История будильников пока пуста</string>
+    <string name="stats_no_history_desc">Отключённые, повторённые, пропущенные и несработавшие будильники появятся здесь, как только накопится история.</string>
+    <string name="stats_no_match">Ничего не найдено</string>
+    <string name="stats_no_match_desc">Сбросьте фильтры или попробуйте другой будильник, задание, действие или день.</string>
+    <string name="stats_find_patterns">Поиск закономерностей</string>
+    <string name="stats_filter_result">Совпадает %1$d из %2$d недавних событий</string>
+    <string name="stats_filter_hint">Фильтр по будильнику, заданию, действию или дню недели.</string>
+    <string name="stats_clear">Сбросить</string>
+    <string name="stats_search_placeholder">Искать по имени, заданию, действию или дню</string>
+    <string name="stats_clear_search">Очистить поиск</string>
+    <string name="stats_filter_outcome">Итог</string>
+    <string name="stats_filter_day">День</string>
+    <string name="stats_all_days">Все дни</string>
+    <plurals name="stats_streak_days">
+        <item quantity="one">%1$d день</item>
+        <item quantity="few">%1$d дня</item>
+        <item quantity="many">%1$d дней</item>
+        <item quantity="other">%1$d дней</item>
+    </plurals>
+    <string name="stats_streak_label">Серия пробуждений: %1$s</string>
+    <string name="stats_wake_streak">Серия пробуждений</string>
+    <string name="stats_start_streak">Начните серию</string>
+    <string name="stats_best">Рекорд: %1$s</string>
+    <string name="stats_next_goal">До цели: %1$d</string>
+    <string name="stats_next_badge">Следующая награда серии</string>
+    <string name="stats_streak_days_progress">%1$d / %2$d дн.</string>
+    <string name="stats_streak_status_zero">Отключите один будильник, чтобы начать утреннюю серию.</string>
+    <string name="stats_streak_status_today">Сегодняшнее пробуждение уже засчитано. Продолжайте завтра.</string>
+    <string name="stats_streak_status_keep">Серия жива со вчерашнего дня. Отключите сегодняшний будильник, чтобы сохранить её.</string>
+    <string name="stats_compact_days">%1$d дн.</string>
+    <string name="stats_sleep_context">Контекст сна</string>
+    <string name="stats_hc_update_required">Обновите Health Connect, чтобы можно было учитывать сеансы сна.</string>
+    <string name="stats_hc_unavailable">Health Connect недоступен на этом устройстве.</string>
+    <string name="stats_hc_grant_read">Разрешите READ_SLEEP в настройках, чтобы сравнивать пробуждение с недавним сном.</string>
+    <string name="stats_hc_sessions_local">Недавние сеансы Health Connect хранятся локально и показываются рядом с историей будильников.</string>
+    <string name="stats_hc_no_recent">READ_SLEEP разрешён, но недавних сеансов сна не найдено.</string>
+    <string name="stats_hc_correlation_desc">Сравнивает недавнюю длительность сна со скоростью отключения, повторами и попытками заданий на этом устройстве.</string>
+    <string name="stats_hc_enable_sleep">Включите Health Connect, чтобы добавить длительность сна к локальным данным о пробуждении.</string>
+    <string name="stats_sleep_ready_wait_wake">Сеансы сна готовы. Столбцы поведения при пробуждении появятся после первых результатов будильников.</string>
+    <string name="stats_wake_ready_wait_sleep">Столбцы поведения при пробуждении готовы. Столбцы сна появятся после сеансов из Health Connect.</string>
+    <string name="stats_chart_built_locally">Недавние сеансы сна и результаты будильников сформируют этот график локально.</string>
+    <string name="stats_read_granted">READ_SLEEP разрешён</string>
+    <string name="stats_permission_needed">Нужно разрешение</string>
+    <plurals name="stats_sessions">
+        <item quantity="one">%1$d сеанс</item>
+        <item quantity="few">%1$d сеанса</item>
+        <item quantity="many">%1$d сеансов</item>
+        <item quantity="other">%1$d сеансов</item>
+    </plurals>
+    <string name="stats_last">Последний: %1$s</string>
+    <string name="stats_deep">Глубокий: %1$s</string>
+    <string name="stats_rem">БДГ %1$s</string>
+    <string name="stats_hc_attention">Health Connect требует внимания</string>
+    <string name="stats_wake_consistency">Регулярность пробуждений</string>
+    <string name="stats_wake_consistency_desc">Насколько стабильным было время пробуждения — рассчитывается на устройстве по последним отключениям.</string>
+    <string name="stats_wake_consistency_more">Отключите ещё несколько будильников, чтобы увидеть, насколько стабильно ваше время пробуждения.</string>
+    <string name="stats_from_wakeups">по %1$d последним пробуждениям</string>
+    <string name="stats_wc_very">Очень стабильно</string>
+    <string name="stats_wc_fair">Достаточно стабильно</string>
+    <string name="stats_wc_somewhat">С переменным успехом</string>
+    <string name="stats_wc_highly">Сильно различается</string>
+    <string name="stats_sleep_wake">Паттерны сна и бодрствования</string>
+    <string name="stats_no_trend">Тенденций сна и бодрствования пока нет</string>
+    <string name="stats_no_trend_desc">История будильников и необязательные сеансы сна Health Connect сформируют этот раздел локально.</string>
+    <string name="stats_sleep_avg">Сон в среднем %1$s</string>
+    <string name="stats_sleep_score">Оценка сна %1$d</string>
+    <string name="stats_sleep_debt">Долг сна %1$s</string>
+    <string name="stats_response_avg">Ответ в среднем %1$s</string>
+    <plurals name="stats_snoozes_count">
+        <item quantity="one">%1$d повтор</item>
+        <item quantity="few">%1$d повтора</item>
+        <item quantity="many">%1$d повторов</item>
+        <item quantity="other">%1$d повторов</item>
+    </plurals>
+    <plurals name="stats_retries">
+        <item quantity="one">%1$d попытка</item>
+        <item quantity="few">%1$d попытки</item>
+        <item quantity="many">%1$d попыток</item>
+        <item quantity="other">%1$d попыток</item>
+    </plurals>
+    <string name="stats_slower_after_short">на %1$s медленнее после короткого сна</string>
+    <string name="stats_faster_after_short">на %1$s быстрее после короткого сна</string>
+    <string name="stats_chart_sleep">Сон</string>
+    <string name="stats_chart_dismiss">Отключение</string>
+    <string name="stats_chart_snooze">Повтор</string>
+    <string name="stats_chart_retry">Попытки</string>
+    <string name="stats_motion_buckets">Суммарные движения сна</string>
+    <string name="stats_motion_desc_empty">Здесь будут сохраняться компактные локальные сводки движений сеансов умного будильника и Sonar.</string>
+    <string name="stats_motion_desc_sonar">Экспериментальные сводки Sonar строятся по анализу отражённых сигналов микрофона. Исходный звук не сохраняется.</string>
+    <string name="stats_motion_desc_phone">Экспериментальные сводки движений телефона из мониторинга умного будильника. Это не медицинские стадии сна.</string>
+    <string name="stats_no_motion">Сеансов движений сна пока нет</string>
+    <string name="stats_no_motion_desc">Включите окно умного будильника или запустите Sonar из режима сна, чтобы собирать компактные локальные сводки.</string>
+    <string name="stats_min">%1$d мин</string>
+    <string name="stats_sonar_session">Сеанс Sonar</string>
+    <string name="stats_fired_early">Сработал раньше</string>
+    <string name="stats_reached_target">Достиг цели</string>
+    <string name="stats_movement_index">Индекс %1$s %2$.2f</string>
+    <string name="stats_decision">Решение: %1$s</string>
+    <string name="stats_sonar_movement">Движения</string>
+    <string name="stats_motion">Движения</string>
+    <string name="stats_sonar_restless">Беспокойные</string>
+    <string name="stats_sonar_still">Неподвижность</string>
+    <string name="stats_motion_awake">Бодрствующая активность</string>
+    <string name="stats_motion_light">Лёгкие движения</string>
+    <string name="stats_motion_still">Почти без движений</string>
+    <string name="stats_sonar_breakdown">%1$d мин движений · %2$d мин беспокойных · %3$d мин неподвижности</string>
+    <string name="stats_motion_breakdown">%1$d мин активных · %2$d мин лёгких · %3$d мин почти без движений</string>
+    <string name="stats_sm_source_sonar">Источник: sonar RMS после %1$d мин наблюдения; исходный звук не сохраняется</string>
+    <string name="stats_sm_decision_phone">Решение: %1$s после %2$d мин наблюдения (%3$s)</string>
+    <string name="stats_sw_light_motion">лёгкие движения</string>
+    <string name="stats_sw_not_enough">недостаточно данных</string>
+    <string name="stats_sw_too_active">слишком активны</string>
+    <string name="stats_sw_still">неподвижность</string>
+    <string name="stats_sw_unstable_light">нестабильные лёгкие движения</string>
+    <string name="stats_sw_final_minute">последняя минута</string>
+    <string name="stats_sw_timeout">таймаут службы</string>
+    <string name="stats_sw_stopped">сеанс остановлен</string>
+    <string name="stats_sw_start_failed">не запустился</string>
+    <string name="stats_sw_target_time">время цели</string>
+    <string name="stats_sw_unknown">неизвестно</string>
+    <string name="stats_event">Событие будильника</string>
+    <string name="stats_alarm_default">Будильник</string>
+    <string name="stats_day_monday">Понедельник</string>
+    <string name="stats_day_tuesday">Вторник</string>
+    <string name="stats_day_wednesday">Среда</string>
+    <string name="stats_day_thursday">Четверг</string>
+    <string name="stats_day_friday">Пятница</string>
+    <string name="stats_day_saturday">Суббота</string>
+    <string name="stats_day_sunday">Воскресенье</string>
+
+    <string name="share_import_back">Отменить импорт будильника</string>
+    <string name="share_import_title_review">Проверка импортируемого будильника</string>
+    <string name="share_import_subtitle">Импортированные будильники отключены, пока вы их не проверите и не включите.</string>
+    <string name="share_import_default_label">Общий будильник</string>
+    <string name="share_import_row_time">Время</string>
+    <string name="share_import_row_repeat">Повтор</string>
+    <string name="share_import_row_challenge">Задание</string>
+    <string name="share_import_row_sound">Звук</string>
+    <string name="share_import_row_status">Статус</string>
+    <string name="share_import_status_off">Сохранён выключенным до проверки</string>
+    <string name="share_import_private_title">Приватные ссылки</string>
+    <string name="share_import_private_clean">Чисто</string>
+    <string name="share_import_private_review">Проверить</string>
+    <string name="share_import_private_none_desc">Контактов, геолокации, Wi-Fi, медиа или ссылок заданий не найдено.</string>
+    <string name="share_import_private_strip_desc">Очистка сохраняет время пробуждения и расписание, но удаляет значения, которые могут раскрыть устройства, места, людей, медиа или секреты заданий.</string>
+    <string name="share_import_error_title">Не удалось сохранить импорт</string>
+    <string name="share_import_save_error">Не удалось сохранить этот общий будильник. Проверьте ссылку и попробуйте снова.</string>
+    <string name="share_import_discard">Отменить</string>
+    <string name="share_import_saving">Сохранение</string>
+    <string name="share_import_save_off">Сохранить выключенным</string>
+    <string name="share_import_challenge_none">Нет</string>
+    <string name="share_import_sound_pool">Случайный набор мелодий</string>
+    <string name="share_import_sound_silent">Беззвучный будильник</string>
+    <string name="share_import_sound_custom">Своя мелодия</string>
+    <string name="share_import_sound_default">Системная по умолчанию</string>
+    <string name="share_import_strip_toggle">Удалить приватные ссылки</string>
+    <string name="share_import_strip_toggle_recommended">Рекомендуется для будильников от других людей или из публичных ссылок.</string>
+    <string name="share_import_strip_toggle_optional">Оставляйте только если доверяете отправителю и эти ссылки нужны.</string>
+    <string name="share_import_risk_ringtone">Свой URI мелодии</string>
+    <string name="share_import_risk_guardian">Контакт ангела-хранителя</string>
+    <string name="share_import_risk_hue">Настройка рассвета Philips Hue</string>
+    <string name="share_import_risk_nfc">Идентификатор NFC-метки</string>
+    <string name="share_import_risk_barcode">Значение штрихкода или QR</string>
+    <string name="share_import_risk_photo">URI фото для совпадения</string>
+    <string name="share_import_risk_wifi">SSID Wi-Fi</string>
+    <string name="share_import_risk_location">Координаты отключения по геолокации</string>
+    <string name="share_import_risk_routine">Текст утренней рутины</string>
+    <string name="share_import_risk_challenge">Задание со ссылкой на данные</string>
+    <string name="share_import_risk_chain">Ссылка в цепочке заданий</string>
+
+    <string name="dashboard_today">Сегодня</string>
+    <string name="dashboard_today_quiet">Сегодня спокойный день</string>
+    <string name="dashboard_day_clear">У вас никаких планов.</string>
+    <string name="dashboard_next_alarm">Ближайший будильник</string>
+    <string name="dashboard_view">Открыть</string>
+    <string name="dashboard_schedule">Расписание</string>
+    <string name="dashboard_calendar_access">Доступ к календарю</string>
+    <string name="dashboard_calendar_access_desc">Разрешите доступ к календарю, чтобы видеть события дня.</string>
+    <string name="dashboard_nothing_scheduled">На сегодня ничего не запланировано</string>
+    <string name="dashboard_calendar_permission_error">Нужен доступ к календарю</string>
+    <string name="dashboard_calendar_load_error">Не удалось загрузить календарь</string>
+
+    <string name="ringtone_section_title">Звук будильника</string>
+    <string name="ringtone_section_desc">Прослушайте звуки перед выбором. Варианты «По умолчанию» и «Беззвучный» доступны в начале списка.</string>
+    <string name="ringtone_from_folder">Из папки</string>
+    <string name="ringtone_folder_source">Источник папки</string>
+    <string name="ringtone_folder_added">Папка добавлена. Её аудиофайлы теперь доступны ниже.</string>
+    <string name="ringtone_folder_access_failed">Не удалось сохранить доступ к этой папке. При необходимости выберите её снова.</string>
+    <plurals name="ringtone_results">
+        <item quantity="one">%1$d результат</item>
+        <item quantity="few">%1$d результата</item>
+        <item quantity="many">%1$d результатов</item>
+        <item quantity="other">%1$d результата</item>
+    </plurals>
+    <string name="ringtone_tap_preview">Нажмите на звук для прослушивания</string>
+    <string name="ringtone_preview_playing">Прослушивание</string>
+    <string name="ringtone_preview_unavailable">Прослушивание недоступно</string>
+    <string name="ringtone_preview_error">Не удалось прослушать этот звук. Его всё равно можно выбрать для будильника.</string>
+    <string name="ringtone_list_limited">Список звуков ограничен</string>
+    <string name="ringtone_list_limited_desc">Не удалось прочитать список звуков устройства. «По умолчанию» и «Беззвучный» по-прежнему доступны.</string>
+    <string name="ringtone_search_cd">Поиск</string>
+    <string name="ringtone_search_placeholder">Поиск звуков будильника</string>
+    <string name="ringtone_no_results">Нет подходящих звуков</string>
+    <string name="ringtone_no_results_desc">По запросу «%1$s» ничего не найдено. Попробуйте более короткий или другой запрос.</string>
+    <string name="ringtone_selected">Выбран</string>
+    <string name="ringtone_previewing">Прослушивается</string>
+    <string name="ringtone_recommended">Рекомендуется</string>
+    <string name="ringtone_quiet_mode">Тихий режим</string>
+    <string name="ringtone_current_sound_cd">Текущий звук будильника</string>
+    <string name="ringtone_use">Использовать</string>
+    <string name="ringtone_stop_preview_cd">Остановить прослушивание</string>
+    <string name="ringtone_preview_sound_cd">Прослушать звук</string>
+    <string name="ringtone_subtitle_default">Использует текущий системный звук будильника устройства.</string>
+    <string name="ringtone_subtitle_silent">Без звука. Лучше всего сочетается с вибрацией и другими эффектами пробуждения.</string>
+    <string name="ringtone_subtitle_preview">Нажмите для прослушивания, затем выберите «Использовать», если звук подходит.</string>
+    <string name="ringtone_subtitle_ready">Готов к применению.</string>
+    <string name="ringtone_default_alarm">По умолчанию</string>
+    <string name="ringtone_silent">Беззвучный</string>
+
+    <string name="firing_no_photo_captured">Фото не сделано. Попробуйте снова.</string>
+    <string name="firing_camera_permission_needed">Для фото-задания требуется разрешение на камеру.</string>
+    <string name="firing_activity_recognition_needed">Для подсчёта шагов требуется разрешение на распознавание физической активности.</string>
+    <string name="firing_location_permission_wifi">Требуется разрешение на геолокацию, чтобы Android разрешил получить имя текущей сети Wi-Fi.</string>
+    <string name="firing_location_permission_dismiss">Требуется разрешение на геолокацию для отключения будильника.</string>
+    <string name="firing_no_step_sensor">На этом устройстве отсутствует датчик шагов.</string>
+    <string name="firing_no_motion_sensor_squats">На этом устройстве отсутствует датчик движения для подсчёта приседаний.</string>
+    <string name="firing_no_motion_sensor_pushups">На этом устройстве отсутствует датчик движения для подсчёта отжиманий.</string>
+    <string name="firing_no_wifi_details">Это устройство не предоставляет данные о подключении Wi-Fi.</string>
+    <string name="firing_wifi_blocked">Android заблокировал доступ к имени текущей сети Wi-Fi.</string>
+    <string name="firing_wifi_unreadable">Не удалось прочитать текущую сеть Wi-Fi. Убедитесь, что геолокация включена и есть подключение к Wi-Fi.</string>
+    <string name="firing_no_location_service">Служба геолокации недоступна на этом устройстве.</string>
+    <string name="firing_location_blocked">Android заблокировал доступ к геолокации во время срабатывания будильника.</string>
+    <string name="firing_no_location_provider">Нет доступных источников геолокации.</string>
+    <string name="firing_location_off">Включите геолокацию устройства, чтобы отключить будильник после выхода из сохранённого места.</string>
+    <string name="firing_location_saved_place_none">Сохранённое место не задано, поэтому блокировка отключения по геолокации неактивна.</string>
+    <string name="firing_location_waiting">Ожидание определения геолокации. Покиньте сохранённую зону (%1$d м), чтобы разблокировать отключение.</string>
+    <string name="firing_location_confirmed_outside">Геолокация подтверждена: %1$d м от сохранённого места. Отключение разблокировано.</string>
+    <string name="firing_location_still_inside">Вы всё ещё в сохранённой зоне: %1$d м от края. Отойдите ещё на %2$d м, чтобы разблокировать отключение.</string>
+    <string name="firing_voice_matched">Фраза распознана.</string>
+    <string name="firing_voice_not_detected">Фраза не распознана. Попробуйте ещё раз или используйте ввод текстом.</string>
+    <string name="firing_voice_heard">Распознано: \"%1$s\". Произнесите фразу, показанную ниже.</string>
+    <string name="firing_handwriting_draw_first">Сначала нарисуйте слово, а затем проверьте его.</string>
+    <string name="firing_handwriting_checking">Проверка рукописного ввода...</string>
+    <string name="firing_handwriting_unavailable">Распознавание рукописного ввода недоступно. Введите слово текстом.</string>
+    <string name="firing_handwriting_matched">Рукописный ввод распознан.</string>
+    <string name="firing_handwriting_recognized">Распознано: \"%1$s\". Нарисуйте слово ещё раз.</string>
+    <string name="firing_handwriting_no_match">Рукописный ввод не совпал. Нарисуйте слово ещё раз.</string>
+    <string name="firing_typing_matched">Введённое слово совпало.</string>
+    <string name="firing_typing_draw_or_type">Введите показанное слово или нарисуйте его ещё раз.</string>
+    <string name="firing_typing_mismatch">Введено: \"%1$s\". Совпадите с показанным словом точно.</string>
+    <string name="firing_nfc_wrong_tag">Не та метка — используйте зарегистрированную.</string>
+    <string name="firing_barcode_wrong_code">Не тот код — отсканируйте зарегистрированный штрихкод.</string>
+    <string name="firing_photo_no_match">Не совпадение — попробуйте ещё раз (сходство %1$d%%)</string>
+
+    <string name="wake_confirm_countdown_desc">Подтвердите в течение %1$d с, иначе будильник сработает снова.</string>
+    <string name="wake_confirm_times_up">Время вышло — будильник срабатывает снова.</string>
+    <string name="wake_confirm_desc">Быстрая повторная проверка для будильников, требующих дополнительного контроля.</string>
+    <plurals name="wake_confirm_refires_left">
+        <item quantity="one">Остался %1$d повторный звонок</item>
+        <item quantity="few">Осталось %1$d повторных звонка</item>
+        <item quantity="many">Осталось %1$d повторных звонков</item>
+        <item quantity="other">Осталось %1$d повторных звонка</item>
+    </plurals>
+    <plurals name="wake_confirm_protection_footer">
+        <item quantity="one">Закрытие этого экрана сохраняет защиту проверки пробуждения. Если не подтвердить, будильник может сработать ещё %1$d раз.</item>
+        <item quantity="few">Закрытие этого экрана сохраняет защиту проверки пробуждения. Если не подтвердить, будильник может сработать ещё до %1$d раз.</item>
+        <item quantity="many">Закрытие этого экрана сохраняет защиту проверки пробуждения. Если не подтвердить, будильник может сработать ещё до %1$d раз.</item>
+        <item quantity="other">Закрытие этого экрана сохраняет защиту проверки пробуждения. Если не подтвердить, будильник может сработать ещё до %1$d раз.</item>
+    </plurals>
+
+    <string name="briefing_good_morning">Доброе утро</string>
+    <string name="briefing_subtitle">Будильник отключён. Вот самый короткий путь в новый день.</string>
+    <string name="briefing_next_event">Следующее событие</string>
+    <string name="briefing_open_schedule">Открыть расписание</string>
+    <plurals name="briefing_routine_items">
+        <item quantity="one">%1$d пункт рутины</item>
+        <item quantity="few">%1$d пункта рутины</item>
+        <item quantity="many">%1$d пунктов рутины</item>
+        <item quantity="other">%1$d пункта рутины</item>
+    </plurals>
+    <string name="briefing_title">Утренний брифинг</string>
+    <string name="briefing_desc">Краткий обзор, чтобы начать день с нужным контекстом.</string>
+    <string name="briefing_nothing_urgent">Сейчас нет ничего срочного. Наслаждайтесь более спокойным началом дня.</string>
+    <string name="briefing_routine_title">Утренняя рутина</string>
+    <string name="briefing_routine_desc">Короткий чек-лист для разгона без напряжения от решений.</string>
+    <string name="briefing_close">Закрыть брифинг</string>
+    <string name="briefing_close_note">Экран закрывается намеренно, чтобы переход от будильника к утру был аккуратным, а не резким.</string>
+
+    <string name="night_clock_bedside">Прикроватный режим</string>
+    <string name="night_clock_long_press_exit">Долгое нажатие в любом месте для выхода</string>
 
 </resources>

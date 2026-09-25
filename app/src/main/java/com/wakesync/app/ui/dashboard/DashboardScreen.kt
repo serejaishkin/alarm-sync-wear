@@ -30,10 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wakesync.app.R
 import com.wakesync.app.data.repository.CalendarEvent
 import com.wakesync.app.ui.components.AlarmClockHeroHeader
 import com.wakesync.app.ui.components.AppEmptyState
@@ -63,7 +65,7 @@ fun DashboardScreen(
     ) {
         AlarmClockHeroHeader(
             transparent = false,
-            title = "Today",
+            title = stringResource(R.string.dashboard_today),
             subtitle = state.todayDate
         )
 
@@ -77,8 +79,8 @@ fun DashboardScreen(
                 AppSurfaceCard {
                     AppEmptyState(
                         icon = Icons.Default.Schedule,
-                        title = "Today is quiet",
-                        description = "Your day is clear."
+                        title = stringResource(R.string.dashboard_today_quiet),
+                        description = stringResource(R.string.dashboard_day_clear)
                     )
                 }
             }
@@ -99,7 +101,7 @@ private fun NextAlarmSection(
     onOpenAlarms: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        AppSectionTitle(title = "Next alarm")
+        AppSectionTitle(title = stringResource(R.string.dashboard_next_alarm))
         AppSurfaceCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -137,7 +139,7 @@ private fun NextAlarmSection(
                     )
                 }
                 Text(
-                    text = "View",
+                    text = stringResource(R.string.dashboard_view),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -160,7 +162,7 @@ private fun AppSectionTitle(title: String) {
 private fun CalendarSection(state: DashboardUiState) {
     AppSurfaceCard {
         Text(
-            "Schedule",
+            stringResource(R.string.dashboard_schedule),
             color = TextPrimary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
@@ -169,8 +171,8 @@ private fun CalendarSection(state: DashboardUiState) {
             state.calendarPermissionNeeded -> {
                 CompactDashboardRow(
                     icon = Icons.Default.CalendarMonth,
-                    title = "Calendar access",
-                    description = "Allow calendar access to see today’s events.",
+                    title = stringResource(R.string.dashboard_calendar_access),
+                    description = stringResource(R.string.dashboard_calendar_access_desc),
                     accent = SnoozeYellow
                 )
             }
@@ -178,8 +180,8 @@ private fun CalendarSection(state: DashboardUiState) {
             state.calendarEvents.isEmpty() -> {
                 CompactDashboardRow(
                     icon = Icons.Default.EventAvailable,
-                    title = "Nothing scheduled today",
-                    description = "Your day is clear.",
+                    title = stringResource(R.string.dashboard_nothing_scheduled),
+                    description = stringResource(R.string.dashboard_day_clear),
                     accent = DismissGreen
                 )
             }

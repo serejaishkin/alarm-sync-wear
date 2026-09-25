@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.wakesync.app.R
 import com.wakesync.app.data.local.entity.AlarmIncidentEvent
 import com.wakesync.app.data.repository.AlarmIncidentRepository
 import com.wakesync.app.domain.AlarmScheduler
@@ -91,7 +92,7 @@ class AlarmFiringActivity : ComponentActivity() {
                 }
             }
         } else {
-            viewModel.onPhotoCaptureUnavailable("No photo captured. Try again.")
+            viewModel.onPhotoCaptureUnavailable(getString(R.string.firing_no_photo_captured))
         }
     }
 
@@ -99,7 +100,7 @@ class AlarmFiringActivity : ComponentActivity() {
         if (granted) {
             photoLauncher.launch(null)
         } else {
-            viewModel.onPhotoCaptureUnavailable("Camera permission is required for photo match.")
+            viewModel.onPhotoCaptureUnavailable(getString(R.string.firing_camera_permission_needed))
         }
     }
 
@@ -110,7 +111,7 @@ class AlarmFiringActivity : ComponentActivity() {
         if (granted) {
             startWalkSteps()
         } else {
-            viewModel.onWalkChallengeUnavailable("Activity recognition permission is required to count steps on this device.")
+            viewModel.onWalkChallengeUnavailable(getString(R.string.firing_activity_recognition_needed))
         }
     }
 
@@ -121,7 +122,7 @@ class AlarmFiringActivity : ComponentActivity() {
         if (granted) {
             startWifiPolling()
         } else {
-            viewModel.onWifiChallengeUnavailable("Location permission is required for Android to reveal the current Wi-Fi network name.")
+            viewModel.onWifiChallengeUnavailable(getString(R.string.firing_location_permission_wifi))
         }
     }
 
@@ -132,7 +133,7 @@ class AlarmFiringActivity : ComponentActivity() {
         if (granted) {
             startLocationDismissMonitoring()
         } else {
-            viewModel.onLocationDismissUnavailable("Location permission is required before dismiss can unlock.")
+            viewModel.onLocationDismissUnavailable(getString(R.string.firing_location_permission_dismiss))
         }
     }
 
@@ -423,7 +424,7 @@ class AlarmFiringActivity : ComponentActivity() {
             viewModel.updateStepCount(steps)
         }
         if (!listener.isAvailable()) {
-            viewModel.onWalkChallengeUnavailable("This device does not expose a step sensor.")
+            viewModel.onWalkChallengeUnavailable(getString(R.string.firing_no_step_sensor))
             return
         }
         stepCounterListener = listener.also { it.start() }
@@ -440,7 +441,7 @@ class AlarmFiringActivity : ComponentActivity() {
             viewModel.updateSquatCount(count)
         }
         if (!detector.isAvailable()) {
-            viewModel.onExerciseChallengeUnavailable("This device does not expose a motion sensor to count squats.")
+            viewModel.onExerciseChallengeUnavailable(getString(R.string.firing_no_motion_sensor_squats))
             return
         }
         squatDetector = detector.also { it.start() }
@@ -457,7 +458,7 @@ class AlarmFiringActivity : ComponentActivity() {
             viewModel.updatePushUpCount(count)
         }
         if (!detector.isAvailable()) {
-            viewModel.onExerciseChallengeUnavailable("This device does not expose a motion sensor to count push-ups.")
+            viewModel.onExerciseChallengeUnavailable(getString(R.string.firing_no_motion_sensor_pushups))
             return
         }
         pushUpDetector = detector.also { it.start() }
@@ -489,7 +490,7 @@ class AlarmFiringActivity : ComponentActivity() {
         }
         val wifiManager = applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)
         if (wifiManager == null) {
-            viewModel.onWifiChallengeUnavailable("This device does not expose Wi-Fi connection details.")
+            viewModel.onWifiChallengeUnavailable(getString(R.string.firing_no_wifi_details))
             return
         }
         wifiPollingJob = lifecycleScope.launch {
@@ -499,7 +500,7 @@ class AlarmFiringActivity : ComponentActivity() {
                 val info = try {
                     wifiManager.connectionInfo
                 } catch (_: SecurityException) {
-                    viewModel.onWifiChallengeUnavailable("Android blocked access to the current Wi-Fi network name.")
+                    viewModel.onWifiChallengeUnavailable(getString(R.string.firing_wifi_blocked))
                     return@launch
                 }
                 @Suppress("DEPRECATION")
@@ -514,7 +515,7 @@ class AlarmFiringActivity : ComponentActivity() {
                     // and then upgraded, or the device simply isn't on Wi-Fi.
                     unknownSsidCount++
                     if (unknownSsidCount >= 5) {
-                        viewModel.onWifiChallengeUnavailable("Unable to read the current Wi-Fi network. Make sure location is enabled and you are connected to Wi-Fi.")
+                        viewModel.onWifiChallengeUnavailable(getString(R.string.firing_wifi_unreadable))
                         return@launch
                     }
                 }
@@ -547,7 +548,7 @@ class AlarmFiringActivity : ComponentActivity() {
 
         val locationManager = getSystemService(LocationManager::class.java)
         if (locationManager == null) {
-            viewModel.onLocationDismissUnavailable("This device does not expose a location service.")
+            viewModel.onLocationDismissUnavailable(getString(R.string.firing_no_location_service))
             return
         }
 
@@ -575,17 +576,17 @@ class AlarmFiringActivity : ComponentActivity() {
             }
         } catch (_: SecurityException) {
             stopLocationDismissMonitoring()
-            viewModel.onLocationDismissUnavailable("Android blocked location access during alarm firing.")
+            viewModel.onLocationDismissUnavailable(getString(R.string.firing_location_blocked))
             return
         } catch (_: IllegalArgumentException) {
             stopLocationDismissMonitoring()
-            viewModel.onLocationDismissUnavailable("No usable location provider is available.")
+            viewModel.onLocationDismissUnavailable(getString(R.string.firing_no_location_provider))
             return
         }
 
         if (!requestedProvider) {
             stopLocationDismissMonitoring()
-            viewModel.onLocationDismissUnavailable("Turn on device Location to unlock dismissal after leaving the saved place.")
+            viewModel.onLocationDismissUnavailable(getString(R.string.firing_location_off))
         }
     }
 
