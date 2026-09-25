@@ -1250,4 +1250,20 @@
     <string name="nav_timer">Таймер</string>
     <string name="nav_settings">Настройки</string>
 
+    <string name="settings_language_russian">Русский</string>
+
+    <plurals name="notif_snooze_countdown_minutes"><item quantity="one">1 минута</item><item quantity="few">%1$d минуты</item><item quantity="many">%1$d минут</item><item quantity="other">%1$d минуты</item></plurals>
+    <plurals name="notif_timers_finished_count"><item quantity="one">%1$d таймер завершён</item><item quantity="few">%1$d таймера завершено</item><item quantity="many">%1$d таймеров завершено</item><item quantity="other">%1$d таймеров завершено</item></plurals>
+    <plurals name="notif_timers_canceled_text"><item quantity="one">Запущенный таймер не удалось сохранить после перезапуска устройства.</item><item quantity="few">%1$d запущенных таймера не удалось сохранить после перезапуска устройства.</item><item quantity="many">%1$d запущенных таймеров не удалось сохранить после перезапуска устройства.</item><item quantity="other">%1$d запущенных таймеров не удалось сохранить после перезапуска устройства.</item></plurals>
+    <plurals name="firing_retry_count"><item quantity="one">%1$d повторная попытка</item><item quantity="few">%1$d повторные попытки</item><item quantity="many">%1$d повторных попыток</item><item quantity="other">%1$d повторных попыток</item></plurals>
+    <plurals name="alarm_edit_minutes"><item quantity="one">%1$d минута</item><item quantity="few">%1$d минуты</item><item quantity="many">%1$d минут</item><item quantity="other">%1$d минуты</item></plurals>
+    <plurals name="alarm_edit_seconds"><item quantity="one">%1$d секунда</item><item quantity="few">%1$d секунды</item><item quantity="many">%1$d секунд</item><item quantity="other">%1$d секунды</item></plurals>
+    <plurals name="alarm_edit_steps"><item quantity="one">%1$d шаг</item><item quantity="few">%1$d шага</item><item quantity="many">%1$d шагов</item><item quantity="other">%1$d шага</item></plurals>
+    <plurals name="alarm_edit_squats"><item quantity="one">%1$d приседание</item><item quantity="few">%1$d приседания</item><item quantity="many">%1$d приседаний</item><item quantity="other">%1$d приседания</item></plurals>
+    <plurals name="alarm_edit_meters"><item quantity="one">%1$d метр</item><item quantity="few">%1$d метра</item><item quantity="many">%1$d метров</item><item quantity="other">%1$d метра</item></plurals>
+    <plurals name="alarm_edit_challenges"><item quantity="one">%1$d задание</item><item quantity="few">%1$d задания</item><item quantity="many">%1$d заданий</item><item quantity="other">%1$d задания</item></plurals>
+    <plurals name="alarm_edit_step_chain"><item quantity="one">цепочка из %1$d шага</item><item quantity="few">цепочка из %1$d шагов</item><item quantity="many">цепочка из %1$d шагов</item><item quantity="other">цепочка из %1$d шагов</item></plurals>
+    <plurals name="alarm_edit_active_integrations"><item quantity="one">%1$d активная</item><item quantity="few">%1$d активные</item><item quantity="many">%1$d активных</item><item quantity="other">%1$d активных</item></plurals>
+    <plurals name="settings_minutes"><item quantity="one">%1$d минута</item><item quantity="few">%1$d минуты</item><item quantity="many">%1$d минут</item><item quantity="other">%1$d минуты</item></plurals>
+    <plurals name="settings_recent_diagnostics"><item quantity="one">Сохранено %1$d недавнее диагностическое событие.</item><item quantity="few">Сохранено %1$d недавних диагностических события.</item><item quantity="many">Сохранено %1$d недавних диагностических событий.</item><item quantity="other">Сохранено %1$d недавних диагностических события.</item></plurals>
 </resources>
