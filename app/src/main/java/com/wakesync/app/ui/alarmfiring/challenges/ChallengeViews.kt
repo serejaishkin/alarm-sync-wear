@@ -1832,7 +1832,7 @@ fun SimonSaysChallengeView(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors[idx].copy(alpha = alpha))
                                 .clickable(enabled = playingIndex < 0) { onPadTap(idx) }
-                                .semantics { contentDescription = "${names[idx]} pad" },
+                                .semantics { contentDescription = stringResource(R.string.challenge_ui_color_pad, names[idx]) },
                             contentAlignment = Alignment.Center
                         ) {
                             if (lit) {
@@ -1876,7 +1876,7 @@ fun DateBackwardsChallengeView(
         )
 
         Text(
-            text = "\u2192  ${challenge.expectedInput}",
+            text = stringResource(R.string.challenge_ui_date_expected, challenge.expectedInput),
             color = TextMuted,
             style = MaterialTheme.typography.bodyLarge
         )
@@ -1949,7 +1949,7 @@ fun StroopChallengeView(
                         .clip(RoundedCornerShape(10.dp))
                         .background(palette[idx])
                         .clickable { onPick(idx) }
-                        .semantics { contentDescription = "${names[idx]} choice" }
+                        .semantics { contentDescription = stringResource(R.string.challenge_ui_color_choice, names[idx]) }
                 )
             }
         }
@@ -2010,7 +2010,7 @@ fun RockPaperScissorsChallengeView(
                 RpsOutcome.DRAW -> SnoozeYellow
             }
             ChallengeNotice(
-                text = "${lastRound.playerChoice.emoji} vs ${lastRound.computerChoice.emoji} \u2014 $outcomeText",
+                text = stringResource(R.string.challenge_ui_rps_last_round, lastRound.playerChoice.emoji, lastRound.computerChoice.emoji, outcomeText),
                 accent = outcomeColor,
                 icon = Icons.Default.WarningAmber
             )
@@ -2195,7 +2195,7 @@ fun TypingSpeedChallengeView(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "\u201C${challenge.phrase}\u201D",
+                text = stringResource(R.string.challenge_ui_speed_phrase, challenge.phrase),
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextPrimary,
                 textAlign = TextAlign.Center,
@@ -2255,11 +2255,11 @@ fun WordleChallengeView(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         val triesLeft = challenge.maxGuesses - guesses.size
-        ChallengeSupportText("Guess the 5-letter word \u2014 $triesLeft tr${if (triesLeft == 1) "y" else "ies"} left.")
+        ChallengeSupportText(stringResource(R.string.challenge_ui_wordle_instruction, triesLeft, if (triesLeft == 1) "y" else "ies")) "y" else "ies"} left.")
 
         if (gameOver) {
             ChallengeNotice(
-                text = "The word was ${challenge.target}. New word coming\u2026",
+                text = stringResource(R.string.challenge_ui_wordle_gameover, challenge.target),
                 accent = AccentRed,
                 icon = Icons.Default.WarningAmber
             )
@@ -2414,7 +2414,7 @@ fun PvtChallengeView(
         ) {
             Text(
                 text = when {
-                    failed -> "Too slow\nTry again"
+                    failed -> stringResource(R.string.challenge_ui_pvt_slow)
                     stimulusShown -> stringResource(R.string.challenge_ui_pvt_tap)
                     waiting -> stringResource(R.string.challenge_ui_pvt_wait)
                     lastReaction != null && lastReaction >= 0 -> stringResource(R.string.challenge_ui_pvt_reaction, lastReaction)
