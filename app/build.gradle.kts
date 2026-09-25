@@ -64,22 +64,22 @@ android {
             }
         }
         debug {
-            applicationIdSuffix = ".debug"
+            // Keep the same package id for debug and release: com.wakesync.app.
             isDebuggable = true
         }
     }
 
     flavorDimensions += "distribution"
     productFlavors {
-        create("play") {
-            dimension = "distribution"
-            manifestPlaceholders["wearActionBridgeEnabled"] = "true"
-        }
+        // F-Droid is the only shipped flavor. Play is intentionally disabled.
         create("fdroid") {
             dimension = "distribution"
             manifestPlaceholders["wearActionBridgeEnabled"] = "false"
         }
-    }
+        // create("play") {
+        //     dimension = "distribution"
+        //     manifestPlaceholders["wearActionBridgeEnabled"] = "true"
+        // }
 
     // Required for F-Droid reproducible builds
     dependenciesInfo {
@@ -131,9 +131,7 @@ android {
 
 val releaseArtifactTasks = setOf(
     "assembleRelease",
-    "assemblePlayRelease",
     "bundleRelease",
-    "bundlePlayRelease",
     "assembleFdroidRelease",
     "bundleFdroidRelease"
 )
@@ -317,24 +315,24 @@ dependencies {
     // interpreter that isn't F-Droid-compatible, so the f-droid flavor uses a
     // stub implementation that returns "not available in this build"). Ported
     // from the Aura/FreeVibe app (~/repos/Aura).
-    "playImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")
+    // "playImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1") — Play flavor disabled; F-Droid is the sole shipped flavor.
     // NewPipe Extractor — drives the in-dialog YouTube search ("rooster
     // crowing alarm" -> list of short clips you can tap to download). Keep on
     // the current 0.26.x line for YouTube integrity/poToken parser fixes.
     // JitPack repo declared in settings.gradle.kts.
-    "playImplementation"("com.github.teamnewpipe:NewPipeExtractor:v0.26.3")
+    // "playImplementation"("com.github.teamnewpipe:NewPipeExtractor:v0.26.3") — Play flavor disabled; F-Droid is the sole shipped flavor.
     // Wear OS Data Layer bridge (play flavor only). F-Droid keeps the wearable
     // bridge as a no-op because Play Services is proprietary.
-    "playImplementation"("com.google.android.gms:play-services-wearable:20.0.1")
+    // "playImplementation"("com.google.android.gms:play-services-wearable:20.0.1") — Play flavor disabled; F-Droid is the sole shipped flavor.
     // Health Connect sleep-session reads (play flavor only). F-Droid keeps
     // this out of its dependency graph and binds a no-op repository.
-    "playImplementation"("androidx.health.connect:connect-client:1.1.0")
+    // "playImplementation"("androidx.health.connect:connect-client:1.1.0") — Play flavor disabled; F-Droid is the sole shipped flavor.
     // ML Kit Digital Ink handwriting recognition (play flavor only). The
     // f-droid flavor binds a no-op recognizer and keeps the typed fallback.
-    "playImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
+    // "playImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0") — Play flavor disabled; F-Droid is the sole shipped flavor.
     // Commons Compress 1.28.0 references XZ stream classes during release
     // shrinking; keep the support library Play-only with the downloader graph.
-    "playImplementation"("org.tukaani:xz:1.10")
+    // "playImplementation"("org.tukaani:xz:1.10") — Play flavor disabled; F-Droid is the sole shipped flavor.
 
     constraints {
         // v1.13.2+ (R5): youtubedl-android 0.18.1 and NewPipeExtractor 0.26.x
