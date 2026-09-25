@@ -746,14 +746,14 @@ private fun speechErrorMessage(context: Context, error: Int): String = when (err
     SpeechRecognizer.ERROR_AUDIO -> context.getString(R.string.challenge_ui_voice_audio_error)
     SpeechRecognizer.ERROR_CLIENT -> context.getString(R.string.challenge_ui_voice_stopped_error)
     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
-        stringResource(R.string.challenge_ui_voice_permission_missing)
+        context.getString(R.string.challenge_ui_voice_permission_missing)
     SpeechRecognizer.ERROR_NETWORK -> context.getString(R.string.challenge_ui_voice_network_error)
     SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> context.getString(R.string.challenge_ui_voice_timeout)
     SpeechRecognizer.ERROR_NO_MATCH -> context.getString(R.string.challenge_ui_voice_no_match)
     SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> context.getString(R.string.challenge_ui_voice_busy)
     SpeechRecognizer.ERROR_SERVER -> context.getString(R.string.challenge_ui_voice_service_error)
     SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> context.getString(R.string.challenge_ui_voice_no_speech)
-    else -> stringResource(R.string.challenge_ui_voice_failed)
+    else -> context.getString(R.string.challenge_ui_voice_failed)
 }
 
 @Composable
