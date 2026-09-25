@@ -2328,4 +2328,18 @@ Try again</string>
     <string name="challenge_ui_speed_phrase">“%1$s”</string>
     <string name="challenge_ui_wordle_instruction">Guess the 5-letter word — %1$d attempts left.</string>
     <string name="settings_language_russian">Russian</string>
+
+    <!-- Compatibility challenge strings kept for existing ChallengeViews references -->
+    <string name="challenge_math_instruction">Choose the correct answer to unlock dismiss.</string>
+    <string name="challenge_shake_description">A strong shake helps break sleepy autopilot before the alarm unlocks.</string>
+    <string name="challenge_typing_instruction">Type the same words and punctuation. Letter case does not matter.</string>
+    <string name="challenge_typing_placeholder">Type the phrase above…</string>
+    <string name="challenge_voice_stop">Stop listening</string>
+    <string name="challenge_voice_fallback">Typed fallback phrase</string>
+    <string name="challenge_voice_check_fallback">Check typed phrase</string>
+    <string name="challenge_handwriting_draw">Drawing pad for ${challenge.targetText}</string>
+    <string name="challenge_handwriting_clear">Clear</string>
+    <string name="challenge_handwriting_fallback">Typed fallback word</string>
+    <string name="challenge_handwriting_check_fallback">Check typed word</string>
+    <string name="challenge_walk_instruction">Walking a few steps helps make sure you are genuinely up.</string>
 </resources>
