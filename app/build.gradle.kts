@@ -81,7 +81,9 @@ android {
         //     manifestPlaceholders["wearActionBridgeEnabled"] = "true"
         // }
 
-    }\n\n    // Required for F-Droid reproducible builds
+    }
+
+    // Required for F-Droid reproducible builds
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
