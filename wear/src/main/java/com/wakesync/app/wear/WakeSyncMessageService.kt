@@ -78,25 +78,7 @@ class WakeSyncMessageService : WearableListenerService() {
         // CREATE/UPDATE may legitimately have a higher timestamp/revision,
         // but must never suppress a real-time ring or user action.
         if (operation == "RINGING" || operation == "SNOOZE" || operation == "DISMISS") {
-            // send() deliberately uses both MessageClient and DataClient. They
-            // carry the same mutation, so execute a transient action only once.
-            // Use the same revision/timestamp ordering as persistent sync.
-            val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            val revisionKey = "transient_revision_${syncId}_${operation}"
-            val timestampKey = "transient_timestamp_${syncId}_${operation}"
-            val lastRevision = prefs.getLong(revisionKey, -1L)
-            val lastTimestamp = prefs.getLong(timestampKey, -1L)
-            val alreadyApplied = incomingRevision < lastRevision ||
-                (incomingRevision == lastRevision && incomingTimestamp <= lastTimestamp)
-            if (alreadyApplied) {
-                Log.i(TAG, "applyPersistentMutation: duplicate transient ignored op=$operation syncId=$syncId rev=$incomingRevision ts=$incomingTimestamp")
-                return
-            }
             applyTransientAction(syncId, operation)
-            prefs.edit()
-                .putLong(revisionKey, incomingRevision)
-                .putLong(timestampKey, incomingTimestamp)
-                .apply()
             return
         }
         if (incomingTimestamp < currentTimestamp ||

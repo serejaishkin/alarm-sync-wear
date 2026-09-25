@@ -8,8 +8,7 @@ import androidx.annotation.RequiresApi
 
 internal enum class AppLanguageOption(val languageTag: String?) {
     SYSTEM_DEFAULT(null),
-    ENGLISH("en"),
-    RUSSIAN("ru")
+    ENGLISH("en")
 }
 
 internal object AppLanguageManager {
@@ -31,10 +30,10 @@ internal object AppLanguageManager {
             .trim()
             .substringBefore('-')
             .lowercase()
-        return when (firstLanguage) {
-            "en" -> AppLanguageOption.ENGLISH
-            "ru" -> AppLanguageOption.RUSSIAN
-            else -> AppLanguageOption.SYSTEM_DEFAULT
+        return if (firstLanguage == "en") {
+            AppLanguageOption.ENGLISH
+        } else {
+            AppLanguageOption.SYSTEM_DEFAULT
         }
     }
 

@@ -39,7 +39,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,7 +101,7 @@ fun StopwatchScreen(
                     }
                 )
                 AppStatusChip(
-                    label = pluralStringResource(R.plurals.stopwatch_laps_count, state.laps.size, state.laps.size),
+                    label = stringResource(R.plurals.stopwatch_laps_count, state.laps.size, state.laps.size),
                     icon = Icons.Default.Flag,
                     color = if (state.laps.isEmpty()) TextMuted else MaterialTheme.colorScheme.primary
                 )

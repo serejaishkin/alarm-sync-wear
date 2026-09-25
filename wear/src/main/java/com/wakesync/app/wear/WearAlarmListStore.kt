@@ -135,8 +135,8 @@ object WearAlarmListStore {
     private fun toVersion(e: Entry) = Version(e.revision, e.updatedAt, e.source, e.originDeviceId)
     private fun compareVersions(a: Entry, b: Entry) = compareVersion(toVersion(a), toVersion(b))
     private fun compareVersion(a: Version, b: Version): Int = when {
-        a.revision != b.revision -> a.revision.compareTo(b.revision)
         a.timestamp != b.timestamp -> a.timestamp.compareTo(b.timestamp)
+        a.revision != b.revision -> a.revision.compareTo(b.revision)
         a.source != b.source -> sourcePriority(a.source).compareTo(sourcePriority(b.source))
         else -> a.deviceId.compareTo(b.deviceId)
     }
