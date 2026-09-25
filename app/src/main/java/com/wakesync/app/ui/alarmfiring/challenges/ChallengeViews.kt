@@ -154,6 +154,7 @@ fun MathChallengeView(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     row.forEach { choice ->
+                        val answerDescription = stringResource(R.string.challenge_ui_answer, choice)
                         OutlinedButton(
                             onClick = {
                                 if (choice == challenge.answer) {
@@ -166,7 +167,7 @@ fun MathChallengeView(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(68.dp)
-                                .semantics { contentDescription = stringResource(R.string.challenge_ui_answer, choice) },
+                                .semantics { contentDescription = answerDescription },
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = SurfaceCard.copy(alpha = 0.82f),
@@ -815,9 +816,7 @@ fun HandwritingChallengeView(
                 .height(220.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(SurfaceDark.copy(alpha = 0.78f))
-                .semantics {
-                    contentDescription = stringResource(R.string.challenge_handwriting_draw, challenge.targetText)
-                }
+                .semantics { contentDescription = handwritingDescription }
         ) {
             Canvas(
                 modifier = Modifier
@@ -1826,6 +1825,7 @@ fun SimonSaysChallengeView(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (col in 0 until 2) {
                         val idx = row * 2 + col
+                        val padDescription = stringResource(R.string.challenge_ui_color_pad, names[idx])
                         val lit = idx == playingIndex
                         val alpha = if (lit) 1f else 0.45f
                         Box(
@@ -1834,7 +1834,7 @@ fun SimonSaysChallengeView(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors[idx].copy(alpha = alpha))
                                 .clickable(enabled = playingIndex < 0) { onPadTap(idx) }
-                                .semantics { contentDescription = stringResource(R.string.challenge_ui_color_pad, names[idx]) },
+                                .semantics { contentDescription = padDescription },
                             contentAlignment = Alignment.Center
                         ) {
                             if (lit) {
@@ -1945,13 +1945,14 @@ fun StroopChallengeView(
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             challenge.choices.forEach { idx ->
+                val choiceDescription = stringResource(R.string.challenge_ui_color_choice, names[idx])
                 Box(
                     modifier = Modifier
                         .size(width = 72.dp, height = 56.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(palette[idx])
                         .clickable { onPick(idx) }
-                        .semantics { contentDescription = stringResource(R.string.challenge_ui_color_choice, names[idx]) }
+                        .semantics { contentDescription = choiceDescription }
                 )
             }
         }
@@ -2368,6 +2369,7 @@ fun PvtChallengeView(
     onFalseStart: () -> Unit,
     onStartTrial: () -> Unit
 ) {
+    val handwritingDescription = stringResource(R.string.challenge_handwriting_draw, challenge.targetText)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -2524,6 +2526,11 @@ private fun DifferenceGrid(
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     row.forEachIndexed { columnIndex, tile ->
                         val index = rowIndex * gridSize + columnIndex
+                        val tileDescription = if (enabled) {
+                            stringResource(R.string.challenge_ui_difference_changed_tile, index + 1)
+                        } else {
+                            stringResource(R.string.challenge_ui_difference_original_tile, index + 1)
+                        }
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -2531,13 +2538,7 @@ private fun DifferenceGrid(
                                 .clip(RoundedCornerShape(7.dp))
                                 .background(palette[tile % palette.size].copy(alpha = 0.9f))
                                 .clickable(enabled = enabled) { onPick(index) }
-                                .semantics {
-                                    contentDescription = if (enabled) {
-                                        stringResource(R.string.challenge_ui_difference_changed_tile, index + 1)
-                                    } else {
-                                        stringResource(R.string.challenge_ui_difference_original_tile, index + 1)
-                                    }
-                                }
+                                .semantics { contentDescription = tileDescription }
                         )
                     }
                 }
