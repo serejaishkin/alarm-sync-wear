@@ -101,7 +101,7 @@ fun StopwatchScreen(
                     }
                 )
                 AppStatusChip(
-                    label = stringResource(R.plurals.stopwatch_laps_count, state.laps.size, state.laps.size),
+                    label = pluralStringResource(R.plurals.stopwatch_laps_count, state.laps.size, state.laps.size),
                     icon = Icons.Default.Flag,
                     color = if (state.laps.isEmpty()) TextMuted else MaterialTheme.colorScheme.primary
                 )
