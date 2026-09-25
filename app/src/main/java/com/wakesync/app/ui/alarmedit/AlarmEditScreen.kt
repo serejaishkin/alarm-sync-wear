@@ -69,9 +69,6 @@ import com.wakesync.app.ui.ringtone.RingtonePickerSheet
 import com.wakesync.app.ui.theme.*
 import com.wakesync.app.util.LocationHelper
 import com.wakesync.app.util.PhotoMatcher
-import com.wakesync.app.worker.GuardianEscalationPolicy
-import com.wakesync.app.worker.GuardianReadiness
-import com.wakesync.app.worker.GuardianSmsPath
 import java.time.DayOfWeek
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
@@ -105,10 +102,8 @@ internal enum class AlarmEditorSection(
     ANNOUNCEMENT(AlarmEditorPage.WAKE, R.string.alarm_edit_announcement, R.string.alarm_edit_section_announcement_description),
     WAKE_CONFIRM(AlarmEditorPage.WAKE, R.string.alarm_edit_wake_confirmation, R.string.alarm_edit_section_wake_confirmation_description),
     SMART_ALARM(AlarmEditorPage.SCHEDULE, R.string.alarm_edit_smart_alarm, R.string.alarm_edit_section_smart_alarm_description),
-    HUE(AlarmEditorPage.ADVANCED, R.string.alarm_edit_hue, R.string.alarm_edit_section_hue_description),
     CHAIN(AlarmEditorPage.DISMISS, R.string.alarm_edit_mission_chain, R.string.alarm_edit_section_chain_description),
     ANTI_SNOOZE(AlarmEditorPage.DISMISS, R.string.alarm_edit_anti_snooze, R.string.alarm_edit_section_anti_snooze_description),
-    GUARDIAN(AlarmEditorPage.ADVANCED, R.string.alarm_edit_guardian, R.string.alarm_edit_section_guardian_description),
     ROUTINE(AlarmEditorPage.WAKE, R.string.alarm_edit_morning_routine, R.string.alarm_edit_section_routine_description),
     ADVANCED(AlarmEditorPage.ADVANCED, R.string.alarm_edit_advanced, R.string.alarm_edit_section_advanced_description)
 }
@@ -545,12 +540,7 @@ fun AlarmEditScreen(
                         state = state,
                         viewModel = viewModel
                     )
-                    alarmEditIntegrationSections(
-                        editorPage = editorPage,
-                        state = state,
-                        viewModel = viewModel,
-                        context = context
-                    )
+
                 }
             }
 
