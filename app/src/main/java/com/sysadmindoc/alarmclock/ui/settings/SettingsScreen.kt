@@ -730,6 +730,7 @@ fun SettingsScreen(
                         when (selectedLanguageOption) {
                             AppLanguageOption.SYSTEM_DEFAULT -> R.string.settings_language_system_default
                             AppLanguageOption.ENGLISH -> R.string.settings_language_english
+                            AppLanguageOption.RUSSIAN -> R.string.settings_language_russian
                         }
                     ),
                     supportingText = stringResource(
@@ -816,6 +817,15 @@ fun SettingsScreen(
                         onSelect = {
                             selectedLanguageOption = AppLanguageOption.ENGLISH
                             AppLanguageManager.setOption(context, AppLanguageOption.ENGLISH)
+                            showLanguageDialog = false
+                        }
+                    )
+                    AppLanguageOptionRow(
+                        label = stringResource(R.string.settings_language_russian),
+                        selected = selectedLanguageOption == AppLanguageOption.RUSSIAN,
+                        onSelect = {
+                            selectedLanguageOption = AppLanguageOption.RUSSIAN
+                            AppLanguageManager.setOption(context, AppLanguageOption.RUSSIAN)
                             showLanguageDialog = false
                         }
                     )
