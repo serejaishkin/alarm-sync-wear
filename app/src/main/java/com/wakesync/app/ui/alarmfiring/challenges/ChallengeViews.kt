@@ -450,6 +450,7 @@ fun TypingChallengeView(
     wrongAttempts: Int
 ) {
     var wrongFlash by remember { mutableStateOf(false) }
+    val handwritingDescription = stringResource(R.string.challenge_handwriting_draw, challenge.targetText)
 
     LaunchedEffect(wrongAttempts) {
         if (wrongAttempts > 0) {
@@ -2369,7 +2370,6 @@ fun PvtChallengeView(
     onFalseStart: () -> Unit,
     onStartTrial: () -> Unit
 ) {
-    val handwritingDescription = stringResource(R.string.challenge_handwriting_draw, challenge.targetText)
     Column(
         modifier = Modifier
             .fillMaxWidth()
