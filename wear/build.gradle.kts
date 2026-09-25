@@ -40,7 +40,7 @@ android {
             if (rootProject.file("keystore.properties").exists()) signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            applicationIdSuffix = ".debug"
+            // Keep the same package id for debug and release: com.wakesync.app.
             isDebuggable = true
         }
     }
