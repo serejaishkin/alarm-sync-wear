@@ -100,14 +100,14 @@ class WearAlarmDataListenerService : WearableListenerService() {
     }
     private fun compareVersion(a: WearAlarmListStore.Entry, b: WearAlarmListStore.Entry): Int = compareVersion(a.revision, a.updatedAt, a.source, a.originDeviceId, b)
     private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Entry): Int = when {
-        timestamp != b.updatedAt -> timestamp.compareTo(b.updatedAt)
         revision != b.revision -> revision.compareTo(b.revision)
+        timestamp != b.updatedAt -> timestamp.compareTo(b.updatedAt)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.originDeviceId)
     }
     private fun compareVersion(revision: Long, timestamp: Long, source: String, deviceId: String, b: WearAlarmListStore.Tombstone): Int = when {
-        timestamp != b.timestamp -> timestamp.compareTo(b.timestamp)
         revision != b.revision -> revision.compareTo(b.revision)
+        timestamp != b.timestamp -> timestamp.compareTo(b.timestamp)
         source != b.source -> sourcePriority(source).compareTo(sourcePriority(b.source))
         else -> deviceId.compareTo(b.deviceId)
     }
