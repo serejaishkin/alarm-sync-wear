@@ -304,7 +304,9 @@ data class Alarm(
             nfcTagId = nfcTagId.trim().take(MAX_SHORT_REFERENCE_CHARS),
             barcodeValue = barcodeValue.trim().take(MAX_BARCODE_CHARS),
             spotifyUri = spotifyUri.trim().take(MAX_URI_CHARS),
-            huePreWakeMinutes = huePreWakeMinutes.coerceIn(0, 180),
+            // Retired feature: Philips Hue sunrise.
+            hueEnabled = false,
+            huePreWakeMinutes = 0,
             photoMatchUri = photoMatchUri.trim().take(MAX_URI_CHARS),
             challengeChain = normalizedChallengeChain,
             backupSoundDelaySec = backupSoundDelaySec.coerceIn(5, 900),
@@ -312,8 +314,10 @@ data class Alarm(
             specificDate = normalizedSpecificDate,
             profileName = profileName.trim().take(MAX_GROUP_CHARS),
             earlyDismissMinutes = earlyDismissMinutes.coerceIn(0, 180),
-            guardianPhone = guardianPhone.trim().take(MAX_PHONE_CHARS),
-            guardianDelaySec = guardianDelaySec.coerceIn(30, 3600),
+            // Retired feature: Guardian Angel emergency escalation.
+            guardianEnabled = false,
+            guardianPhone = "",
+            guardianDelaySec = 0,
             locationDismissRadius = locationDismissRadius.coerceIn(25, 5_000),
             wifiDismissSsid = wifiDismissSsid.trim().take(MAX_WIFI_SSID_CHARS),
             internetRadioUrl = internetRadioUrl.trim().take(MAX_URI_CHARS),
@@ -328,8 +332,9 @@ data class Alarm(
                 else -> "NONE"
             },
             ringtonePool = normalizedPool,
-            solarOffsetMinutes = solarOffsetMinutes.coerceIn(-720, 720),
-            solarAnchor = if (solarAnchor.equals("SUNSET", ignoreCase = true)) "SUNSET" else "SUNRISE",
+            // Retired feature: sunrise/sunset-relative alarm scheduling.
+            solarOffsetMinutes = 0,
+            solarAnchor = "SUNRISE",
             // v1.12.0 (roadmap N7): 0..600 s (10 min hard cap matches the
             // ceiling on gradualVolumeSeconds so the two can pair cleanly).
             vibrationDelaySeconds = vibrationDelaySeconds.coerceIn(0, 600),
