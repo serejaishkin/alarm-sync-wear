@@ -232,10 +232,15 @@ class AlarmSyncCoordinator @Inject constructor(
             AlarmSyncOperation.SNOOZE -> {
                 Log.i(TAG, "applyRemote: SNOOZE for syncId=${payload.syncId}")
                 alarmCommand(payload, AlarmService.ACTION_SNOOZE)
+                // MessageClient and DataClient intentionally carry the same action.
+                // Advance the version after execution so the durable DataClient
+                // replay is accepted by the transport but ignored here.
+                rememberVersion(payload.syncId, payload.revision, payload.timestamp, payload.source, payload.originDeviceId)
             }
             AlarmSyncOperation.DISMISS -> {
                 Log.i(TAG, "applyRemote: DISMISS for syncId=${payload.syncId}")
                 alarmCommand(payload, AlarmService.ACTION_DISMISS)
+                rememberVersion(payload.syncId, payload.revision, payload.timestamp, payload.source, payload.originDeviceId)
             }
             AlarmSyncOperation.DELETE -> Unit // handled above before the version gate
         }
