@@ -2330,6 +2330,7 @@
     <string name="challenge_ui_date_expected">→  %1$s</string>
     <string name="challenge_ui_speed_phrase">«%1$s»</string>
     <string name="challenge_ui_wordle_instruction">Угадайте слово из 5 букв — осталось попыток: %1$d.</string>
+    <string name="settings_language_russian">Русский</string>
 </resources>
 
     <string name="challenge_math_instruction">Выберите правильный ответ, чтобы разблокировать отключение будильника.</string>
