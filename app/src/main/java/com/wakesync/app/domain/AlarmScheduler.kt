@@ -22,7 +22,6 @@ import com.wakesync.app.service.SmartAlarmService
 import com.wakesync.app.widget.WidgetUpdater
 import com.wakesync.app.worker.FireWatchdogPolicy
 import com.wakesync.app.worker.FireWatchdogWorker
-import com.wakesync.app.worker.HueSunriseWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.yield
 import java.time.Instant
@@ -50,7 +49,7 @@ class AlarmScheduler @Inject constructor(
     /**
      * Schedule an alarm using setAlarmClock() for maximum reliability.
      * Checks vacation mode before scheduling.
-     * Also starts SmartAlarmService window and enqueues HueSunriseWorker if enabled.
+     * Also starts the SmartAlarmService window and fire watchdog.
      *
      * @param notBeforeMillis Floor for the computed occurrence. Used after a
      * fire/dismiss/skip of a known occurrence so the recomputed trigger can
@@ -557,7 +556,6 @@ class AlarmScheduler @Inject constructor(
 
     private fun scheduleSupportingWork(alarm: Alarm, triggerTime: Long) {
         scheduleSmartAlarmStart(alarm, triggerTime)
-        scheduleHueSunrise(alarm, triggerTime)
         scheduleFireWatchdog(alarm, triggerTime)
     }
 
@@ -644,29 +642,6 @@ class AlarmScheduler @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun scheduleHueSunrise(alarm: Alarm, triggerTime: Long) {
-        val workManager = WorkManager.getInstance(context)
-        if (!alarm.hueEnabled || alarm.huePreWakeMinutes <= 0) {
-            workManager.cancelUniqueWork("hue_sunrise_${alarm.id}")
-            return
-        }
-
-        val hueStartMs = triggerTime - (alarm.huePreWakeMinutes * 60_000L)
-        val hueDelayMs = (hueStartMs - System.currentTimeMillis()).coerceAtLeast(0)
-        val inputData = Data.Builder()
-            .putLong(HueSunriseWorker.KEY_ALARM_ID, alarm.id)
-            .build()
-        val workRequest = OneTimeWorkRequestBuilder<HueSunriseWorker>()
-            .setInitialDelay(hueDelayMs, TimeUnit.MILLISECONDS)
-            .setInputData(inputData)
-            .build()
-        workManager.enqueueUniqueWork(
-            "hue_sunrise_${alarm.id}",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
     }
 
     private fun cancelScheduledEntries(alarmId: Long, includeFollowUpWorkers: Boolean = false) {
