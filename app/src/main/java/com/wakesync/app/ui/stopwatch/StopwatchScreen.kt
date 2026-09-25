@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -143,18 +142,18 @@ fun StopwatchScreen(
                 AppSurfaceCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = false)
-                ) {
+                    ) {
                     AppSectionTitle(
                         title = stringResource(R.string.stopwatch_lap_history),
                         description = stringResource(R.string.stopwatch_lap_history_desc)
                     )
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth()
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(state.laps) { lap ->
+                        state.laps.forEachIndexed { index, lap ->
                             LapRow(lap)
-                            if (lap != state.laps.last()) {
+                            if (index < state.laps.lastIndex) {
                                 HorizontalDivider(color = TextMuted.copy(alpha = 0.16f))
                             }
                         }
