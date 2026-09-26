@@ -4,8 +4,6 @@ import com.wakesync.app.data.health.FdroidHealthConnectSleepRepository
 import com.wakesync.app.data.health.HealthConnectSleepRepository
 import com.wakesync.app.ui.alarmfiring.challenges.DigitalInkChallengeRecognizer
 import com.wakesync.app.ui.alarmfiring.challenges.FdroidDigitalInkChallengeRecognizer
-import com.wakesync.app.wear.FdroidWearNextAlarmBridge
-import com.wakesync.app.wear.WearNextAlarmBridge
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,10 +17,6 @@ object FdroidFlavorModule {
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class FdroidFlavorBindings {
-    @Binds
-    @Singleton
-    abstract fun bindWearNextAlarmBridge(impl: FdroidWearNextAlarmBridge): WearNextAlarmBridge
-
     @Binds
     @Singleton
     abstract fun bindHealthConnectSleepRepository(

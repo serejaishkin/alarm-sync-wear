@@ -25,6 +25,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // The Wear OS action bridge is part of the shipped phone app, so the
+        // bridge service must stay enabled in every flavor. It used to be
+        // "true" for play and "false" for fdroid, which silently disabled the
+        // whole phone<->watch Data Layer path in the F-Droid build.
+        manifestPlaceholders["wearActionBridgeEnabled"] = "true"
+
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
@@ -74,7 +80,6 @@ android {
         // F-Droid is the only shipped flavor. Play is intentionally disabled.
         create("fdroid") {
             dimension = "distribution"
-            manifestPlaceholders["wearActionBridgeEnabled"] = "false"
         }
         // create("play") {
         //     dimension = "distribution"
@@ -323,9 +328,10 @@ dependencies {
     // the current 0.26.x line for YouTube integrity/poToken parser fixes.
     // JitPack repo declared in settings.gradle.kts.
     // "playImplementation"("com.github.teamnewpipe:NewPipeExtractor:v0.26.3") — Play flavor disabled; F-Droid is the sole shipped flavor.
-    // Wear OS Data Layer bridge (play flavor only). F-Droid keeps the wearable
-    // bridge as a no-op because Play Services is proprietary.
-    // "playImplementation"("com.google.android.gms:play-services-wearable:20.0.1") — Play flavor disabled; F-Droid is the sole shipped flavor.
+    // Wear OS Data Layer bridge. This is NOT flavor-scoped: the phone app is
+    // the Data Layer publisher, and shipping it without play-services-wearable
+    // leaves the watch permanently out of sync (no alarms, no actions).
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
     // Health Connect sleep-session reads (play flavor only). F-Droid keeps
     // this out of its dependency graph and binds a no-op repository.
     // "playImplementation"("androidx.health.connect:connect-client:1.1.0") — Play flavor disabled; F-Droid is the sole shipped flavor.

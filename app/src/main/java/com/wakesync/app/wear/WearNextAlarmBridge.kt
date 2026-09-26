@@ -3,11 +3,12 @@ package com.wakesync.app.wear
 import com.wakesync.app.data.model.Alarm
 
 /**
- * Flavor-bound Wear OS bridge.
+ * Wear OS bridge.
  *
- * The Play build publishes next-alarm state to Wear OS through the Data Layer.
- * The F-Droid build binds a no-op implementation so proprietary Play Services
- * never enters the F-Droid dependency graph.
+ * Publishes next-alarm state to Wear OS through the Data Layer so the watch
+ * mirrors the phone. This is a hard dependency of every flavor: the watch
+ * module is useless without a publisher, and a no-op implementation here
+ * leaves the watch permanently out of sync.
  */
 interface WearNextAlarmBridge {
     fun start()

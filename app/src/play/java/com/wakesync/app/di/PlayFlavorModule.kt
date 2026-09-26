@@ -4,8 +4,6 @@ import com.wakesync.app.data.health.HealthConnectSleepRepository
 import com.wakesync.app.data.health.PlayHealthConnectSleepRepository
 import com.wakesync.app.ui.alarmfiring.challenges.DigitalInkChallengeRecognizer
 import com.wakesync.app.ui.alarmfiring.challenges.PlayDigitalInkChallengeRecognizer
-import com.wakesync.app.wear.PlayWearNextAlarmBridge
-import com.wakesync.app.wear.WearNextAlarmBridge
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,9 +17,9 @@ object PlayFlavorModule {
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class PlayFlavorBindings {
-    @Binds
-    @Singleton
-    abstract fun bindWearNextAlarmBridge(impl: PlayWearNextAlarmBridge): WearNextAlarmBridge
+    // The Wear OS Data Layer bridge moved to the shared source set
+    // (WearBridgeModule) so every flavor can sync with the watch. Re-enabling
+    // the play flavor must not add a second WearNextAlarmBridge binding here.
 
     @Binds
     @Singleton

@@ -7,9 +7,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Resolves the Play-flavor Wear Data Layer transport without making the core
- * source set depend on Google Play Services. F-Droid simply gets a no-op
- * transport until a direct BLE transport is installed.
+ * Resolves the Wear Data Layer transport without making this file depend on
+ * Google Play Services at compile time. Falls back to a no-op transport only
+ * when Play Services is genuinely missing at runtime, so a device without GMS
+ * degrades instead of crashing.
  */
 @Singleton
 class AlarmSyncTransportProvider @Inject constructor(
@@ -31,7 +32,7 @@ class AlarmSyncTransportProvider @Inject constructor(
             val constructor = clazz.getConstructor(Context::class.java)
             constructor.newInstance(context) as AlarmSyncTransport
         }.getOrElse { e ->
-            Log.w(TAG, "WearDataLayerTransport not available (fdroid build?): ${e.message}")
+            Log.w(TAG, "WearDataLayerTransport unavailable (Play Services missing?): ${e.message}")
             NoOpAlarmSyncTransport
         }
     }

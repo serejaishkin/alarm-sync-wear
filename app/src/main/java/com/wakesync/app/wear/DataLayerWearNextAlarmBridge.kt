@@ -31,7 +31,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PlayWearNextAlarmBridge @Inject constructor(
+class DataLayerWearNextAlarmBridge @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: AlarmRepository,
     private val preferencesManager: PreferencesManager,

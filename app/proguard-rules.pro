@@ -16,6 +16,14 @@
 -keep class com.wakesync.app.receiver.** { *; }
 -keep class com.wakesync.app.service.** { *; }
 
+# ===== Wear OS Data Layer + alarm sync plumbing =====
+# WearDataLayerTransport is resolved reflectively by AlarmSyncTransportProvider,
+# and everything under sync/ is only referenced from AndroidManifest.xml, so
+# release shrinking must not rename or drop it. Losing this package is what
+# silently breaks phone<->watch alarm sync in a minified build.
+-keep class com.wakesync.app.sync.** { *; }
+-keep class com.wakesync.app.wear.** { *; }
+
 # ===== Direct Boot fallback path =====
 # These classes are the minimal pre-unlock alarm path. Keep them explicitly so
 # release shrinking cannot break Direct Boot if manifest wiring is refactored.
