@@ -47,6 +47,17 @@ class AlarmSyncCoordinator @Inject constructor(
     fun start() {
         if (observationJob?.isActive == true) return
         android.util.Log.i("AlarmSync", "Starting sync coordinator")
+        
+        // Check if this is a fresh start after package change (empty known_alarm_ids but alarms exist)
+        val knownIds = preferences.getStringSet(KEY_KNOWN_ALARM_IDS, emptySet()).orEmpty()
+        scope.launch {
+            val alarmCount = alarmRepository.getAll().size
+            if (knownIds.isEmpty() && alarmCount > 0) {
+                Log.w(TAG, "Detected package change: $alarmCount alarms exist but no known IDs - clearing sync state")
+                clearSyncState()
+            }
+        }
+        
         observationJob = scope.launch {
             // Do not use collectLatest here: cancelling an in-flight Data Layer
             // write can lose the first CREATE during app startup/reinstall.
@@ -59,6 +70,13 @@ class AlarmSyncCoordinator @Inject constructor(
             delay(10_000L)
             requestWatchSnapshot()
         }
+    }
+    
+    private fun clearSyncState() {
+        Log.i(TAG, "Clearing sync state due to package change")
+        preferences.edit().clear().apply()
+        // Re-assign deviceId after clear
+        preferences.edit().putString(KEY_DEVICE_ID, deviceId).apply()
     }
 
     fun requestWatchSnapshot() {
