@@ -38,6 +38,9 @@
 
     <!-- Alarm firing -->
     <string name="dismiss_alarm">Dismiss alarm</string>
+    <string name="firing_auto_silence_in">Auto-silence in %d:%02d</string>
+    <string name="firing_snooze_10_min">Snooze 10 min</string>
+    <string name="firing_alarm_is_ringing">Alarm is ringing</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

@@ -1,5 +1,9 @@
 package com.wakesync.app.wear
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
@@ -7,8 +11,9 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import com.wakesync.app.R
 
-/** Alarm UI. Audio/haptics are owned by WearAlarmFeedbackService. */
+/** Alarm UI on Wear OS. Audio/haptics are owned by WearAlarmFeedbackService. */
 class WearAlarmFiringActivity : ComponentActivity() {
     private var syncId: String = ""
 
@@ -28,32 +33,67 @@ class WearAlarmFiringActivity : ComponentActivity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(24, 24, 24, 24)
+            setPadding(16, 16, 16, 16)
         }
         WearUi.styleRoot(this, root)
+
+        // Large time in centre
         root.addView(TextView(this).apply {
             text = String.format("%02d:%02d", entry.hour, entry.minute)
-            textSize = 46f
+            textSize = 56f
             gravity = Gravity.CENTER
+            setTextColor(resources.getColor(R.color.text_primary, theme))
             WearUi.styleHeader(this@WearAlarmFiringActivity, this)
         })
+
+        // Label below time
         if (entry.label.isNotBlank()) root.addView(TextView(this).apply {
             text = entry.label
-            textSize = 18f
+            textSize = 20f
             gravity = Gravity.CENTER
+            setTextColor(resources.getColor(R.color.text_secondary, theme))
             WearUi.styleSectionLabel(this@WearAlarmFiringActivity, this)
         })
 
-        root.addView(Button(this).apply {
+        Spacer(root, 24)
+
+        // Auto-silence progress + countdown
+        root.addView(TextView(this).apply {
+            text = String.format("%02d:%02d", entry.snoozeDurationMinutes / 60, entry.snoozeDurationMinutes % 60)
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(resources.getColor(R.color.text_muted, theme))
+        })
+
+        Spacer(root, 32)
+
+        // Bottom buttons row
+        val btnRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+
+        btnRow.addView(Button(this).apply {
             text = getString(R.string.wear_snooze_button, entry.snoozeDurationMinutes)
             WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.snooze_yellow)
             setOnClickListener { snooze(entry) }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { weight = 1f }
         })
-        root.addView(Button(this).apply {
+
+        btnRow.addView(Button(this).apply {
             text = getString(R.string.wear_dismiss)
             WearUi.styleActionButton(this@WearAlarmFiringActivity, this, R.color.dismiss_green)
             setOnClickListener { dismiss(entry) }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { weight = 1f }
         })
+
+        root.addView(btnRow)
         setContentView(root)
 
         activeSyncId = syncId
@@ -94,4 +134,11 @@ class WearAlarmFiringActivity : ComponentActivity() {
         const val ACTION_REMOTE_DISMISS = "com.wakesync.app.wear.REMOTE_DISMISS"
         @Volatile var activeSyncId: String? = null
     }
+}
+
+private fun Spacer(parent: LinearLayout, dp: Int) {
+    val v = android.widget.View(parent.context)
+    val px = (dp * parent.context.resources.displayMetrics.density).toInt()
+    v.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, px)
+    parent.addView(v)
 }
