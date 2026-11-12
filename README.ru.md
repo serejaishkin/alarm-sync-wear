@@ -261,9 +261,9 @@ cd alarm-sync-wear
 1. Сгенерируйте keystore: `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias alarm`
 2. Скопируйте `keystore.properties.template` в `keystore.properties`
 3. Заполните путь к keystore и учётные данные
-4. Сборка: `./gradlew :app:bundlePlayRelease :app:assemblePlayRelease :app:verifyFdroidReleaseSize :wear:assembleRelease`
+4. Сборка подписанных APK телефона и часов: `./gradlew :app:assembleFdroidRelease :app:verifyFdroidReleaseSize :wear:assembleRelease`
 
-Локальные релизы используют `keystore.properties`. Если вы зеркалируете эту настройку в другом окружении, используйте либо предпочтительные имена `ANDROID_*`, либо legacy короткие имена для тех же значений:
+Локальные релизы используют `keystore.properties`. При создании этого файла из секретов CI используйте предпочтительные имена `ANDROID_*` либо legacy-короткие имена:
 
 | Предпочтительный секрет | Legacy alias | Назначение |
 |------------------|--------------|---------|
@@ -272,12 +272,19 @@ cd alarm-sync-wear
 | `ANDROID_KEY_ALIAS` | `KEY_ALIAS` | Алиас подписывающего ключа |
 | `ANDROID_KEY_PASSWORD` | `KEY_PASSWORD` | Пароль ключа |
 
-Задачи сборки релизов зависят от корневой проверки `verifyReleaseSigning` и завершаются fail-closed, если `keystore.properties` или настроенный keystore отсутствует. Это не даёт неподписанному AAB/APK ошибочно стать публикуемым артефактом. Релизы собирают подписанные Play, F-Droid и Wear APK локально; проверка размера F-Droid также собирает релизный APK и следит за лимитом 40 MiB. Play-бандл пишется в `app/build/outputs/bundle/playRelease/`. Проверьте подписи `apksigner`, создайте `SHA256SUMS.txt` и `APK-CERT-FINGERPRINTS.txt` и прикрепите артефакты к релизу GitHub.
+Workflow GitHub Actions `Release builds` запускается при публикации GitHub
+Release; его также можно запустить вручную. Добавьте четыре предпочтительных
+значения выше в секреты Actions репозитория. Workflow проверяет зависимости,
+собирает и проверяет подписанные APK F-Droid и Wear, а затем прикрепляет APK,
+SHA-256-суммы и отпечатки сертификатов к опубликованному GitHub Release.
+Ручной запуск сохраняет артефакты workflow, не изменяя GitHub Release.
+
+Задачи сборки релизов зависят от корневой проверки `verifyReleaseSigning` и завершаются fail-closed, если `keystore.properties` или настроенный keystore отсутствует. Это не даёт неподписанному APK ошибочно стать публикуемым артефактом. Команда сборки создаёт подписанные APK F-Droid и Wear; проверка размера F-Droid также собирает релизный APK и следит за лимитом 40 MiB. Проверьте подписи `apksigner`, создайте `SHA256SUMS.txt` и `APK-CERT-FINGERPRINTS.txt` и прикрепите артефакты к релизу GitHub.
 
 Проверка сертификата sideload-APK:
 
 ```bash
-apksigner verify --print-certs WakeSync-v1.15.33-play-release.apk
+apksigner verify --print-certs app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
 ```
 
 Сравните `certificate SHA-256 digest` с отпечатком, опубликованным в `APK-CERT-FINGERPRINTS.txt` релиза.
@@ -290,16 +297,17 @@ bash scripts/check-signing-hygiene.sh
 ./gradlew verifyDependencyIntegrity
 ./gradlew :app:verifyRoomSchemaExports
 python scripts/osv_gradle_audit.py
+./gradlew :app:assembleFdroidRelease :app:verifyFdroidReleaseSize :wear:assembleRelease
 python scripts/verify_api37_release.py --device <api37-16kb-serial> --run-test-alarm --fresh-install
 ```
 
-Артефакты зависимостей проверяются по SHA-256, а рантайм-графы релизов Play, F-Droid и Wear фиксируются. При намеренном обновлении зависимостей обновляйте оба контроля и просматривайте каждый diff контрольных сумм/версий перед коммитом:
+Артефакты зависимостей проверяются по SHA-256, а рантайм-графы релизов F-Droid и Wear фиксируются. При намеренном обновлении зависимостей обновляйте оба контроля и просматривайте каждый diff контрольных сумм/версий перед коммитом:
 
 ```powershell
 .\scripts\update-dependency-integrity.ps1
 ```
 
-Проверка подписи падает, если файлы keystore или `keystore.properties` отслеживаются/застейджены, или если не проигнорированы типовые пути к подписывающим материалам. Шлюз OSV разрешает рантайм-класспасы релизов Play, F-Droid и Wear и завершается с ошибкой при найденных уязвимостях. Верификатор Android 17 проверяет выравнивание 16 КБ для релизных APK Play, F-Droid и Wear, устанавливает Play-релиз на устройство API 37 16 КБ, проверяет точные будильники, promoted-уведомления, обычные уведомления и локальную сеть, а также может запустить встроенный тестовый будильник.
+Проверка подписи падает, если файлы keystore или `keystore.properties` отслеживаются/застейджены, или если не проигнорированы типовые пути к подписывающим материалам. Шлюз OSV разрешает рантайм-класспасы релизов F-Droid и Wear и завершается с ошибкой при найденных уязвимостях. Верификатор Android 17 проверяет выравнивание 16 КБ для релизных APK F-Droid и Wear, устанавливает F-Droid-релиз на устройство API 37 16 КБ, проверяет точные будильники, promoted-уведомления, обычные уведомления и локальную сеть, а также может запустить встроенный тестовый будильник.
 
 ### Варианты сборки
 
@@ -307,6 +315,8 @@ python scripts/verify_api37_release.py --device <api37-16kb-serial> --run-test-a
 |---------|-------------|
 | `fdroidDebug` | Flavor F-Droid, debug-подпись |
 | `fdroidRelease` | Flavor F-Droid, релизная подпись, R8 minify |
+
+Flavor Google Play сейчас отключён и не входит в релизные сборки.
 
 ## Разрешения
 

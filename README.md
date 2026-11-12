@@ -261,11 +261,10 @@ All 30 challenge types have been removed from the alarm firing screen. The alarm
 1. Generate a keystore: `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias alarm`
 2. Copy `keystore.properties.template` to `keystore.properties`
 3. Fill in your keystore path and credentials
-4. Build: `./gradlew :app:bundlePlayRelease :app:assemblePlayRelease :app:verifyFdroidReleaseSize :wear:assembleRelease`
+4. Build the signed phone and Wear APKs: `./gradlew :app:assembleFdroidRelease :app:verifyFdroidReleaseSize :wear:assembleRelease`
 
-Local release builds use `keystore.properties`. If you mirror this setup in
-another environment, use either the preferred `ANDROID_*` names or the legacy
-short names for the same values:
+Local release builds use `keystore.properties`. When provisioning this file
+from CI secrets, use either the preferred `ANDROID_*` names or the legacy short names:
 
 | Preferred secret | Legacy alias | Purpose |
 |------------------|--------------|---------|
@@ -274,19 +273,25 @@ short names for the same values:
 | `ANDROID_KEY_ALIAS` | `KEY_ALIAS` | Signing key alias |
 | `ANDROID_KEY_PASSWORD` | `KEY_PASSWORD` | Signing key password |
 
+The `Release builds` GitHub Actions workflow runs when a GitHub Release is
+published and can also be started manually. Add the four preferred values above
+as repository Actions secrets. It verifies dependencies, builds and checks the
+signed F-Droid and Wear APKs, and attaches the APKs, SHA-256 sums, and signing
+fingerprints to published GitHub Releases. Manual runs publish workflow
+artifacts without changing a GitHub Release.
+
 Release artifact tasks depend on the root `verifyReleaseSigning` check and fail
 closed when `keystore.properties` or its configured keystore is missing. This
-prevents an unsigned AAB or APK from being mistaken for a publishable artifact.
-Release builds produce signed Play, F-Droid, and Wear APKs locally; the F-Droid
-size check also builds its release APK and enforces the 40 MiB budget. The Play
-bundle is written under `app/build/outputs/bundle/playRelease/`. Verify
+prevents an unsigned APK from being mistaken for a publishable artifact.
+The release command produces signed F-Droid and Wear APKs; the F-Droid size
+check also builds its release APK and enforces the 40 MiB budget. Verify
 signatures with `apksigner`, write `SHA256SUMS.txt` and
 `APK-CERT-FINGERPRINTS.txt`, and attach the artifacts to the GitHub Release.
 
 To verify a sideloaded APK's signing certificate:
 
 ```bash
-apksigner verify --print-certs WakeSync-v1.15.33-play-release.apk
+apksigner verify --print-certs app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
 ```
 
 Compare the `certificate SHA-256 digest` against the fingerprint published in
@@ -300,11 +305,12 @@ bash scripts/check-signing-hygiene.sh
 ./gradlew verifyDependencyIntegrity
 ./gradlew :app:verifyRoomSchemaExports
 python scripts/osv_gradle_audit.py
+./gradlew :app:assembleFdroidRelease :app:verifyFdroidReleaseSize :wear:assembleRelease
 python scripts/verify_api37_release.py --device <api37-16kb-serial> --run-test-alarm --fresh-install
 ```
 
-Dependency artifacts are SHA-256 verified and the Play, F-Droid, and Wear
-release runtime graphs are locked. When intentionally updating dependencies,
+Dependency artifacts are SHA-256 verified and the F-Droid and Wear release
+runtime graphs are locked. When intentionally updating dependencies,
 refresh both controls and review every checksum/version diff before committing:
 
 ```powershell
@@ -313,9 +319,9 @@ refresh both controls and review every checksum/version diff before committing:
 
 The signing check fails if keystore files or `keystore.properties` are
 tracked/staged, or if common signing-material paths are not ignored. The OSV
-gate resolves Play, F-Droid, and Wear release runtime classpaths and exits
+gate resolves F-Droid and Wear release runtime classpaths and exits
 non-zero on reported vulnerabilities. The Android 17 verifier checks 16 KB APK
-alignment for Play, F-Droid, and Wear release APKs, installs the Play release
+alignment for F-Droid and Wear release APKs, installs the F-Droid release
 on an API 37 16 KB device, verifies exact-alarm, promoted-notification,
 notification, and local-network permission state, and can drive the built-in
 test alarm.
@@ -326,6 +332,8 @@ test alarm.
 |---------|-------------|
 | `fdroidDebug` | F-Droid flavor, debug signing |
 | `fdroidRelease` | F-Droid flavor, release signing, R8 minified |
+
+The Google Play flavor is currently disabled and is not included in release builds.
 
 ## Permissions
 

@@ -56,7 +56,6 @@ class GradleTarget:
 
 
 DEFAULT_TARGETS: tuple[GradleTarget, ...] = (
-    GradleTarget(":app", "playReleaseRuntimeClasspath"),
     GradleTarget(":app", "fdroidReleaseRuntimeClasspath"),
     GradleTarget(":wear", "releaseRuntimeClasspath"),
 )
@@ -94,7 +93,7 @@ def parse_args() -> argparse.Namespace:
             "Gradle target in PROJECT:CONFIGURATION form, for example "
             ":wear:releaseRuntimeClasspath. Repeat to audit multiple targets. "
             "When no target/project/configuration is supplied, the release gate "
-            "audits Play, F-Droid, and Wear release runtime classpaths."
+            "audits the F-Droid and Wear release runtime classpaths."
         ),
     )
     parser.add_argument(

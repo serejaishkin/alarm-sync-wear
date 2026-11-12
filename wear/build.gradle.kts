@@ -24,7 +24,13 @@ android {
             if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                val configuredStoreFile = keystoreProperties.getProperty("storeFile").trim()
+                val configuredStore = java.io.File(configuredStoreFile)
+                storeFile = when {
+                    configuredStore.isAbsolute -> configuredStore
+                    rootProject.file(configuredStoreFile).isFile -> rootProject.file(configuredStoreFile)
+                    else -> rootProject.file("app").resolve(configuredStoreFile)
+                }
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")

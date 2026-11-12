@@ -114,12 +114,12 @@ def verify_release_metadata(root: Path) -> ReleaseSnapshot:
     )
     expect("README.md version badge", badge_version, version_name)
     artifact_versions = re.findall(
-        rf"WakeSync-v({VERSION_PATTERN})-play-release\.apk", readme
+        rf"WakeSync-v({VERSION_PATTERN})-fdroid-release\.apk", readme
     )
     if not artifact_versions:
-        errors.append("README.md: no Play release artifact filename found")
+        errors.append("README.md: no F-Droid release artifact filename found")
     for artifact_version in artifact_versions:
-        expect("README.md Play release artifact", artifact_version, version_name)
+        expect("README.md F-Droid release artifact", artifact_version, version_name)
 
     changelog = read_text(root, "CHANGELOG.md")
     changelog_versions = re.findall(

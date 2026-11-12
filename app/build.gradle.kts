@@ -48,7 +48,13 @@ android {
             if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                val configuredStoreFile = keystoreProperties.getProperty("storeFile").trim()
+                val configuredStore = java.io.File(configuredStoreFile)
+                storeFile = when {
+                    configuredStore.isAbsolute -> configuredStore
+                    rootProject.file(configuredStoreFile).isFile -> rootProject.file(configuredStoreFile)
+                    else -> rootProject.file("app").resolve(configuredStoreFile)
+                }
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
@@ -170,7 +176,7 @@ val verifyFdroidReleaseSize by tasks.registering {
 val verifyRoomSchemaExports by tasks.registering {
     group = "verification"
     description = "Reject Room schema exports changed by a debug build until they are reviewed and committed."
-    dependsOn("kspFdroidDebugKotlin", "kspPlayDebugKotlin")
+    dependsOn("kspFdroidDebugKotlin")
 
     doLast {
         fun runGit(vararg arguments: String): Pair<Int, String> {

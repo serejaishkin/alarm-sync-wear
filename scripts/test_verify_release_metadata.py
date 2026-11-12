@@ -20,7 +20,7 @@ class ReleaseMetadataVerificationTest(unittest.TestCase):
             "wear/build.gradle.kts": 'versionCode = 42\nversionName = "1.2.3"\n',
             "README.md": (
                 "https://img.shields.io/badge/version-1.2.3-blue\n"
-                "WakeSync-v1.2.3-play-release.apk\n"
+                "WakeSync-v1.2.3-fdroid-release.apk\n"
             ),
             "CHANGELOG.md": "## [1.2.3] - 2026-01-01\n",
             "scripts/verify_api37_release.py": (

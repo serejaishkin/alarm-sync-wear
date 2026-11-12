@@ -9,7 +9,10 @@ class OsvGradleAuditTest(unittest.TestCase):
         args = argparse.Namespace(target=None, project=None, configuration=None)
 
         self.assertEqual(
-            audit.DEFAULT_TARGETS,
+            (
+                audit.GradleTarget(":app", "fdroidReleaseRuntimeClasspath"),
+                audit.GradleTarget(":wear", "releaseRuntimeClasspath"),
+            ),
             audit.targets_from_args(args),
         )
 

@@ -17,7 +17,6 @@ PACKAGE = "com.wakesync.app"
 EXPECTED_VERSION_CODE = "135"
 EXPECTED_VERSION_NAME = "1.15.33"
 DEFAULT_APKS = (
-    Path("app/build/outputs/apk/play/release/app-play-release.apk"),
     Path("app/build/outputs/apk/fdroid/release/app-fdroid-release.apk"),
     Path("wear/build/outputs/apk/release/wear-release.apk"),
 )
@@ -39,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--fresh-install",
         action="store_true",
-        help="Uninstall the phone package before installing the Play release APK.",
+        help="Uninstall the phone package before installing the F-Droid release APK.",
     )
     parser.add_argument(
         "--run-test-alarm",
@@ -50,13 +49,13 @@ def parse_args() -> argparse.Namespace:
         "--apk",
         action="append",
         type=Path,
-        help="APK to check with zipalign -P 16. Defaults to Play/F-Droid/Wear release APKs.",
+        help="APK to check with zipalign -P 16. Defaults to F-Droid and Wear release APKs.",
     )
     parser.add_argument(
-        "--play-apk",
+        "--fdroid-apk",
         type=Path,
-        default=DEFAULT_APKS[0],
-        help="Phone Play release APK to install for device smoke.",
+        default=Path("app/build/outputs/apk/fdroid/release/app-fdroid-release.apk"),
+        help="Phone F-Droid release APK to install for device smoke.",
     )
     return parser.parse_args()
 
@@ -244,7 +243,7 @@ def main() -> int:
     check_16kb_zipalign(zipalign, apks)
 
     if args.device:
-        device_smoke(adb_path, args.device, args.play_apk, args.fresh_install)
+        device_smoke(adb_path, args.device, args.fdroid_apk, args.fresh_install)
         if args.run_test_alarm:
             drive_test_alarm(adb_path, args.device)
 

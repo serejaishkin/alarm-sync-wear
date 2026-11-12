@@ -1,0 +1,194 @@
+name: Release builds
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify signed APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check signing hygiene
+        run: bash scripts/check-signing-hygiene.sh
+
+      - name: Verify release metadata and scripts
+        run: |
+          python3 scripts/verify_release_metadata.py
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+
+      - name: Verify locked release dependencies
+        run: |
+          ./gradlew verifyDependencyIntegrity --no-daemon
+          python3 scripts/osv_gradle_audit.py \
+            --target :app:fdroidReleaseRuntimeClasspath \
+            --target :wear:releaseRuntimeClasspath
+
+      - name: Configure release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" \
+            || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "::error::Configure all four ANDROID_* release-signing repository secrets."
+            exit 1
+          fi
+
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.jks
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          def escape(value: str) -> str:
+              escaped = []
+              for index, character in enumerate(value):
+                  if character == "\\":
+                      escaped.append("\\\\")
+                  elif character in "=:#!" or (character == " " and index == 0):
+                      escaped.append("\\" + character)
+                  elif character == "\t":
+                      escaped.append("\\t")
+                  elif character == "\n":
+                      escaped.append("\\n")
+                  elif character == "\r":
+                      escaped.append("\\r")
+                  elif character == "\f":
+                      escaped.append("\\f")
+                  elif ord(character) > 0xFF:
+                      codepoint = ord(character)
+                      if codepoint <= 0xFFFF:
+                          escaped.append(f"\\u{codepoint:04x}")
+                      else:
+                          codepoint -= 0x10000
+                          escaped.append(f"\\u{0xD800 + (codepoint >> 10):04x}")
+                          escaped.append(f"\\u{0xDC00 + (codepoint & 0x3FF):04x}")
+                  else:
+                      escaped.append(character)
+              return "".join(escaped)
+
+          properties = {
+              "storeFile": "release.jks",
+              "storePassword": os.environ["ANDROID_KEYSTORE_PASSWORD"],
+              "keyAlias": os.environ["ANDROID_KEY_ALIAS"],
+              "keyPassword": os.environ["ANDROID_KEY_PASSWORD"],
+          }
+          Path("keystore.properties").write_text(
+              "".join(f"{key}={escape(value)}\n" for key, value in properties.items()),
+              encoding="ISO-8859-1",
+          )
+          PY
+
+      - name: Build signed F-Droid and Wear APKs
+        run: |
+          ./gradlew \
+            :app:verifyRoomSchemaExports \
+            :app:verifyFdroidReleaseSize \
+            :wear:assembleRelease \
+            --no-daemon
+
+      - name: Verify APK alignment and signatures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/verify_api37_release.py
+
+          build_tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          apksigner="$build_tools/apksigner"
+          staging="build/release"
+          mkdir -p "$staging"
+
+          version_name="$(python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          source = Path("app/build.gradle.kts").read_text(encoding="utf-8")
+          match = re.search(r'^\s*versionName\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"\s*$', source, re.MULTILINE)
+          if match is None:
+              raise SystemExit("Unable to read app versionName")
+          print(match.group(1))
+          PY
+          )"
+
+          if [[ "$GITHUB_EVENT_NAME" == "release" && "$GITHUB_REF_NAME" != "v$version_name" ]]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match app version v$version_name."
+            exit 1
+          fi
+
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
+            "$staging/WakeSync-v${version_name}-fdroid-release.apk"
+          cp wear/build/outputs/apk/release/wear-release.apk \
+            "$staging/WakeSync-v${version_name}-wear-release.apk"
+
+          : > "$staging/APK-CERT-FINGERPRINTS.txt"
+          for apk in "$staging"/*.apk; do
+            "$apksigner" verify --verbose "$apk"
+            certificate="$("$apksigner" verify --print-certs "$apk" \
+              | grep -m 1 'Signer #1 certificate SHA-256 digest:')"
+            printf '%s : %s\n' "$(basename "$apk")" "$certificate" \
+              >> "$staging/APK-CERT-FINGERPRINTS.txt"
+          done
+
+          (
+            cd "$staging"
+            sha256sum ./*.apk > SHA256SUMS.txt
+          )
+
+      - name: Upload release build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: WakeSync-release-${{ github.run_id }}
+          path: build/release/*
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Attach APKs to GitHub Release
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: WakeSync-release-${{ github.run_id }}
+          path: release-assets
+
+      - name: Upload assets to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
