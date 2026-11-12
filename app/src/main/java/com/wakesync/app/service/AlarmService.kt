@@ -440,6 +440,24 @@ class AlarmService : Service() {
         alarmSyncCoordinator.notifyWearAction(alarmId, com.wakesync.app.sync.AlarmSyncOperation.RINGING)
             .onFailure { Log.w(TAG, "Failed to mirror phone ringing to Wear", it) }
 
+        // v1.15.x: full-screen alarm requires the USE_FULL_SCREEN_INTENT special
+        // app-access permission on Android 10+. Without it the notification posts
+        // but the full-screen intent is silently dropped and the firing Activity
+        // may not break through the lock screen. Record it so diagnostics show
+        // why the user only sees a heads-up notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val nm = getSystemService(NotificationManager::class.java)
+            if (nm?.canUseFullScreenIntent() != true) {
+                recordIncident(
+                    type = AlarmIncidentEvent.TYPE_NOTIFICATION,
+                    status = AlarmIncidentEvent.STATUS_FAILED,
+                    reasonCode = "FULL_SCREEN_INTENT_NOT_GRANTED",
+                    source = "AlarmService"
+                )
+                Log.w(TAG, "USE_FULL_SCREEN_INTENT not granted — alarm will notify but may not show full-screen")
+            }
+        }
+
         val settings = preferencesManager.getCurrentSettings()
         OnCallDndOverride.begin(this, settings.onCallModeEnabled)
 
@@ -480,7 +498,12 @@ class AlarmService : Service() {
             fireId = currentFireId
         )
         try {
-            startActivity(firingIntent)
+            // v1.15.x: startActivity() from a background service runs on the IO
+            // dispatcher here; Android 10+ background-activity-start restrictions
+            // can silently drop the launch unless it is posted to the main thread.
+            withContext(Dispatchers.Main) {
+                startActivity(firingIntent)
+            }
             recordIncident(
                 type = AlarmIncidentEvent.TYPE_ACTIVITY_LAUNCH,
                 status = AlarmIncidentEvent.STATUS_SUCCEEDED,

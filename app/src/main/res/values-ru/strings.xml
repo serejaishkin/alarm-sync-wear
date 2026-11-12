@@ -2154,4 +2154,67 @@
     <string name="night_clock_bedside">Прикроватный режим</string>
     <string name="night_clock_long_press_exit">Долгое нажатие в любом месте для выхода</string>
 
+    <!-- Challenge views: UI shell strings (game targets themselves stay untranslated) -->
+    <string name="challenge_math_support">Выберите правильный ответ, чтобы разблокировать отключение.</string>
+    <string name="challenge_math_wrong">Не то. Попробуйте следующий вариант.</string>
+
+    <string name="challenge_shake_support">Крепко встряхните телефон, чтобы прервать сонный автопилот перед разблокировкой будильника.</string>
+    <string name="challenge_shake_progress">%1$d из %2$d выполнено</string>
+    <string name="challenge_shake_start">Начните встряхивать, чтобы набрать импульс.</string>
+    <string name="challenge_shake_remaining">Осталось встряхнуть: %1$d.</string>
+    <string name="challenge_shake_cd">Встряхните телефон</string>
+
+    <string name="challenge_sequence_support">Нажимайте числа от меньшего к большему. Следующая цель: %1$s.</string>
+    <string name="challenge_sequence_complete">Последовательность завершена.</string>
+    <string name="challenge_sequence_tapped">%1$d из %2$d нажато</string>
+
+    <string name="challenge_memory_watching">Запоминайте</string>
+    <string name="challenge_memory_repeating">Повторяйте</string>
+    <string name="challenge_memory_retry">Ещё раз</string>
+    <string name="challenge_memory_showing">Запомните подсвеченные плитки, пока узор не исчез.</string>
+    <string name="challenge_memory_input">Нажимайте те же плитки в том же порядке.</string>
+    <string name="challenge_memory_wrong">Узор покажут снова через мгновение.</string>
+    <string name="challenge_memory_matched">%1$d из %2$d совпало</string>
+
+    <string name="challenge_emoji_revealing">Запомните пары! (%1$d с)</string>
+    <string name="challenge_emoji_input">Найдено пар: %1$d из 8. Нажмите на две карточки, чтобы составить пару.</string>
+
+    <string name="challenge_typing_support">Наберите те же слова и знаки препинания. Регистр букв не важен.</string>
+    <string name="challenge_typing_placeholder">Введите показанную фразу выше\u2026</string>
+    <string name="challenge_typing_wrong">Не совсем. Совпадите с фразой точно перед следующей попыткой.</string>
+    <string name="challenge_typing_check">Проверить фразу</string>
+
+    <string name="challenge_voice_mic_ready">Микрофон готов. Начните прослушивание снова.</string>
+    <string name="challenge_voice_permission_denied">Разрешение на микрофон отклонено. Введите фразу текстом ниже, чтобы закончить.</string>
+    <string name="challenge_voice_support">Чётко произнесите фразу. Офлайн-распознавание предпочтительнее, если Android его предоставляет.</string>
+    <string name="challenge_voice_unavailable">Распознавание речи Android недоступно здесь. Введите фразу ниже.</string>
+    <string name="challenge_voice_starting">Запуск микрофона\u2026</string>
+    <string name="challenge_voice_start_fail">Не удалось запустить распознавание речи. Введите фразу ниже.</string>
+    <string name="challenge_voice_listening">Слушаю\u2026</string>
+    <string name="challenge_voice_start_btn">Начать прослушивание</string>
+    <string name="challenge_voice_stop_btn">Остановить прослушивание</string>
+    <string name="challenge_voice_stopped">Прослушивание остановлено.</string>
+    <string name="challenge_voice_heard">Распознано: %1$s</string>
+    <string name="challenge_voice_fallback_placeholder">Резервная фраза (текст)</string>
+    <string name="challenge_voice_check_typed">Проверить введённую фразу</string>
+    <string name="challenge_voice_error_audio">Микрофон вернул аудио-ошибку. Попробуйте снова или введите фразу.</string>
+    <string name="challenge_voice_error_client">Распознавание речи остановлено. Попробуйте снова или введите фразу.</string>
+    <string name="challenge_voice_error_permissions">Отсутствует разрешение на микрофон. Предоставьте его или введите фразу.</string>
+    <string name="challenge_voice_error_network">Сетевая ошибка распознавания речи. Офлайн-резерв может быть недоступен.</string>
+    <string name="challenge_voice_error_timeout">Время распознавания речи истекло. Попробуйте снова или введите фразу.</string>
+    <string name="challenge_voice_error_nomatch">Подходящая речь не распознана. Произнесите фразу снова.</string>
+    <string name="challenge_voice_error_busy">Распознавание речи занято. Подождите мгновение и повторите.</string>
+    <string name="challenge_voice_error_server">Ошибка речевого сервиса. Введите фразу, если повторяется.</string>
+    <string name="challenge_voice_error_speechtimeout">Речь не слышна. Попробуйте снова или введите фразу.</string>
+    <string name="challenge_voice_error_else">Распознавание речи не удалось. Попробуйте снова или введите фразу.</string>
+
+    <string name="challenge_handwriting_support">Нарисуйте слово в окне. Распознавание запускается на устройстве после загрузки модели почерка.</string>
+    <string name="challenge_handwriting_pad_cd">Холст для рисования слова %1$s</string>
+    <string name="challenge_handwriting_empty">Напишите %1$s</string>
+    <string name="challenge_handwriting_clear">Очистить</string>
+    <string name="challenge_handwriting_checking">Проверяю\u2026</string>
+    <string name="challenge_handwriting_check_draw">Проверить рисунок</string>
+    <string name="challenge_handwriting_fallback_placeholder">Резервное слово (текст)</string>
+    <string name="challenge_handwriting_check_typed">Проверить введённое слово</string>
+
 </resources>
