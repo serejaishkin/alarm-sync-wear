@@ -4,6 +4,14 @@ All notable changes to WakeSync will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Alarm firing screen simplified** — all dismiss challenges and their sensors removed from the firing screen. The screen now shows time, label, auto-silence countdown, audio visualizer, and two buttons (Snooze / Dismiss). No puzzles, no shake/walk/squat/wifi/NFC detection.
+- **Wear OS sync restored on F-Droid** — `play-services-wearable` promoted to a shared dependency; all sync classes (`WearDataLayerTransport`, `PhoneWakeSyncListenerService`, `WearActionListenerService`, `PhoneLocalAlarm{Trigger,Action}Receiver`, `WakeSyncPeriodicReceiver`, `WakeSyncStartupProvider`, `WearAlarmActionListenerService`) moved from `app/src/play` to `app/src/main`. `wearActionBridgeEnabled` is `true` for all flavors. F-Droid stub bridge and no-op action service removed.
+- **Watch firing screen simplified** — matches phone: large time, label, auto-silence countdown, two buttons (Snooze / Dismiss).
+- **Watch time guard** — `WearAlarmReceiver` now compares expected hour/minute against current local time before firing; if timezone hasn't been applied after boot, the alarm is rescheduled instead of firing 3–5 hours late.
+- **Phone 12-hour TimePicker fix** — `timePickerState.period` (AM/PM) is now applied when converting to 24-hour storage, fixing 6 AM ↔ 6 PM shift on synced watch alarms.
+
 ### Internal
 
 - Continued the god-file refactor by extracting Bedtime sleep tracking,

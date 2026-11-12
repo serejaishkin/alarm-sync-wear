@@ -19,10 +19,10 @@
 **Latest signed APK** - [Releases page](https://github.com/serejaishkin/alarm-sync-wear/releases/latest)
 
 ```
-adb install WakeSync-v1.15.33-play-release.apk
+adb install WakeSync-v1.15.33-fdroid-release.apk
 ```
 
-The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPipe Extractor), Wear OS Data Layer bridge, Wear next-alarm tile/complication support, optional Health Connect READ_SLEEP integration, and ML Kit Digital Ink handwriting recognition. The F-Droid flavor strips proprietary or Play-distribution-adjacent phone pieces for an unencumbered build.
+F-Droid is the only shipped flavor. It includes the Wear OS Data Layer bridge (phone ↔ watch alarm sync), Wear next-alarm tile/complication support, and the simplified alarm firing screen (no dismiss challenges). Play-specific features (YouTube downloader, Health Connect SDK, ML Kit handwriting) are excluded.
 
 ## Roadmap
 
@@ -38,6 +38,8 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 - One-off "snooze until" clock-time picker, persisted as the alarm's next trigger with exact-alarm and inexact fallback
 - Ongoing snooze countdown notification with Android 16 `ProgressStyle` live updates and a chronometer fallback on older versions
 - Media3 stall hardening for local tones and internet radio — bounded READY watchdog forces speaker/max-volume routing, records the failure, and falls back to the legacy player
+- Wear OS Data Layer sync on F-Droid flavor — play-services-wearable promoted to shared dependency; all sync classes moved to main source set; phone ↔ watch alarm sync works on every build variant
+- Alarm firing screen simplified — all 30 dismiss challenges and their sensors removed; screen now shows time, label, auto-silence countdown, audio visualizer, and two buttons (Snooze / Dismiss)
 
 ### In Progress
 - Diagnosing Data Layer delivery failures (transport logging added, awaiting user logcat)
@@ -48,7 +50,6 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 - Full phone → watch snapshot reconciliation on reconnect
 - Watch → phone: proper tombstone cleanup after echo-DELETE
 - Wear OS Compose migration (current UI is programmatic Views)
-- F-Droid flavor: stub-less direct sync path (currently no-op)
 - Signed release builds, CI/CD, Play Store / F-Droid submission
 
 ## Build From Source
@@ -56,13 +57,13 @@ The Play-flavor APK includes the YouTube alarm-sound downloader (yt-dlp + NewPip
 ```bash
 git clone https://github.com/serejaishkin/alarm-sync-wear.git
 cd alarm-sync-wear
-./gradlew assemblePlayDebug
-# Install: adb install app/build/outputs/apk/play/debug/app-play-debug.apk
+./gradlew assembleFdroidDebug
+# Install phone: adb install -r app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
 ./gradlew :wear:assembleDebug
-# Wear tile: install wear/build/outputs/apk/debug/wear-debug.apk on a paired Wear OS watch
+# Install watch: adb install -r wear/build/outputs/apk/debug/wear-debug.apk
 ```
 
-**Requirements:** Android Studio Narwhal+ or the included Gradle wrapper, JDK 17, Android SDK 36
+**Requirements:** Android Studio Narwhal+ or the included Gradle wrapper, JDK 17, Android SDK 36. F-Droid is the only shipped flavor; Play flavor has been removed.
 
 ## Features
 
@@ -88,40 +89,42 @@ cd alarm-sync-wear
 | Manual Alarm Order | Drag alarms into a custom list order that persists across app restarts, backup, and restore |
 | Wear OS Tile + Complication | Shows the next alarm on the watch tile and compatible watch faces; the tile also exposes skip controls before fire and snooze/dismiss controls while ringing and honors the public-label privacy setting |
 
-### Dismiss Challenges (30 Types)
-| Challenge | Description |
-|-----------|-------------|
-| Math (Easy/Medium/Hard) | Solve arithmetic problems with explicit operator precedence |
-| Shake Phone | Shake device N times (configurable) |
-| Number Sequence | Tap 6 numbers in ascending order |
-| Memory Pattern | Memorize and recreate a tile pattern on 3x3 grid |
-| Type a Phrase | Type a displayed phrase exactly (custom phrases supported) |
-| Voice Phrase | Say the displayed phrase with Android speech recognition; typed fallback protects denied-permission and no-recognizer devices |
-| Handwriting | Draw a displayed wake word with Play-flavor ML Kit Digital Ink; typed fallback keeps F-Droid and offline-missing-model devices dismissable |
-| Walk Steps | Walk N steps using step counter sensor |
-| NFC Tag Scan | Tap a pre-registered NFC tag |
-| Barcode/QR Scan | Scan a pre-registered barcode |
-| Photo Match | Photograph a registered location (similarity scoring) |
-| Location Dismissal Lock | Anti-Sleepyhead mode keeps Dismiss locked until GPS/network location confirms the phone left the saved area |
-| Squats | Accelerometer-based squat detection |
-| Maze Puzzle | Navigate a randomized 5x5 maze |
-| Wi-Fi Connect | Connect to a specific Wi-Fi network |
-| Count the Sheep | Tap every drifting sheep; avoid the decoy goats (novel CAPTCHA) |
-| Simon Says | Watch a 4-pad color sequence and play it back in order |
-| Type Date Backwards | Type today's ISO date reversed character-by-character |
-| Stroop Test | Tap the INK color of a color-word, not the word itself |
-| Rock / Paper / Scissors | Best-of-5 RPS against the computer (first to 3 wins) |
-| Emoji Memory | Match 8 emoji pairs on a face-down 4x4 grid |
-| Typing Speed | Type a phrase at >= N wpm with limited word mistakes |
-| Wordle | Guess the 5-letter target word in <= 6 attempts |
-| Reaction Test (PVT) | Tap 5 times when a green stimulus appears; average under 500ms to dismiss |
-| Spot the Difference | Compare two color grids and tap the single changed tile |
-| Chess Mate in 1 | Pick the checkmate move from a compact board position |
-| RSVP Speed Reading | Read a rapid word stream, then identify a word that appeared |
-| Push-ups | Accelerometer-based push-up detection with the phone face-down on the floor |
-| Plank Hold | Hold the phone level in a plank position for 30 seconds |
-| Mission Chaining | Stack 2-5 challenges in sequence (e.g., Math + Shake + Typing) |
-| Adaptive Difficulty | Auto-escalates math difficulty based on snooze history |
+### Dismiss Challenges (Removed from firing screen)
+| Challenge | Status |
+|-----------|--------|
+| Math (Easy/Medium/Hard) | Removed from firing screen |
+| Shake Phone | Removed from firing screen |
+| Number Sequence | Removed from firing screen |
+| Memory Pattern | Removed from firing screen |
+| Type a Phrase | Removed from firing screen |
+| Voice Phrase | Removed from firing screen |
+| Handwriting | Removed from firing screen |
+| Walk Steps | Removed from firing screen |
+| NFC Tag Scan | Removed from firing screen |
+| Barcode/QR Scan | Removed from firing screen |
+| Photo Match | Removed from firing screen |
+| Location Dismissal Lock | Removed from firing screen |
+| Squats | Removed from firing screen |
+| Maze Puzzle | Removed from firing screen |
+| Wi-Fi Connect | Removed from firing screen |
+| Count the Sheep | Removed from firing screen |
+| Simon Says | Removed from firing screen |
+| Type Date Backwards | Removed from firing screen |
+| Stroop Test | Removed from firing screen |
+| Rock / Paper / Scissors | Removed from firing screen |
+| Emoji Memory | Removed from firing screen |
+| Typing Speed | Removed from firing screen |
+| Wordle | Removed from firing screen |
+| Reaction Test (PVT) | Removed from firing screen |
+| Spot the Difference | Removed from firing screen |
+| Chess Mate in 1 | Removed from firing screen |
+| RSVP Speed Reading | Removed from firing screen |
+| Push-ups | Removed from firing screen |
+| Plank Hold | Removed from firing screen |
+| Mission Chaining | Removed from firing screen |
+| Adaptive Difficulty | Removed from firing screen |
+
+All 30 challenge types have been removed from the alarm firing screen. The alarm now rings until the user taps **Snooze** or **Dismiss** — no puzzles, no sensors, no peripheral hardware required. The challenge view code remains in `app/src/main/java/com/wakesync/app/ui/alarmfiring/challenges/` but is no longer wired to the firing Activity.
 
 ### Anti-Snooze Arsenal
 | Feature | Description |
@@ -230,7 +233,8 @@ cd alarm-sync-wear
 +---------------------------------------------------------+
 |                    UI Layer (Compose)                     |
 |  Screens <- ViewModels <- StateFlow                      |
-|  30 challenge flows, 8 alarm edit sections               |
+|  Simple firing screen (time, label, snooze, dismiss),    |
+|  8 alarm edit sections                                   |
 +---------------------------------------------------------+
 |                   Domain Layer                           |
 |  AlarmScheduler | NextAlarmCalculator | SolarCalculator  |
@@ -320,8 +324,6 @@ test alarm.
 
 | Variant | Description |
 |---------|-------------|
-| `playDebug` | Google Play flavor, debug signing |
-| `playRelease` | Google Play flavor, release signing, R8 minified |
 | `fdroidDebug` | F-Droid flavor, debug signing |
 | `fdroidRelease` | F-Droid flavor, release signing, R8 minified |
 
