@@ -6,17 +6,17 @@ import android.content.Context
 import android.os.Build
 import android.text.format.DateFormat
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateWithSpec
-import androidx.compose.animation.core.linear
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -126,13 +126,13 @@ fun AlarmFiringScreen(
     val autoSilenceSeconds by remember { mutableIntStateOf(600) }
 
     // Audio visualiser bars
-    val barHeights by remember { mutableStateOf(listOf(0.2f, 0.5f, 0.8f, 0.4f, 0.6f, 0.3f, 0.9f, 0.5f, 0.7f, 0.4f)) }
+    var barHeights by remember { mutableStateOf(listOf(0.2f, 0.5f, 0.8f, 0.4f, 0.6f, 0.3f, 0.9f, 0.5f, 0.7f, 0.4f)) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(150)
-            val newHeights = barHeights.map { (it + 0.3f + (Math.random() * 0.4f)).coerceIn(0.1f, 1f) }
-            barHeights.clear()
-            barHeights.addAll(newHeights)
+            barHeights = barHeights.map {
+                (it + 0.3f + kotlin.random.Random.nextFloat() * 0.4f).coerceIn(0.1f, 1f)
+            }
         }
     }
 
@@ -228,7 +228,7 @@ fun AlarmFiringScreen(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
-                barHeights.forEachIndexed { index, height ->
+                barHeights.forEach { height ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -242,8 +242,6 @@ fun AlarmFiringScreen(
                                 ),
                                 shape = RoundedCornerShape(2.dp)
                             )
-                            .clickable { /* no-op */ },
-                        contentDescription = null
                     )
                 }
             }
@@ -259,7 +257,7 @@ fun AlarmFiringScreen(
                     onClick = onSnooze,
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.5f, SnoozeYellow),
+                    border = BorderStroke(1.5.dp, SnoozeYellow),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = SnoozeYellow
                     )
@@ -302,5 +300,3 @@ fun AlarmFiringScreen(
         }
     }
 }
-
-private fun Spacer(modifier: Modifier) = androidx.compose.foundation.Spacer(modifier = modifier)

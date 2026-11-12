@@ -571,16 +571,7 @@ fun AlarmEditScreen(
                     val selectedTime = if (useTimeNumpad) {
                         numpadTime
                     } else {
-                        // In 12-hour mode TimePickerState.hour returns 1-12 and the
-                        // AM/PM period must be applied to round-trip to 0-23 storage.
-                        val hour24 = when {
-                            state.is24HourFormat -> timePickerState.hour
-                            timePickerState.period == TimePickerPeriod.PM ->
-                                if (timePickerState.hour == 12) 12 else timePickerState.hour + 12
-                            else ->
-                                if (timePickerState.hour == 12) 0 else timePickerState.hour
-                        }
-                        AlarmNumpadTime(hour24, timePickerState.minute)
+                        AlarmNumpadTime(timePickerState.hour, timePickerState.minute)
                     }
                     selectedTime?.let { viewModel.updateTime(it.hour, it.minute) }
                     showTimePicker = false

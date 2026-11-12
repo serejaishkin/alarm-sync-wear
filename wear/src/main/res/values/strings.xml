@@ -52,7 +52,7 @@
     <string name="wear_source_phone">📱 Phone</string>
     <string name="wear_snooze_button">Snooze %d min</string>
     <string name="wear_dismiss">Dismiss</string>
-    <string name="wear_auto_silence_in">Auto-silence in %d:%02d</string>
+    <string name="wear_auto_silence_in">Auto-silence in %1$d:%2$02d</string>
     <string name="wear_alarm_ringing">Alarm is ringing</string>
     <string name="wear_notification_title">Alarm</string>
     <string name="wear_notification_text_default">Time to wake up</string>

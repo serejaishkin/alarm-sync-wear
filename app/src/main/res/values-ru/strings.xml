@@ -23,7 +23,7 @@
     <string name="snooze_duration">Длительность отсрочки</string>
     <string name="dismiss_challenge">Задание для отключения</string>
     <string name="dismiss_alarm">Отключить будильник</string>
-    <string name="firing_auto_silence_in">До автоотключения: %d:%02d</string>
+    <string name="firing_auto_silence_in">До автоотключения: %1$d:%2$02d</string>
     <string name="firing_snooze_10_min">Отложить 10 мин</string>
     <string name="firing_alarm_is_ringing">Будильник звенит</string>
     <string name="settings_title">Настройки</string>

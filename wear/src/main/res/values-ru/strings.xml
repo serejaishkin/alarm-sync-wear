@@ -52,7 +52,7 @@
     <string name="wear_source_phone">📱 Телефон</string>
     <string name="wear_snooze_button">Отложить %d мин</string>
     <string name="wear_dismiss">Выключить</string>
-    <string name="wear_auto_silence_in">До автоотключения: %d:%02d</string>
+    <string name="wear_auto_silence_in">До автоотключения: %1$d:%2$02d</string>
     <string name="wear_alarm_ringing">Будильник звенит</string>
     <string name="wear_notification_title">Будильник</string>
     <string name="wear_notification_text_default">Время вставать</string>

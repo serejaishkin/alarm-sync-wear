@@ -1,3 +1,4 @@
+import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -25,7 +26,7 @@ android {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 val configuredStoreFile = keystoreProperties.getProperty("storeFile").trim()
-                val configuredStore = java.io.File(configuredStoreFile)
+                val configuredStore = File(configuredStoreFile)
                 storeFile = when {
                     configuredStore.isAbsolute -> configuredStore
                     rootProject.file(configuredStoreFile).isFile -> rootProject.file(configuredStoreFile)

@@ -6,12 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
-import com.wakesync.app.R
 
 /** Alarm UI on Wear OS. Audio/haptics are owned by WearAlarmFeedbackService. */
 class WearAlarmFiringActivity : ComponentActivity() {
@@ -137,7 +137,7 @@ class WearAlarmFiringActivity : ComponentActivity() {
 }
 
 private fun Spacer(parent: LinearLayout, dp: Int) {
-    val v = android.widget.View(parent.context)
+    val v = View(parent.context)
     val px = (dp * parent.context.resources.displayMetrics.density).toInt()
     v.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, px)
     parent.addView(v)

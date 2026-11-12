@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.io.File
 import org.gradle.api.GradleException
 
 // WakeSync v1.15.33
@@ -49,7 +50,7 @@ android {
                 val keystoreProperties = Properties()
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
                 val configuredStoreFile = keystoreProperties.getProperty("storeFile").trim()
-                val configuredStore = java.io.File(configuredStoreFile)
+                val configuredStore = File(configuredStoreFile)
                 storeFile = when {
                     configuredStore.isAbsolute -> configuredStore
                     rootProject.file(configuredStoreFile).isFile -> rootProject.file(configuredStoreFile)
@@ -256,6 +257,12 @@ tasks.matching { it.name == "check" }.configureEach {
 }
 
 dependencies {
+    constraints {
+        implementation("com.google.guava:guava:33.7.2-android") {
+            because("Fix GHSA-xxph-c9ww-hj94 in the F-Droid release dependency graph.")
+        }
+    }
+
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2026.06.00")
     implementation(composeBom)

@@ -18,8 +18,8 @@ object WearAlarmScheduler {
     // Time validation extras — prevent firing at the wrong local time if the
     // watch's timezone wasn't applied yet when the alarm was scheduled.
     private const val EXTRA_TRIGGER_TIME = "triggerTime"
-    private const val EXTRA_EXPECTED_HOUR = "expectedHour"
-    private const val EXTRA_EXPECTED_MINUTE = "expectedMinute"
+    internal const val EXTRA_EXPECTED_HOUR = "expectedHour"
+    internal const val EXTRA_EXPECTED_MINUTE = "expectedMinute"
     private const val REQUEST_BASE = 710000
 
     fun schedule(context: Context, entry: WearAlarmListStore.Entry) {

@@ -12,7 +12,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.wakesync.app.R
 import com.wakesync.app.data.local.entity.AlarmIncidentEvent
@@ -24,7 +26,7 @@ import com.wakesync.app.ui.theme.WakeSyncTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +41,7 @@ class AlarmFiringActivity : ComponentActivity() {
     @Inject lateinit var alarmIncidentRepository: com.wakesync.app.data.repository.AlarmIncidentRepository
     @Inject lateinit var alarmSyncCoordinator: AlarmSyncCoordinator
 
-    private val viewModel: com.wakesync.app.ui.alarmfiring.AlarmFiringViewModel by androidx.lifecycle.viewModels()
+    private val viewModel: AlarmFiringViewModel by viewModels()
     private var alarmId: Long = -1
     private var scheduledAt: Long = 0L
     private var fireId: String = ""
@@ -91,15 +93,18 @@ class AlarmFiringActivity : ComponentActivity() {
         )
 
         // Flash-wake if the alarm requests it and gradual volume is configured
-        val reduceMotionAndFlashing by viewModel.reduceMotionAndFlashing.collectAsStateWithLifecycle()
-        viewModel.uiState.collectAsStateWithLifecycle().collect { state ->
-            val alarm = state.alarm
-            if (alarm != null && alarm.flashWake && alarm.gradualVolumeSeconds > 0 && flashWakeJob == null) {
-                startFlashWake(alarm.gradualVolumeSeconds)
+        lifecycleScope.launch {
+            viewModel.uiState.collect { state ->
+                val alarm = state.alarm
+                if (alarm != null && alarm.flashWake && alarm.gradualVolumeSeconds > 0 && flashWakeJob == null) {
+                    startFlashWake(alarm.gradualVolumeSeconds)
+                }
             }
         }
 
         setContent {
+            val reduceMotionAndFlashing =
+                viewModel.reduceMotionAndFlashing.collectAsStateWithLifecycle().value
             WakeSyncTheme(reduceMotionAndFlashing = reduceMotionAndFlashing) {
                 AlarmFiringScreen(
                     onDismiss = { dismiss() },
