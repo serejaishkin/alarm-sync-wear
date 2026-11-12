@@ -15,17 +15,26 @@ object WearAlarmScheduler {
     private const val EXTRA_SYNC_ID = "syncId"
     private const val EXTRA_ALARM_TOKEN = "alarmToken"
     private const val EXTRA_SNOOZE = "snooze"
+    // Time validation extras — prevent firing at the wrong local time if the
+    // watch's timezone wasn't applied yet when the alarm was scheduled.
+    private const val EXTRA_TRIGGER_TIME = "triggerTime"
+    private const val EXTRA_EXPECTED_HOUR = "expectedHour"
+    private const val EXTRA_EXPECTED_MINUTE = "expectedMinute"
     private const val REQUEST_BASE = 710000
 
     fun schedule(context: Context, entry: WearAlarmListStore.Entry) {
         cancel(context, entry.syncId)
         if (!entry.enabled) return
         val trigger = nextTrigger(entry) ?: return
+        val triggerMillis = trigger.toInstant().toEpochMilli()
         val intent = Intent(context, WearAlarmReceiver::class.java).apply {
             action = ACTION_FIRE
             putExtra(EXTRA_SYNC_ID, entry.syncId)
             putExtra(EXTRA_ALARM_TOKEN, entry.alarmToken)
             putExtra(EXTRA_SNOOZE, false)
+            putExtra(EXTRA_TRIGGER_TIME, triggerMillis)
+            putExtra(EXTRA_EXPECTED_HOUR, entry.hour.coerceIn(0, 23))
+            putExtra(EXTRA_EXPECTED_MINUTE, entry.minute.coerceIn(0, 59))
         }
         val pi = PendingIntent.getBroadcast(
             context,
@@ -35,7 +44,7 @@ object WearAlarmScheduler {
         )
         context.getSystemService(AlarmManager::class.java).setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            trigger.toInstant().toEpochMilli(),
+            triggerMillis,
             pi
         )
     }
