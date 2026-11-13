@@ -114,9 +114,9 @@ object WearAlarmText {
     }
 
     fun complicationShortTitle(snapshot: WearAlarmSnapshot): String = when {
-        snapshot.isFiring -> "Wake"
+        snapshot.isFiring -> "WakeSync"
         snapshot.hasAlarm -> snapshot.label.ifBlank { "Next" }.take(SHORT_TITLE_LIMIT)
-        else -> "Wake"
+        else -> "WakeSync"
     }
 
     fun complicationLongText(snapshot: WearAlarmSnapshot, now: Long = System.currentTimeMillis()): String = when {
