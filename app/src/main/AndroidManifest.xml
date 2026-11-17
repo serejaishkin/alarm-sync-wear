@@ -14,6 +14,10 @@
 
     <!-- Notifications & Lock Screen -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Lets the alarm service open the firing screen from the background while the
+         phone is unlocked (Android blocks background activity starts otherwise,
+         and a full-screen-intent notification only shows as a heads-up then). -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />

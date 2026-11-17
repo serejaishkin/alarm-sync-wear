@@ -20,6 +20,21 @@ internal fun randomRingtoneStartOffsetMs(durationMs: Long, randomUnit: Double): 
     return (latestStart * randomUnit.coerceIn(0.0, 1.0)).toLong()
 }
 
+/**
+ * Perceptually even fade-in curve. Hearing is logarithmic, so a linear
+ * amplitude ramp sounds loud within the first few seconds. This maps
+ * progress (0..1) onto a 40 dB range (0.01..1.0 amplitude) with a short
+ * linear lead-in from silence so the very first step is still inaudible.
+ */
+internal fun fadeInGain(progress: Float): Float {
+    val p = progress.coerceIn(0f, 1f)
+    if (p <= 0f) return 0f
+    if (p >= 1f) return 1f
+    val db = Math.pow(10.0, (-2.0 * (1.0 - p))).toFloat()
+    val lead = (p / 0.05f).coerceAtMost(1f)
+    return (db * lead).coerceIn(0f, 1f)
+}
+
 internal fun alarmPlaybackGain(
     callMuted: Boolean,
     challengeDuckingActive: Boolean,

@@ -458,6 +458,13 @@ class AlarmService : Service() {
             }
         }
 
+        // Without "Display over other apps" Android drops the background launch
+        // of the firing Activity while the phone is in use, leaving only a
+        // heads-up notification.
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "Overlay permission not granted — firing screen may not pop up over other apps")
+        }
+
         val settings = preferencesManager.getCurrentSettings()
         OnCallDndOverride.begin(this, settings.onCallModeEnabled)
 
@@ -619,6 +626,9 @@ class AlarmService : Service() {
                     reasonCode = "BACKUP_SOUND_ESCALATED",
                     source = "AlarmService"
                 )
+                // Stop the fade-in coroutine, otherwise it would keep writing
+                // lower ramp values and pull the volume back down afterwards.
+                volumeJob?.cancel()
                 playbackRampGain = 1f
                 applyPlaybackGain()
             }
@@ -991,7 +1001,7 @@ class AlarmService : Service() {
                     val stepDelay = fadeInMs / steps
                     for (i in 1..steps) {
                         delay(stepDelay)
-                        val volume = i.toFloat() / steps
+                        val volume = fadeInGain(i.toFloat() / steps)
                         playbackRampGain = volume
                         applyPlaybackGain()
                     }
@@ -1242,7 +1252,7 @@ class AlarmService : Service() {
                         delay(stepDelay)
                         // v1.11.2: the call observer takes priority; don't ramp
                         // volume during a call (it'll be restored on IDLE).
-                        val volume = i.toFloat() / steps
+                        val volume = fadeInGain(i.toFloat() / steps)
                         playbackRampGain = volume
                         applyPlaybackGain()
                     }
