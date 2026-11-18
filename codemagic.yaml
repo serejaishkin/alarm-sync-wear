@@ -2,7 +2,7 @@ workflows:
   release:
     name: Release build
     max_build_duration: 60
-    instance_type: mac_mini_m1
+    instance_type: mac_mini_m2
     environment:
       groups:
         - keystore
@@ -49,13 +49,13 @@ workflows:
       - build/release/*
     publishing:
       google_play:
-        credentials: $GOOGLE_PLAY_CREDENTIALS
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
         track: internal
         submit_as_draft: true
   debug:
     name: Debug build
     max_build_duration: 30
-    instance_type: mac_mini_m1
+    instance_type: mac_mini_m2
     environment:
       vars:
         JAVA_HOME: "/usr/lib/jvm/java-17-openjdk-amd64"
