@@ -1,0 +1,80 @@
+workflows:
+  release:
+    name: Release build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - keystore
+      vars:
+        JAVA_HOME: "/usr/lib/jvm/java-17-openjdk-amd64"
+        ANDROID_HOME: "/usr/local/share/android-sdk"
+        GRADLE_OPTS: "-Djava.net.preferIPv4Stack=true"
+    triggering:
+      events:
+        - tag
+      branch_filter: "v*"
+      check_run: false
+    scripts:
+      - name: Setup signing
+        script: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ] \
+            || [ -z "${ANDROID_KEY_ALIAS:-}" ] || [ -z "${ANDROID_KEY_PASSWORD:-}" ]; then
+            echo "error: missing release-signing secrets"
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.jks
+          cat > keystore.properties <<EOF
+          storeFile=release.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+      - name: Build signed release APKs
+        script: |
+          ./gradlew \
+            :app:verifyRoomSchemaExports \
+            :app:verifyFdroidReleaseSize \
+            :wear:assembleRelease \
+            --no-daemon
+    artifacts:
+      - app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
+      - wear/build/outputs/apk/release/wear-release.apk
+      - build/release/*
+    publishing:
+      providers:
+        - provider: google_play_store
+          config:
+            track: internal
+            artifact: app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
+            release_status: draft
+  debug:
+    name: Debug build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
+    environment:
+      vars:
+        JAVA_HOME: "/usr/lib/jvm/java-17-openjdk-amd64"
+        ANDROID_HOME: "/usr/local/share/android-sdk"
+    triggering:
+      events:
+        - pull_request
+      branch_filter: "pull_request"
+    scripts:
+      - name: Assemble phone and wear debug
+        script: |
+          ./gradlew \
+            :app:assembleFdroidDebug \
+            :wear:assembleDebug \
+            --no-daemon
+    artifacts:
+      - app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
+      - wear/build/outputs/apk/debug/wear-debug.apk
+    publishing:
+      providers:
+        - provider: test_cloud
+          config:
+            - app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
+            - wear/build/outputs/apk/debug/wear-debug.apk
