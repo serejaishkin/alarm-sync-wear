@@ -13,8 +13,12 @@ workflows:
     triggering:
       events:
         - tag
-      branch_filter: "v*"
-      check_run: false
+      branch_patterns:
+        - pattern: "v*"
+          include: true
+      tag_patterns:
+        - pattern: "v*"
+          include: true
     scripts:
       - name: Setup signing
         script: |
@@ -44,12 +48,10 @@ workflows:
       - wear/build/outputs/apk/release/wear-release.apk
       - build/release/*
     publishing:
-      providers:
-        - provider: google_play_store
-          config:
-            track: internal
-            artifact: app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
-            release_status: draft
+      google_play:
+        credentials: $GOOGLE_PLAY_CREDENTIALS
+        track: internal
+        submit_as_draft: true
   debug:
     name: Debug build
     max_build_duration: 30
@@ -61,7 +63,9 @@ workflows:
     triggering:
       events:
         - pull_request
-      branch_filter: "pull_request"
+      branch_patterns:
+        - pattern: "*"
+          include: true
     scripts:
       - name: Assemble phone and wear debug
         script: |
@@ -72,9 +76,3 @@ workflows:
     artifacts:
       - app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
       - wear/build/outputs/apk/debug/wear-debug.apk
-    publishing:
-      providers:
-        - provider: test_cloud
-          config:
-            - app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
-            - wear/build/outputs/apk/debug/wear-debug.apk
