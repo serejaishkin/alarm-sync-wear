@@ -47,11 +47,6 @@ workflows:
       - app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
       - wear/build/outputs/apk/release/wear-release.apk
       - build/release/*
-    publishing:
-      google_play:
-        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
-        track: internal
-        submit_as_draft: true
   debug:
     name: Debug build
     max_build_duration: 30
