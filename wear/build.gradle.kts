@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.wakesync.app.wear"
     compileSdk = 36
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "com.wakesync.app"
