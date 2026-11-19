@@ -504,7 +504,16 @@ class AlarmService : Service() {
             scheduledAt = currentScheduledAt,
             fireId = currentFireId
         )
-        try {
+        if (!preferencesManager.getCachedSettings().fullScreenAlarmEnabled) {
+            // User chose the compact notification: the notification stays up and
+            // tapping it opens the firing screen; do not take over the screen.
+            recordIncident(
+                type = AlarmIncidentEvent.TYPE_ACTIVITY_LAUNCH,
+                status = AlarmIncidentEvent.STATUS_SKIPPED,
+                reasonCode = "FIRING_ACTIVITY_SKIPPED_NOTIFICATION_MODE",
+                source = "AlarmService"
+            )
+        } else try {
             // v1.15.x: startActivity() from a background service runs on the IO
             // dispatcher here; Android 10+ background-activity-start restrictions
             // can silently drop the launch unless it is posted to the main thread.
@@ -747,7 +756,10 @@ class AlarmService : Service() {
         val timeText = formatAlarmTime(alarm)
         val hideLabel = preferencesManager.getCachedSettings().hideAlarmLabelsOnPublicSurfaces
 
-        return NotificationCompat.Builder(this, CHANNEL_ALARM)
+        val fullScreenAlarm = preferencesManager.getCachedSettings().fullScreenAlarmEnabled
+        val hasDismissChallenge = alarm.challengeType != "NONE" || alarm.challengeChain.isNotBlank()
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ALARM)
             .setSmallIcon(R.drawable.ic_alarm)
             .setContentTitle(getString(R.string.notif_alarm_title))
             .setContentText(
@@ -760,13 +772,22 @@ class AlarmService : Service() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setFullScreenIntent(fullScreenPi, true)
             .setContentIntent(fullScreenPi)
             .setOngoing(true)
             .setAutoCancel(false)
             .addAction(R.drawable.ic_alarm, getString(R.string.notif_snooze_action, alarm.snoozeDurationMinutes), snoozePi)
-            .addAction(R.drawable.ic_alarm, getString(R.string.notif_dismiss_action), dismissPi)
-            .build()
+
+        // Compact-notification mode: no full-screen takeover, heads-up banner only.
+        if (fullScreenAlarm) {
+            builder.setFullScreenIntent(fullScreenPi, true)
+        }
+        // The Dismiss button bypasses the in-app challenge, so in compact mode an
+        // alarm with a challenge offers only Snooze; tapping the banner opens
+        // the challenge screen. Full-screen mode keeps the existing behavior.
+        if (fullScreenAlarm || !hasDismissChallenge) {
+            builder.addAction(R.drawable.ic_alarm, getString(R.string.notif_dismiss_action), dismissPi)
+        }
+        return builder.build()
     }
 
     private fun activateAlarmMediaSession(reasonCode: String) {
@@ -1427,7 +1448,9 @@ class AlarmService : Service() {
         }
         val notification = buildAlarmNotification(alarm)
         val notificationManager = getSystemService(NotificationManager::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        val fullScreenAlarm = preferencesManager.getCachedSettings().fullScreenAlarmEnabled
+        if (fullScreenAlarm &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
             notificationManager?.canUseFullScreenIntent() != true
         ) {
             Log.w(TAG, "Full-screen alarm access is disabled; opening permission settings")
@@ -1444,15 +1467,17 @@ class AlarmService : Service() {
             } else {
                 notificationManager?.notify(NOTIFICATION_ID, notification)
             }
-            startActivity(
-                AlarmFireDismissContract.firingActivityIntent(
-                    this,
-                    alarmId,
-                    currentScheduledAt,
-                    currentFireId
+            if (fullScreenAlarm) {
+                startActivity(
+                    AlarmFireDismissContract.firingActivityIntent(
+                        this,
+                        alarmId,
+                        currentScheduledAt,
+                        currentFireId
+                    )
                 )
-            )
-            Log.i(TAG, "Remote ring notification and firing UI shown alarmId=$alarmId")
+            }
+            Log.i(TAG, "Remote ring notification shown alarmId=$alarmId fullScreen=$fullScreenAlarm")
         }.onFailure {
             Log.e(TAG, "Failed to show remote ring alarmId=$alarmId", it)
         }

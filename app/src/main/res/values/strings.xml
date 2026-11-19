@@ -1017,6 +1017,8 @@
     <string name="settings_dynamic_color_description">Blends the app accent with your wallpaper palette (Android 12+).</string>
     <string name="settings_expressive_surfaces">Expressive surfaces</string>
     <string name="settings_expressive_surfaces_description">Adds bolder shape rhythm and clearer accent semantics across shared app surfaces.</string>
+    <string name="settings_full_screen_alarm">Full-screen alarm</string>
+    <string name="settings_full_screen_alarm_description">On: the alarm opens over the whole screen. Off: only a compact notification with Snooze and Dismiss appears. Alarms that need a dismiss challenge show just Snooze; tap the notification to open the challenge.</string>
     <string name="settings_reduce_motion">Reduce motion and flashing</string>
     <string name="settings_reduce_motion_description">Stops decorative loops and flashlight strobing. Android\'s Remove animations setting is also honored.</string>
     <string name="settings_cover_to_snooze">Cover-to-snooze</string>

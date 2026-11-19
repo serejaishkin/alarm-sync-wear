@@ -109,6 +109,8 @@ data class AppSettings(
     val expressiveModeEnabled: Boolean = true,
     // Device-local accessibility companion to Android's Remove animations setting.
     val reduceMotionAndFlashing: Boolean = false,
+    // Device-local: true = full-screen alarm screen, false = compact heads-up notification.
+    val fullScreenAlarmEnabled: Boolean = true,
     // v1.4.0: Proximity-sensor "cover phone to snooze" (global toggle, pairs with flip-to-snooze)
     val coverToSnoozeEnabled: Boolean = false,
     // v1.4.0: Pre-sleep bedtime checklist (newline-separated items; shown on Bedtime tab)
@@ -287,6 +289,7 @@ class PreferencesManager @Inject constructor(
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val EXPRESSIVE_MODE = booleanPreferencesKey("expressive_mode")
         val REDUCE_MOTION_AND_FLASHING = booleanPreferencesKey("reduce_motion_and_flashing")
+        val FULL_SCREEN_ALARM = booleanPreferencesKey("full_screen_alarm")
         val COVER_TO_SNOOZE = booleanPreferencesKey("cover_to_snooze")
         val BEDTIME_CHECKLIST = stringPreferencesKey("bedtime_checklist")
         val SLEEP_SOUND_TIMER = intPreferencesKey("sleep_sound_timer_minutes")
@@ -413,6 +416,7 @@ class PreferencesManager @Inject constructor(
         dynamicColorEnabled = this[Keys.DYNAMIC_COLOR] ?: false,
         expressiveModeEnabled = this[Keys.EXPRESSIVE_MODE] ?: false,
         reduceMotionAndFlashing = this[Keys.REDUCE_MOTION_AND_FLASHING] ?: false,
+        fullScreenAlarmEnabled = this[Keys.FULL_SCREEN_ALARM] ?: true,
         coverToSnoozeEnabled = this[Keys.COVER_TO_SNOOZE] ?: false,
         bedtimeChecklist = this[Keys.BEDTIME_CHECKLIST] ?: "",
         sleepSoundTimerMinutes = this[Keys.SLEEP_SOUND_TIMER] ?: 0,
@@ -484,6 +488,7 @@ class PreferencesManager @Inject constructor(
         this[Keys.DYNAMIC_COLOR] = s.dynamicColorEnabled
         this[Keys.EXPRESSIVE_MODE] = s.expressiveModeEnabled
         this[Keys.REDUCE_MOTION_AND_FLASHING] = s.reduceMotionAndFlashing
+        this[Keys.FULL_SCREEN_ALARM] = s.fullScreenAlarmEnabled
         this[Keys.COVER_TO_SNOOZE] = s.coverToSnoozeEnabled
         this[Keys.BEDTIME_CHECKLIST] = s.bedtimeChecklist
         this[Keys.SLEEP_SOUND_TIMER] = s.sleepSoundTimerMinutes

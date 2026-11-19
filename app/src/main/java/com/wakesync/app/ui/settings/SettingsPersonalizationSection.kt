@@ -195,6 +195,13 @@ internal fun PersonalizationSection(state: SettingsUiState, viewModel: SettingsV
         )
 
         SettingsToggle(
+            label = stringResource(R.string.settings_full_screen_alarm),
+            checked = state.settings.fullScreenAlarmEnabled,
+            supportingText = stringResource(R.string.settings_full_screen_alarm_description),
+            onToggle = viewModel::toggleFullScreenAlarm
+        )
+
+        SettingsToggle(
             label = stringResource(R.string.settings_reduce_motion),
             checked = state.settings.reduceMotionAndFlashing,
             supportingText = stringResource(R.string.settings_reduce_motion_description),
