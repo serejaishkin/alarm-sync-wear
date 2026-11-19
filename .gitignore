@@ -41,3 +41,6 @@ wakesync-reconciliation-fix.zip
 # Local build logs and office lock files
 gradle-*.log
 .~lock.*#
+
+# Local Windows build helper (machine-specific)
+/build.bat
