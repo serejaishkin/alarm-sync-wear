@@ -37,3 +37,7 @@ PROJECT_CONTEXT.md
 CONTINUATION_PROMPT.md
 wakesync-reconciliation-fix.zip
 *.lnk
+
+# Local build logs and office lock files
+gradle-*.log
+.~lock.*#
