@@ -24,7 +24,11 @@ cd /d D:\GitHub\alarm-sync-wear
 echo [1/3] Stopping Gradle daemon...
 call gradlew.bat --stop >nul 2>&1
 
-echo [2/3] Building phone + wear debug APKs...
+echo [2/4] Cleaning KSP cache...
+if exist "app\build\generated\ksp" rmdir /s /q "app\build\generated\ksp"
+if exist "app\build\tmp\ksp" rmdir /s /q "app\build\tmp\ksp"
+
+echo [3/4] Building phone + wear debug APKs...
 call gradlew.bat :app:assembleFdroidDebug :wear:assembleDebug
 
 if %ERRORLEVEL% NEQ 0 (
@@ -35,7 +39,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [3/3] Build complete!
+echo [4/4] Build complete!
 echo.
 echo APKs:
 echo   Phone: app\build\outputs\apk\fdroid\debug\app-fdroid-debug.apk
