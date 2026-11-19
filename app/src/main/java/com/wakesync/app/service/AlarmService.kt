@@ -370,6 +370,9 @@ class AlarmService : Service() {
                     currentFireId = fireId
                     currentSnoozeCount = readPersistedSnoozeCount(alarmId)
                 }
+                // Android 14+: startForeground() must be called within 5s of
+                // startForegroundService() or the app crashes.
+                startForegroundWithPlaceholder()
                 serviceScope.launch { snoozeAlarm(alarmId, customMinutes, snoozeAtMillis) }
             }
             ACTION_SET_CHALLENGE_DUCKING -> {
@@ -404,6 +407,8 @@ class AlarmService : Service() {
                     currentFireId = fireId
                     currentSnoozeCount = readPersistedSnoozeCount(alarmId)
                 }
+                // Android 14+: startForeground() must be called within 5s.
+                startForegroundWithPlaceholder()
                 serviceScope.launch {
                     dismissAlarm(
                         alarmId = alarmId,
