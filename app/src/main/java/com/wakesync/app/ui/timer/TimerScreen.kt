@@ -58,6 +58,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -123,7 +124,7 @@ fun TimerScreen(
             subtitle = if (state.activeTimers.isEmpty()) {
                 ""
             } else {
-                stringResource(R.plurals.timer_active_count, state.activeTimers.size, state.activeTimers.size)
+                pluralStringResource(R.plurals.timer_active_count, state.activeTimers.size, state.activeTimers.size)
             },
             actions = {
                 TextButton(onClick = onOpenStopwatch) {

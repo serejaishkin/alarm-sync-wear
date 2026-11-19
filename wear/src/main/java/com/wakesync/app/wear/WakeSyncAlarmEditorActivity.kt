@@ -106,7 +106,18 @@ class WakeSyncAlarmEditorActivity : Activity() {
         updateTimeText()
         timeCard.addView(timeDisplay)
 
-        // Hours & Minutes Adjustment Row
+        // Toggle between stepped and numeric input
+        var useNumericInput = false
+        val inputModeButton = Button(this).apply {
+            text = "⌨ Ввод цифрами"
+            isAllCaps = false
+            textSize = 11f
+            WearUi.styleActionButton(this@WakeSyncAlarmEditorActivity, this, R.color.text_secondary)
+            setPadding(4, 4, 4, 4)
+        }
+        timeCard.addView(inputModeButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8 })
+
+        // --- Stepped input (default) ---
         val adjustRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -134,6 +145,74 @@ class WakeSyncAlarmEditorActivity : Activity() {
         }, LinearLayout.LayoutParams(0, -2, 1f))
 
         timeCard.addView(adjustRow)
+
+        // --- Numeric input (hidden by default) ---
+        val numericRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, 8, 0, 0)
+            visibility = View.GONE
+        }
+
+        val hourInput = android.widget.EditText(this).apply {
+            hint = "ЧЧ"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setTextColor(WearUi.color(this@WakeSyncAlarmEditorActivity, R.color.text_primary))
+            setPadding(8, 4, 8, 4)
+            layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = 8 }
+        }
+        val minuteInput = android.widget.EditText(this).apply {
+            hint = "ММ"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setTextColor(WearUi.color(this@WakeSyncAlarmEditorActivity, R.color.text_primary))
+            setPadding(8, 4, 8, 4)
+            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+        }
+        numericRow.addView(hourInput)
+        numericRow.addView(minuteInput)
+
+        val applyNumericBtn = Button(this).apply {
+            text = "Применить"
+            isAllCaps = false
+            textSize = 11f
+            WearUi.styleActionButton(this@WakeSyncAlarmEditorActivity, this, R.color.dismiss_green)
+            setPadding(4, 6, 4, 6)
+            setOnClickListener {
+                val h = hourInput.text.toString().toIntOrNull()
+                val m = minuteInput.text.toString().toIntOrNull()
+                if (h != null && h in 0..23 && m != null && m in 0..59) {
+                    hourValue = h
+                    minuteValue = m
+                    updateTimeText()
+                    Toast.makeText(this@WakeSyncAlarmEditorActivity, "Установлено $h:$m", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@WakeSyncAlarmEditorActivity, "Введите часы (0-23) и минуты (0-59)", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        numericRow.addView(applyNumericBtn, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = 8 })
+
+        timeCard.addView(numericRow)
+
+        inputModeButton.setOnClickListener {
+            useNumericInput = !useNumericInput
+            if (useNumericInput) {
+                adjustRow.visibility = View.GONE
+                numericRow.visibility = View.VISIBLE
+                inputModeButton.text = "{-#} Колёсики"
+                hourInput.setText(hourValue.toString())
+                minuteInput.setText(String.format("%02d", minuteValue))
+            } else {
+                adjustRow.visibility = View.VISIBLE
+                numericRow.visibility = View.GONE
+                inputModeButton.text = "⌨ Ввод цифрами"
+            }
+        }
+
         content.addView(timeCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12 })
 
         // 2. Quick Label Selector

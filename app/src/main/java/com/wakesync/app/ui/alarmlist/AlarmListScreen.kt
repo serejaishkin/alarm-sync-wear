@@ -107,6 +107,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -193,11 +194,11 @@ fun AlarmListScreen(
                             color = TextSecondary
                         )
                     } else {
-                        Text(stringResource(R.plurals.alarm_stats_fired, stats.fireCount, stats.fireCount))
+                        Text(pluralStringResource(R.plurals.alarm_stats_fired, stats.fireCount, stats.fireCount))
                         Text(stringResource(R.string.alarm_stats_avg_snoozes, String.format("%.1f", stats.avgSnoozesPerFire)))
                         Text(stringResource(R.string.alarm_stats_avg_dismiss, stats.avgDismissTimeSec.toString()))
                         if (stats.missedCount > 0) {
-                            Text(stringResource(R.plurals.alarm_stats_missed, stats.missedCount, stats.missedCount), color = AccentRed)
+                            Text(pluralStringResource(R.plurals.alarm_stats_missed, stats.missedCount, stats.missedCount), color = AccentRed)
                         }
                     }
                 }
@@ -282,7 +283,7 @@ fun AlarmListScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        stringResource(R.plurals.alarm_bulk_delete_confirm, state.selectedIds.size, state.selectedIds.size)
+                        pluralStringResource(R.plurals.alarm_bulk_delete_confirm, state.selectedIds.size, state.selectedIds.size)
                     )
                 }
             },
@@ -293,7 +294,7 @@ fun AlarmListScreen(
             },
             title = {
                 Text(
-                    text = stringResource(R.plurals.alarm_bulk_delete_title, state.selectedIds.size, state.selectedIds.size),
+                    text = pluralStringResource(R.plurals.alarm_bulk_delete_title, state.selectedIds.size, state.selectedIds.size),
                     color = TextPrimary,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
@@ -492,7 +493,7 @@ fun AlarmListScreen(
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     AppInlineNotice(
-                                        title = stringResource(R.plurals.duplicate_alarms, duplicateExtras.size, duplicateExtras.size),
+                                        title = pluralStringResource(R.plurals.duplicate_alarms, duplicateExtras.size, duplicateExtras.size),
                                         message = stringResource(R.string.duplicate_alarms_msg),
                                         icon = Icons.Default.ContentCopy,
                                         color = AccentRed
@@ -503,7 +504,7 @@ fun AlarmListScreen(
                                     ) {
                                         TextButton(onClick = viewModel::removeDuplicateExtras) {
                                             Text(
-                                                stringResource(R.plurals.remove_duplicates, duplicateExtras.size, duplicateExtras.size),
+                                                pluralStringResource(R.plurals.remove_duplicates, duplicateExtras.size, duplicateExtras.size),
                                                 color = AccentRed
                                             )
                                         }
@@ -1563,7 +1564,7 @@ private fun SelectionActionBar(
                         Icon(Icons.Default.Close, stringResource(R.string.cd_clear_selection), tint = TextPrimary)
                     }
                     Column {
-                        Text(stringResource(R.plurals.selection_count, selectedCount, selectedCount), color = TextPrimary, style = MaterialTheme.typography.titleSmall)
+                        Text(pluralStringResource(R.plurals.selection_count, selectedCount, selectedCount), color = TextPrimary, style = MaterialTheme.typography.titleSmall)
                         Text(
                             stringResource(
                                 if (selectedCount == totalCount) R.string.bulk_all_note else R.string.bulk_selected_note
