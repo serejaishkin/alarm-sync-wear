@@ -509,7 +509,7 @@ class AlarmService : Service() {
             scheduledAt = currentScheduledAt,
             fireId = currentFireId
         )
-        if (!preferencesManager.getCachedSettings().fullScreenAlarmEnabled) {
+        if (!shouldShowFullScreenAlarm()) {
             // User chose the compact notification: the notification stays up and
             // tapping it opens the firing screen; do not take over the screen.
             recordIncident(
@@ -725,6 +725,26 @@ class AlarmService : Service() {
         }
     }
 
+    /**
+     * Full-screen takeover unless the user chose the compact notification AND a
+     * heads-up banner can actually be seen. A banner is not shown on a locked or
+     * dark screen, and is useless when notifications or the alarm channel are
+     * muted, so those cases always fall back to full screen: an alarm must never
+     * be invisible.
+     */
+    private fun shouldShowFullScreenAlarm(): Boolean {
+        if (preferencesManager.getCachedSettings().fullScreenAlarmEnabled) return true
+        val keyguard = getSystemService(android.app.KeyguardManager::class.java)
+        if (keyguard?.isKeyguardLocked == true) return true
+        val power = getSystemService(android.os.PowerManager::class.java)
+        if (power?.isInteractive != true) return true
+        val nm = getSystemService(NotificationManager::class.java)
+        if (nm == null || !nm.areNotificationsEnabled()) return true
+        val channel = nm.getNotificationChannel(CHANNEL_ALARM)
+        if (channel != null && channel.importance < NotificationManager.IMPORTANCE_HIGH) return true
+        return false
+    }
+
     private fun buildAlarmNotification(alarm: Alarm): Notification {
         val fullScreenIntent = AlarmFireDismissContract.firingActivityIntent(
             context = this,
@@ -761,7 +781,7 @@ class AlarmService : Service() {
         val timeText = formatAlarmTime(alarm)
         val hideLabel = preferencesManager.getCachedSettings().hideAlarmLabelsOnPublicSurfaces
 
-        val fullScreenAlarm = preferencesManager.getCachedSettings().fullScreenAlarmEnabled
+        val fullScreenAlarm = shouldShowFullScreenAlarm()
         val hasDismissChallenge = alarm.challengeType != "NONE" || alarm.challengeChain.isNotBlank()
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ALARM)
@@ -1453,7 +1473,7 @@ class AlarmService : Service() {
         }
         val notification = buildAlarmNotification(alarm)
         val notificationManager = getSystemService(NotificationManager::class.java)
-        val fullScreenAlarm = preferencesManager.getCachedSettings().fullScreenAlarmEnabled
+        val fullScreenAlarm = shouldShowFullScreenAlarm()
         if (fullScreenAlarm &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
             notificationManager?.canUseFullScreenIntent() != true
