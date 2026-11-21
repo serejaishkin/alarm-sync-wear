@@ -2228,4 +2228,17 @@
     <string name="challenge_handwriting_fallback_placeholder">Резервное слово (текст)</string>
     <string name="challenge_handwriting_check_typed">Проверить введённое слово</string>
 
+    <string name="settings_clock_import">Перенос из «Часов»</string>
+    <string name="settings_clock_import_description">Откройте старое приложение «Часы» и за пару касаний введите его будильники здесь.</string>
+    <string name="clock_import_title">Перенос из «Часов»</string>
+    <string name="clock_import_back">Назад</string>
+    <string name="clock_import_intro">Android не даёт приложениям читать будильники чужих часов. Откройте «Часы», затем впишите время и дни каждого будильника здесь. Одинаковые будильники не дублируются.</string>
+    <string name="clock_import_open_clock">Открыть «Часы»</string>
+    <string name="clock_import_no_clock">Другое приложение часов не найдено. Откройте его вручную.</string>
+    <string name="clock_import_time">Время</string>
+    <string name="clock_import_label">Название</string>
+    <string name="clock_import_remove">Удалить</string>
+    <string name="clock_import_add_row">Добавить ещё будильник</string>
+    <string name="clock_import_create">Создать будильники (%1$d)</string>
+    <string name="clock_import_result">Создано %1$d, дубликатов пропущено %2$d, ошибок %3$d</string>
 </resources>

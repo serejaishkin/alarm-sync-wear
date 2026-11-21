@@ -2345,4 +2345,17 @@
 
     <string name="challenge_progress_complete">%1$d%% complete</string>
 
+    <string name="settings_clock_import">Move alarms from Clock</string>
+    <string name="settings_clock_import_description">Open your old Clock app and re-enter its alarms here in a few taps.</string>
+    <string name="clock_import_title">Move from Clock</string>
+    <string name="clock_import_back">Back</string>
+    <string name="clock_import_intro">Android does not let apps read another clock\'s alarms. Open your Clock app, then type each alarm\'s time and days here. Identical alarms are not duplicated.</string>
+    <string name="clock_import_open_clock">Open Clock app</string>
+    <string name="clock_import_no_clock">No other clock app found. Open it manually.</string>
+    <string name="clock_import_time">Time</string>
+    <string name="clock_import_label">Label</string>
+    <string name="clock_import_remove">Remove</string>
+    <string name="clock_import_add_row">Add another alarm</string>
+    <string name="clock_import_create">Create alarms (%1$d)</string>
+    <string name="clock_import_result">Created %1$d, skipped duplicates %2$d, failed %3$d</string>
 </resources>

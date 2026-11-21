@@ -200,6 +200,7 @@ private fun LazyListScope.settingsItem(
 fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
     onOpenOnboardingChecklist: () -> Unit = {},
+    onOpenClockImport: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -501,6 +502,12 @@ fun SettingsScreen(
                     ),
                     enabled = languagePickerSupported,
                     onClick = { showLanguageDialog = true }
+                )
+                SettingsActionRow(
+                    label = stringResource(R.string.settings_clock_import),
+                    value = "",
+                    supportingText = stringResource(R.string.settings_clock_import_description),
+                    onClick = onOpenClockImport
                 )
             }
             }

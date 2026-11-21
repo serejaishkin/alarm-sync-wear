@@ -41,6 +41,7 @@ import com.wakesync.app.ui.alarmedit.AlarmEditScreen
 import com.wakesync.app.ui.alarmlist.GoogleStyleAlarmScreen
 import com.wakesync.app.ui.bedtime.BedtimeScreen
 import com.wakesync.app.ui.components.BottomNavContainer
+import com.wakesync.app.ui.clockimport.ClockImportScreen
 import com.wakesync.app.ui.onboarding.OnboardingScreen
 import com.wakesync.app.ui.settings.SettingsScreen
 import com.wakesync.app.ui.share.SharedAlarmImportScreen
@@ -62,6 +63,7 @@ sealed class Screen(val route: String) {
     data object Bedtime : Screen("bedtime")
     data object Onboarding : Screen("onboarding")
     data object SharedAlarmImport : Screen("shared_alarm_import")
+    data object ClockImport : Screen("clock_import")
 }
 
 data class BottomNavItem(
@@ -267,8 +269,10 @@ private fun WakeSyncNavHost(
         composable(Screen.Stopwatch.route) { StopwatchScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onOpenOnboardingChecklist = { navController.navigate(Screen.Onboarding.route) { launchSingleTop = true } }
+                onOpenOnboardingChecklist = { navController.navigate(Screen.Onboarding.route) { launchSingleTop = true } },
+                onOpenClockImport = { navController.navigate(Screen.ClockImport.route) { launchSingleTop = true } }
             )
         }
+        composable(Screen.ClockImport.route) { ClockImportScreen(onNavigateBack = { navController.popBackStack() }) }
     }
 }
