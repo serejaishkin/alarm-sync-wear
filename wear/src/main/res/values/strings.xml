@@ -35,6 +35,8 @@
     <string name="wear_snooze_minus_5">- 5 min</string>
     <string name="wear_snooze_plus_5">+ 5 min</string>
     <string name="wear_volume">Volume</string>
+    <string name="wear_fullscreen_warning">Full-screen alarms are blocked. The alarm will not open over the lock screen.</string>
+    <string name="wear_fullscreen_fix">Allow</string>
     <string name="wear_save">Save</string>
     <string name="wear_vibration_on">Vibration: ON</string>
     <string name="wear_vibration_off">Vibration: OFF</string>

@@ -1,15 +1,19 @@
 package com.wakesync.app.wear
 
+import android.annotation.TargetApi
 import android.app.Activity
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -29,6 +33,7 @@ import java.util.Locale
 class WakeSyncAlarmListActivity : Activity() {
     private lateinit var listContainer: LinearLayout
     private lateinit var statusText: TextView
+    private lateinit var permissionContainer: LinearLayout
     private lateinit var scrollView: ScrollView
     private val syncHandler = Handler(Looper.getMainLooper())
     private var touchStartY = 0f
@@ -84,6 +89,7 @@ class WakeSyncAlarmListActivity : Activity() {
         super.onResume()
         requestPhoneSnapshot()
         render()
+        renderPermissionBanner()
         scrollView.post {
             scrollView.requestFocus()
         }
@@ -154,6 +160,10 @@ class WakeSyncAlarmListActivity : Activity() {
         }
         content.addView(statusText)
 
+        // Shown only when the system blocks full-screen alarm notifications.
+        permissionContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        content.addView(permissionContainer, LinearLayout.LayoutParams(-1, -2))
+
         // Add Alarm Button
         val addButton = Button(this).apply {
             text = getString(R.string.wear_add_new_alarm)
@@ -172,6 +182,44 @@ class WakeSyncAlarmListActivity : Activity() {
 
         scrollView.addView(content)
         setContentView(scrollView)
+    }
+
+    /**
+     * Android 14+ can deny USE_FULL_SCREEN_INTENT. Without it an alarm cannot
+     * light up a locked watch, so tell the user and link to the system page.
+     */
+    private fun renderPermissionBanner() {
+        permissionContainer.removeAllViews()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        // A failed read counts as granted so we never nag on a bad read.
+        val granted = runCatching { nm.canUseFullScreenIntent() }.getOrDefault(true)
+        if (granted) return
+        permissionContainer.addView(TextView(this).apply {
+            text = getString(R.string.wear_fullscreen_warning)
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(WearUi.color(this@WakeSyncAlarmListActivity, R.color.text_secondary))
+            setPadding(0, 0, 0, 6)
+        })
+        permissionContainer.addView(
+            Button(this).apply {
+                text = getString(R.string.wear_fullscreen_fix)
+                WearUi.styleActionButton(this@WakeSyncAlarmListActivity, this, R.color.accent_blue)
+                setOnClickListener { openFullScreenSettings() }
+            },
+            LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12 }
+        )
+    }
+
+    @TargetApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private fun openFullScreenSettings() {
+        val pkg = Uri.parse("package:$packageName")
+        try {
+            startActivity(Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkg))
+        } catch (_: Exception) {
+            runCatching { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg)) }
+        }
     }
 
     private fun requestPhoneSnapshot() {

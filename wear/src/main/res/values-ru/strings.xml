@@ -35,6 +35,8 @@
     <string name="wear_snooze_minus_5">- 5 мин</string>
     <string name="wear_snooze_plus_5">+ 5 мин</string>
     <string name="wear_volume">Громкость</string>
+    <string name="wear_fullscreen_warning">Полноэкранные будильники заблокированы. Будильник не откроется поверх экрана блокировки.</string>
+    <string name="wear_fullscreen_fix">Разрешить</string>
     <string name="wear_save">Сохранить</string>
     <string name="wear_vibration_on">Вибрация: ВКЛ</string>
     <string name="wear_vibration_off">Вибрация: ВЫКЛ</string>
