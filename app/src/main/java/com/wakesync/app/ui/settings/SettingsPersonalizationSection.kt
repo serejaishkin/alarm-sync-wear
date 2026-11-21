@@ -201,6 +201,41 @@ internal fun PersonalizationSection(state: SettingsUiState, viewModel: SettingsV
             onToggle = viewModel::toggleFullScreenAlarm
         )
 
+        // Full-screen mode needs two system grants; surface whichever is missing
+        // right next to the switch, with a button that opens the right system page.
+        if (state.settings.fullScreenAlarmEnabled) {
+            if (!state.canDrawOverlays) {
+                AppInlineNotice(
+                    title = stringResource(R.string.settings_overlay_access_needed),
+                    message = stringResource(R.string.settings_overlay_access_description),
+                    icon = Icons.Default.Warning,
+                    color = SnoozeYellow
+                )
+                Button(
+                    onClick = viewModel::requestOverlayAccess,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.settings_open_overlay_settings))
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                state.canUseFullScreenIntent == false
+            ) {
+                AppInlineNotice(
+                    title = stringResource(R.string.settings_fullscreen_access_needed),
+                    message = stringResource(R.string.settings_fullscreen_access_description),
+                    icon = Icons.Default.Warning,
+                    color = SnoozeYellow
+                )
+                Button(
+                    onClick = viewModel::requestFullScreenAlarmAccess,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.settings_open_fullscreen_settings))
+                }
+            }
+        }
+
         SettingsToggle(
             label = stringResource(R.string.settings_reduce_motion),
             checked = state.settings.reduceMotionAndFlashing,

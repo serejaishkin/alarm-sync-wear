@@ -77,6 +77,8 @@ data class SettingsUiState(
     val hasNotificationPermission: Boolean = true,
     val canScheduleExactAlarms: Boolean = true,
     val canUseFullScreenIntent: Boolean? = null,
+    // "Display over other apps": lets the service open the alarm screen from the background.
+    val canDrawOverlays: Boolean = true,
     val alarmMutedByDnd: Boolean = false,
     val hasLocalNetworkPermission: Boolean = true,
     val guardianReadiness: GuardianReadiness = GuardianReadiness(
@@ -214,6 +216,7 @@ class SettingsViewModel @Inject constructor(
             hasNotificationPermission = wakeReadiness.hasNotificationPermission,
             canScheduleExactAlarms = wakeReadiness.canScheduleExactAlarms,
             canUseFullScreenIntent = wakeReadiness.canUseFullScreenIntent,
+            canDrawOverlays = wakeReadiness.canDrawOverlays,
             hasLocalNetworkPermission = wakeReadiness.hasLocalNetworkPermission,
             alarmMutedByDnd = wakeReadiness.alarmMutedByDnd,
             guardianReadiness = GuardianEscalationPolicy.readiness(
@@ -283,6 +286,25 @@ class SettingsViewModel @Inject constructor(
         try {
             context.startActivity(
                 Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        } catch (_: Exception) {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        }
+    }
+
+    fun requestOverlayAccess() {
+        val context = getApplication<Application>()
+        try {
+            context.startActivity(
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
                     data = Uri.parse("package:${context.packageName}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -857,6 +879,7 @@ class SettingsViewModel @Inject constructor(
         val hasNotificationPermission: Boolean,
         val canScheduleExactAlarms: Boolean,
         val canUseFullScreenIntent: Boolean?,
+        val canDrawOverlays: Boolean,
         val hasLocalNetworkPermission: Boolean,
         val hasSendSmsPermission: Boolean,
         val hasCallPhonePermission: Boolean,
@@ -887,6 +910,8 @@ class SettingsViewModel @Inject constructor(
                 } else {
                     null
                 }
+                // A failed read is treated as granted so we never nag on a bad read.
+                val overlayReady = runCatching { Settings.canDrawOverlays(context) }.getOrDefault(true)
                 val localNetworkReady = LocalNetworkPermission.isGranted(context)
                 val sendSmsGranted = ContextCompat.checkSelfPermission(
                     context,
@@ -920,6 +945,7 @@ class SettingsViewModel @Inject constructor(
                     hasNotificationPermission = notificationsReady,
                     canScheduleExactAlarms = exactAlarmsReady,
                     canUseFullScreenIntent = fullScreenIntentReady,
+                    canDrawOverlays = overlayReady,
                     hasLocalNetworkPermission = localNetworkReady,
                     hasSendSmsPermission = sendSmsGranted,
                     hasCallPhonePermission = callPhoneGranted,

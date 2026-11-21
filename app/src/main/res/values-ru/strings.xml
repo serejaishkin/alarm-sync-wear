@@ -591,6 +591,12 @@
     <string name="settings_expressive_surfaces_description">Более выразительные формы и понятные акценты интерфейса.</string>
     <string name="settings_full_screen_alarm">Полноэкранный будильник</string>
     <string name="settings_full_screen_alarm_description">Включено: будильник открывается на весь экран. Выключено: пока вы пользуетесь телефоном, показывается только компактное уведомление с кнопками «Отложить» и «Выключить»; на заблокированном или погасшем экране, а также при отключённых уведомлениях будильник всё равно открывается на весь экран. Для будильников с заданием на отключение остаётся только «Отложить» — задание откроется по нажатию на уведомление.</string>
+    <string name="settings_overlay_access_needed">«Поверх других приложений» выключено</string>
+    <string name="settings_overlay_access_description">Без этого Android может не открыть экран будильника, пока вы пользуетесь телефоном, и придёт только уведомление. Разрешите для WakeSync.</string>
+    <string name="settings_open_overlay_settings">Открыть настройки наложения</string>
+    <string name="settings_fullscreen_access_needed">Полноэкранные уведомления выключены</string>
+    <string name="settings_fullscreen_access_description">Без этого будильник не откроется поверх экрана блокировки. Разрешите полноэкранные уведомления для WakeSync.</string>
+    <string name="settings_open_fullscreen_settings">Открыть настройки полного экрана</string>
     <string name="settings_reduce_motion">Уменьшить анимацию и вспышки</string>
     <string name="settings_reduce_motion_description">Отключает декоративные циклы и стробоскоп. Также учитывается системное отключение анимации.</string>
     <string name="settings_cover_to_snooze">Отсрочка ладонью</string>
